@@ -384,7 +384,7 @@
     <div class="sec-head reveal">
       <span class="num">05 — THE SENSES</span>
       <h2>The six sensor classes — and what each one gives you</h2>
-      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here is every sensor class in this ecosystem, in beginner terms.</p>
+      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here is every sensor class in this ecosystem, in beginner terms — each with a representative image and a direct buy link.</p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:34px; padding:0; border:none; background:none;">
@@ -396,6 +396,7 @@
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--phosphor)" stroke-width="2"><circle cx="10" cy="38" r="3" fill="var(--phosphor)" stroke="none"/><path d="M10 38 A18 18 0 0 1 28 20"/><path d="M10 38 A28 28 0 0 1 38 10"/><circle cx="33" cy="17" r="2.5" fill="var(--amber)" stroke="none"/></svg>
+        <img class="shot" src="/assets/img/sensor-ld2450.jpg" alt="Representative image of an LD2450 24 GHz mmWave radar module" loading="lazy" />
         <span class="tag">24 GHz mmWave radar · position</span>
         <h3>LD2450</h3>
         <div class="model-line">HLK-LD2450 · Hi-Link 24 GHz FMCW radar</div>
@@ -407,10 +408,12 @@
           <dt>CONNECTS</dt><dd>USB-serial (UART) @ <span class="mono">256000</span> baud</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> It tracks <em>one point per person</em>, not individual limbs. And its baud rate is the unusual <span class="mono">256000</span> — set it to the common 115200 and you'll get pure zeros.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0CGNMCTRC" target="_blank" rel="noopener">Buy on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--cyan);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M24 6 L40 15 L40 33 L24 42 L8 33 L8 15 Z"/><path d="M24 6 L24 24 L40 15 M24 24 L8 15 M24 24 L24 42"/></svg>
+        <img class="shot" src="/assets/img/sensor-ld6004.jpg" alt="Representative image of an LD6004 60 GHz 3D mmWave radar module" loading="lazy" />
         <span class="tag">60 GHz mmWave radar · 3D</span>
         <h3>LD6004</h3>
         <div class="model-line">HLK-LD6004 · Hi-Link 60 GHz 3D radar</div>
@@ -422,10 +425,12 @@
           <dt>CONNECTS</dt><dd>3.3 V GPIO UART @ <span class="mono">115200</span> baud</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> This one wires straight to the Pi's <em>GPIO header pins</em>, not USB. 60 GHz is heavily absorbed by walls — same-room only.</div>
+        <a class="buybtn" href="https://www.amazon.com/s?k=HLK-LD6004" target="_blank" rel="noopener">Find on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--amber);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 26 L14 26 L18 14 L24 36 L29 22 L33 26 L44 26"/></svg>
+        <img class="shot" src="/assets/img/sensor-mr60.jpg" alt="Representative image of a Seeed XIAO MR60BHA2 60 GHz vital-signs radar" loading="lazy" />
         <span class="tag">60 GHz mmWave · vital signs</span>
         <h3>MR60BHA2</h3>
         <div class="model-line">Seeed XIAO MR60BHA2 · ADT6101P radar + ESP32-C6</div>
@@ -437,10 +442,12 @@
           <dt>CONNECTS</dt><dd>WiFi (ESPHome native API, TCP 6053)</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> The XIAO has <em>two</em> USB-C ports. The case-edge one is <strong>power only</strong> — to flash it, open the case and use the inner port. It also reads null for ~60 s after power-on while it "warms up." That's normal.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">Buy on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--phosphor)" stroke-width="2" stroke-linecap="round"><path d="M10 26 A20 20 0 0 1 38 26"/><path d="M16 31 A12 12 0 0 1 32 31"/><circle cx="24" cy="37" r="2.5" fill="var(--phosphor)" stroke="none"/></svg>
+        <img class="shot" src="/assets/img/sensor-esp32.jpg" alt="Representative image of an ESP32 WiFi-CSI development board" loading="lazy" />
         <span class="tag">WiFi CSI · presence &amp; shape</span>
         <h3>ESP32 CSI nodes</h3>
         <div class="model-line">ESP32-S3 (2.4 GHz) &amp; ESP32-C5 (5 GHz)</div>
@@ -452,10 +459,12 @@
           <dt>CONNECTS</dt><dd>WiFi (UDP stream)</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> "Subcarriers" are how many frequency-slices of detail you get — more is sharper. Use a <em>mesh</em> of nodes; one node alone can't tell left from right.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--cyan);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="12" y="12" width="24" height="24" rx="3"/><circle cx="24" cy="24" r="5"/><path d="M24 4 L24 12 M24 36 L24 44 M4 24 L12 24 M36 24 L44 24"/></svg>
+        <img class="shot" src="/assets/img/sensor-m5stick.jpg" alt="Representative image of an M5StickC PLUS2 IMU device" loading="lazy" />
         <span class="tag">IMU · vibration &amp; motion</span>
         <h3>M5StickC PLUS2</h3>
         <div class="model-line">ESP32 + MPU6886 6-axis accelerometer/gyro</div>
@@ -467,10 +476,12 @@
           <dt>CONNECTS</dt><dd>WiFi (UDP stream)</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> Default range is ±2 g. Strong vibration (a shaking plate, ~5 g) <em>clips</em> — raise the range to ±8/16 g in firmware or your peaks are garbage.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0D6LCQ19Z" target="_blank" rel="noopener">Buy on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--amber);">
         <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6 L24 42 M24 6 L34 16 L24 26 M24 42 L34 32 L24 22"/></svg>
+        <img class="shot" src="/assets/img/sensor-polar.jpg" alt="Representative image of a Polar H10 BLE heart-rate chest strap" loading="lazy" />
         <span class="tag">BLE wearable · ground truth</span>
         <h3>Polar H10</h3>
         <div class="model-line">Bluetooth LE chest strap</div>
@@ -482,6 +493,7 @@
           <dt>WEARABLE</dt><dd>Yes — worn on the chest</dd>
         </dl>
         <div class="gotcha"><b>Good to know →</b> Optional. Add it when you need to <em>prove</em> a contactless heart-rate reading is correct, not for everyday sensing.</div>
+        <a class="buybtn" href="https://www.amazon.com/s?k=Polar+H10+heart+rate+sensor" target="_blank" rel="noopener">Find on Amazon ↗</a>
       </div>
 
     </div>
