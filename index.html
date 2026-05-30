@@ -70,6 +70,7 @@
       <a href="#quickstart">Quick start</a>
       <a href="#sensors">Sensors</a>
       <a href="#choose">Which one?</a>
+      <a href="#array">Build array</a>
       <a href="#batteries">Batteries</a>
       <a href="/setup">Setup &amp; flashing</a>
       <a href="#soul">Soul signature</a>
@@ -523,11 +524,157 @@
   </div>
 </section>
 
+<!-- ============ BUILD THE ARRAY ============ -->
+<section id="array">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">07 — BUILD THE ARRAY</span>
+      <h2>How to place your ESP32 sensor array</h2>
+      <p>This is the step that makes or breaks WiFi sensing — and it's where most people fail. Buying the nodes is half of it; <strong>how you arrange them in the room</strong> is the other half. You can't pile them on a desk in front of you and expect a 3-D picture.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:30px;">
+      <h3 style="margin:0 0 10px;font-size:20px;color:var(--phosphor);">Plan on about <span style="color:var(--ink)">6 ESP32 nodes</span></h3>
+      <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Six</b> is the number that wraps a proper sensing "cloud" all the way around a person — front, back and sides — with enough overlap that furniture and bodies don't create blind spots. A common split is <b>3 on 2.4 GHz (ESP32-S3)</b> + <b>3 on 5 GHz (ESP32-C5)</b>.</p>
+    </div>
+
+    <figure class="figure reveal" style="margin-bottom:30px;">
+      <svg viewBox="0 0 1000 540" role="img" aria-label="Top-down room: six ESP32 nodes arranged in a ring around a person, each antenna pointing inward toward the subject">
+        <defs>
+          <marker id="ant" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#43f59b"/></marker>
+        </defs>
+        <rect x="40" y="60" width="920" height="440" rx="16" fill="#0a1018" stroke="#1c3a2b" stroke-width="2"/>
+        <text x="500" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#ffb454">Spread the nodes around the room — never piled on one desk</text>
+        <ellipse cx="500" cy="280" rx="300" ry="170" fill="none" stroke="#2a9d68" stroke-dasharray="5 9" opacity="0.55"/>
+        <!-- subject -->
+        <circle cx="500" cy="280" r="30" fill="#0e2a3c" stroke="#5cd6ff" stroke-width="2"/>
+        <circle cx="500" cy="270" r="8" fill="#5cd6ff"/>
+        <rect x="490" y="280" width="20" height="22" rx="7" fill="#5cd6ff"/>
+        <text x="500" y="330" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8293a6">you / subject</text>
+        <!-- antenna arrows (point inward toward subject) -->
+        <g stroke="#43f59b" stroke-width="2.5" fill="none" marker-end="url(#ant)">
+          <line x1="500" y1="118" x2="500" y2="232"/>
+          <line x1="812" y1="172" x2="690" y2="240"/>
+          <line x1="812" y1="388" x2="690" y2="320"/>
+          <line x1="500" y1="442" x2="500" y2="328"/>
+          <line x1="188" y1="388" x2="310" y2="320"/>
+          <line x1="188" y1="172" x2="310" y2="240"/>
+        </g>
+        <!-- node boxes -->
+        <g font-family="Chakra Petch" font-size="15" font-weight="600" fill="#070b10">
+          <g><rect x="468" y="86" width="64" height="32" rx="7" fill="#43f59b"/><text x="500" y="108" text-anchor="middle">#1</text></g>
+          <g><rect x="780" y="140" width="64" height="32" rx="7" fill="#43f59b"/><text x="812" y="162" text-anchor="middle">#2</text></g>
+          <g><rect x="780" y="356" width="64" height="32" rx="7" fill="#43f59b"/><text x="812" y="378" text-anchor="middle">#3</text></g>
+          <g><rect x="468" y="442" width="64" height="32" rx="7" fill="#43f59b"/><text x="500" y="464" text-anchor="middle">#4</text></g>
+          <g><rect x="156" y="356" width="64" height="32" rx="7" fill="#43f59b"/><text x="188" y="378" text-anchor="middle">#5</text></g>
+          <g><rect x="156" y="140" width="64" height="32" rx="7" fill="#43f59b"/><text x="188" y="162" text-anchor="middle">#6</text></g>
+        </g>
+        <text x="660" y="206" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">≈ 1.5–2.5 m</text>
+        <text x="500" y="492" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#43f59b">→ each antenna / sensing face points INWARD, at the people</text>
+      </svg>
+      <figcaption>Top-down: ring the nodes around the subject and aim each antenna inward. Raise them to roughly torso height and keep clear line-of-sight — the goal is sightlines from every direction, not one wall.</figcaption>
+    </figure>
+
+    <div class="when" style="grid-template-columns:1fr 1fr; margin-bottom:30px;">
+      <div class="block reveal">
+        <h4>✓ Do</h4>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14.5px;">
+          <li class="yes">Ring them <em>around</em> the space — front, back, both sides</li>
+          <li class="yes">Point each PCB antenna toward where people will be</li>
+          <li class="yes">Raise them off the floor to ~torso height</li>
+          <li class="yes">Keep line-of-sight; spread across both WiFi bands</li>
+        </ul>
+      </div>
+      <div class="block amber reveal">
+        <h4>✕ Don't</h4>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14.5px;">
+          <li class="no">Pile them all on one desk facing the same way</li>
+          <li class="no">Hide them behind metal, TVs, or in drawers</li>
+          <li class="no">Bunch them in one corner (no triangulation)</li>
+          <li class="no">Lay antennas flat on the floor</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="reveal" style="font-size:18px;color:var(--phosphor);margin:0 0 16px;">The deployment workflow</h3>
+    <div class="callout reveal" style="margin-bottom:30px;">
+      <ol style="margin:0;padding-left:20px;color:var(--muted);line-height:1.95;">
+        <li><b style="color:var(--ink)">Flash them all first.</b> Each node gets firmware on your Mac/PC before it goes on the wall (see the <a href="/setup">Setup &amp; flashing page</a>).</li>
+        <li><b style="color:var(--ink)">Number each one (node ID 1–6).</b> Set a unique ID when you flash it, and physically label the case — so when the dashboard says "#5 is dead," you know which one to walk over to.</li>
+        <li><b style="color:var(--ink)">Place them in the ring</b> per the diagram — antennas inward, off the floor.</li>
+        <li><b style="color:var(--ink)">Power each one</b> (small battery or USB — see Batteries below).</li>
+        <li><b style="color:var(--ink)">Verify on a status dashboard</b> that all six are live <em>before</em> you trust the data.</li>
+      </ol>
+    </div>
+
+    <h3 class="reveal" style="font-size:18px;color:var(--cyan);margin:0 0 14px;">"I plugged it in — how do I know it's working?"</h3>
+    <p class="reveal" style="color:var(--muted);margin:0 0 18px;max-width:78ch;">This is the question every beginner hits, and the answer is simple: <strong>build yourself a status screen.</strong> Point a small dashboard at the Seed's live data stream so you can watch every sensor — radar, vitals, and all your ESP32 nodes — <em>arrive</em>, flow into the <b>Cognitum One Seed</b>, and get <b>consolidated in RuVector</b> into one picture. If a tile is green, that sensor's data is making it all the way through. If it's red, you know exactly which one to go fix.</p>
+
+    <figure class="figure reveal" style="margin-bottom:26px;">
+      <svg viewBox="0 0 1000 170" role="img" aria-label="Data flow: many sensors stream into the Cognitum One Seed, into RuVector, and are consolidated into one picture">
+        <defs><marker id="fl" markerWidth="10" markerHeight="10" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#43f59b"/></marker></defs>
+        <g font-family="IBM Plex Mono" font-size="12">
+          <rect x="14" y="34" width="210" height="102" rx="10" fill="#0e1824" stroke="#2a9d68"/>
+          <text x="119" y="58" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#dbe6f0">Your sensors</text>
+          <text x="119" y="82" text-anchor="middle" fill="#8293a6">LD2450 · MR60</text>
+          <text x="119" y="102" text-anchor="middle" fill="#8293a6">6× ESP32 CSI</text>
+          <text x="119" y="122" text-anchor="middle" fill="#43f59b">all streaming →</text>
+        </g>
+        <line x1="224" y1="85" x2="286" y2="85" stroke="#43f59b" stroke-width="2.5" marker-end="url(#fl)"/>
+        <g font-family="IBM Plex Mono" font-size="12">
+          <polygon points="360,38 432,72 432,132 360,166 288,132 288,72" fill="#0e2a3c" stroke="#5cd6ff" stroke-width="2" transform="translate(0,-18)"/>
+          <text x="360" y="78" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#5cd6ff">Cognitum</text>
+          <text x="360" y="96" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#5cd6ff">One Seed</text>
+          <text x="360" y="116" text-anchor="middle" fill="#8293a6">the brain</text>
+        </g>
+        <line x1="434" y1="85" x2="496" y2="85" stroke="#43f59b" stroke-width="2.5" marker-end="url(#fl)"/>
+        <g font-family="IBM Plex Mono" font-size="12">
+          <rect x="498" y="34" width="196" height="102" rx="10" fill="#0e1824" stroke="#43f59b"/>
+          <text x="596" y="62" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#43f59b">RuVector</text>
+          <text x="596" y="86" text-anchor="middle" fill="#8293a6">fuse + remember</text>
+          <text x="596" y="106" text-anchor="middle" fill="#8293a6">(HNSW memory)</text>
+        </g>
+        <line x1="694" y1="85" x2="756" y2="85" stroke="#43f59b" stroke-width="2.5" marker-end="url(#fl)"/>
+        <g font-family="IBM Plex Mono" font-size="12">
+          <rect x="758" y="34" width="228" height="102" rx="10" fill="#0e1824" stroke="#2a9d68"/>
+          <text x="872" y="58" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#dbe6f0">One picture</text>
+          <text x="872" y="82" text-anchor="middle" fill="#8293a6">presence · position</text>
+          <text x="872" y="102" text-anchor="middle" fill="#8293a6">vitals · identity</text>
+        </g>
+      </svg>
+      <figcaption>The pipeline your dashboard lets you <em>see</em>: every sensor's data flows into the Seed, gets fused and remembered in RuVector, and becomes one consolidated picture.</figcaption>
+    </figure>
+
+    <figure class="figure reveal">
+      <svg viewBox="0 0 1000 320" role="img" aria-label="Example sensor-health dashboard showing different sensors — radar, vitals and ESP32 CSI nodes — working together, with live, warming and dead status">
+        <text x="20" y="26" font-family="Chakra Petch" font-size="15" font-weight="600" fill="#dbe6f0">Sensor Health — all feeds into the Seed</text>
+        <g font-family="IBM Plex Mono" font-size="11">
+          <circle cx="612" cy="22" r="6" fill="#43f59b"/><text x="624" y="26" fill="#8293a6">LIVE</text>
+          <circle cx="692" cy="22" r="6" fill="#ffb454"/><text x="704" y="26" fill="#8293a6">WARMING</text>
+          <circle cx="800" cy="22" r="6" fill="#ff6b6b"/><text x="812" y="26" fill="#8293a6">DEAD / STALE</text>
+        </g>
+        <g font-family="IBM Plex Mono" font-size="11">
+          <!-- row 1: the different sensor TYPES -->
+          <g><rect x="20" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="64" r="7" fill="#43f59b"/><text x="40" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">LD2450 · radar</text><text x="40" y="94" fill="#8293a6">position · LIVE</text><text x="40" y="116" fill="#43f59b">x 0.32 m · y 1.10 m</text><text x="40" y="136" fill="#8293a6">1 target · age 30 ms</text></g>
+          <g><rect x="350" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="630" cy="64" r="7" fill="#43f59b"/><text x="370" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">MR60BHA2 · vitals</text><text x="370" y="94" fill="#8293a6">LIVE</text><text x="370" y="116" fill="#43f59b">72 bpm · 16 rpm</text><text x="370" y="136" fill="#8293a6">present: yes</text></g>
+          <g><rect x="680" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="960" cy="64" r="7" fill="#43f59b"/><text x="700" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #1 · CSI</text><text x="700" y="94" fill="#8293a6">2.4 GHz · LIVE</text><text x="700" y="116" fill="#43f59b">subcarriers 192</text><text x="700" y="136" fill="#8293a6">rssi −44 dBm · age 18 ms</text></g>
+          <!-- row 2 -->
+          <g><rect x="20" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="196" r="7" fill="#43f59b"/><text x="40" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #2 · CSI</text><text x="40" y="226" fill="#8293a6">2.4 GHz · LIVE</text><text x="40" y="248" fill="#43f59b">subcarriers 192</text><text x="40" y="268" fill="#8293a6">rssi −51 dBm · age 22 ms</text></g>
+          <g><rect x="350" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="rgba(255,180,84,0.5)"/><circle cx="630" cy="196" r="7" fill="#ffb454"/><text x="370" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-C5 #5 · CSI</text><text x="370" y="226" fill="#ffb454">5 GHz · WARMING…</text><text x="370" y="248" fill="#8293a6">no frames yet — go check #5</text></g>
+          <g><rect x="680" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="#43f59b"/><circle cx="960" cy="196" r="7" fill="#43f59b"/><text x="700" y="204" font-family="Chakra Petch" font-size="14" fill="#43f59b">Fusion → RuVector</text><text x="700" y="226" fill="#8293a6">consolidating 5 feeds</text><text x="700" y="248" fill="#43f59b">one picture · LIVE</text></g>
+        </g>
+        <text x="20" y="312" font-family="IBM Plex Mono" font-size="10" fill="#4a5a6c">reading the Seed's live stream (e.g. a WebSocket) · updates ~10×/sec</text>
+      </svg>
+      <figcaption>Example health view — different sensors (radar, vitals, CSI nodes) all reporting in, plus a <b>Fusion → RuVector</b> tile showing they're being consolidated into one picture. Green = data is flowing all the way through; the amber #5 tells you exactly what to go fix. <span style="color:var(--faint)">(Illustrative — modeled on a real deployment dashboard.)</span></figcaption>
+    </figure>
+  </div>
+</section>
+
 <!-- ============ BATTERIES ============ -->
 <section id="batteries">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">07 — UNTETHER IT</span>
+      <span class="num">08 — UNTETHER IT</span>
       <h2>Batteries: powering ESP32s you scatter around a room</h2>
       <p>The detail everyone forgets. The instant you place WiFi-CSI nodes <em>away</em> from a wall outlet — in corners, on shelves, around a room for a mesh — each one needs its own small, light, rechargeable power source. Here's how to do it cheaply.</p>
     </div>
@@ -617,7 +764,7 @@
 <section id="soul">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">08 — ADVANCED</span>
+      <span class="num">09 — ADVANCED</span>
       <h2>Soul Signature: recognising a person by their WiFi</h2>
       <p>The most advanced idea in this stack — identifying <em>who</em> is present with no camera, from the unique way a body disturbs radio. Here's what's real today (honestly), using Ruv's open-source <b>RuView</b>.</p>
     </div>
@@ -659,7 +806,7 @@
 <section id="buy">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">09 — SHOPPING LIST</span>
+      <span class="num">10 — SHOPPING LIST</span>
       <h2>Buy it: the kit that actually works</h2>
       <p>Beginner-friendly, plug-and-play versions only. <span style="color:var(--phosphor)">▸ direct links</span> were correct when last checked; <span style="color:var(--amber)">⌕ search links</span> point at a product category. Always open the page and confirm before buying.</p>
     </div>
@@ -694,7 +841,7 @@
 <section id="faq">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">10 — FAQ</span>
+      <span class="num">11 — FAQ</span>
       <h2>Common questions</h2>
       <p>The things a brand-new owner usually asks next.</p>
     </div>
@@ -713,7 +860,7 @@
 <section id="glossary">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">11 — PLAIN ENGLISH</span>
+      <span class="num">12 — PLAIN ENGLISH</span>
       <h2>Glossary: the jargon, decoded</h2>
     </div>
     <dl class="gloss reveal">
