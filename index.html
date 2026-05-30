@@ -84,7 +84,7 @@
     <div>
       <span class="eyebrow">Field guide · passive contactless sensing</span>
       <h1>You got a Seed.<br/>Now give it <span class="glow">senses.</span></h1>
-      <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We cover the three sensors you can buy today, hook up, and use to sense a room — no camera, nothing worn.</p>
+      <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We cover the sensors you can buy today and hook up — three that sense a room contactlessly, plus one you attach for motion.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
         <a class="hero-cta" href="#start">Start the tour ↓</a>
         <a class="hero-cta" style="--accent:var(--cyan);background:transparent;color:var(--cyan);border:1px solid var(--cyan);box-shadow:none;" href="/setup">Setup &amp; flashing →</a>
@@ -92,7 +92,7 @@
       <div class="meta-row">
         <span>READ TIME · <b>~18 min</b></span>
         <span>LEVEL · <b>Absolute beginner</b></span>
-        <span>COVERS · <b>3 passive sensors · setup guide</b></span>
+        <span>COVERS · <b>4 sensors · setup guide</b></span>
       </div>
     </div>
     <div>
@@ -311,6 +311,7 @@
           <tr><td>A small radar board with a 4-pin cable + a USB adapter dongle</td><td>LD2450 USB kit</td><td>Position tracking</td></tr>
           <tr><td>A small black module behind a textured cover, USB-C</td><td>MR60BHA2 (Seeed XIAO)</td><td>Heart &amp; breathing</td></tr>
           <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C5 / S3 CSI node</td><td>WiFi sensing</td></tr>
+          <tr><td>A small grey stick with a screen, a button &amp; USB-C</td><td>M5StickS3</td><td>Motion / vibration</td></tr>
         </tbody>
       </table>
     </div>
@@ -357,8 +358,8 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="num">05 — THE SENSES</span>
-      <h2>The three passive sensors — and what each one gives you</h2>
-      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here are the three contactless sensors you can buy and use today — each with the real product photo and a direct link to a plug-and-play version.</p>
+      <h2>The sensors — and what each one gives you</h2>
+      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here are the sensors you can buy and use today — three that sense a room contactlessly, plus the M5StickS3 you attach to an object for motion. Each has the real product photo and a direct buy link.</p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:34px; padding:0; border:none; background:none;">
@@ -376,6 +377,7 @@
             <tr><td>ESP32 WiFi CSI</td><td><b style="color:var(--amber)">3 nodes</b></td><td><b>6–8</b> (mix 2.4 + 5 GHz)</td><td>One node only senses "something changed." Position &amp; shape need several sightlines to triangulate.</td></tr>
             <tr><td>LD2450 radar</td><td>1</td><td><b>2–3</b> per room</td><td>One covers a cone; corners, blind spots and left/right asymmetry need a second and third.</td></tr>
             <tr><td>MR60BHA2 vitals</td><td>1</td><td><b>1 per seat/spot</b></td><td>It reads one subject facing it — it can't follow someone moving around the room.</td></tr>
+            <tr><td>M5StickS3 (IMU)</td><td>1</td><td><b>1–2</b></td><td>One reads an object's motion; two let you compare two points (e.g. how vibration travels from a source to a body).</td></tr>
           </tbody>
         </table>
       </div>
@@ -432,6 +434,22 @@
         <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 (buy 3+) ↗</a>
       </div>
 
+      <div class="scard reveal" style="--accent: var(--cyan);">
+        <img class="shot" src="/assets/img/amz-sticks3.jpg" alt="M5StickS3 ESP32-S3 mini IoT dev kit with screen and built-in IMU" loading="lazy" />
+        <span class="tag">IMU · motion &amp; vibration</span>
+        <h3>M5StickS3</h3>
+        <div class="model-line">M5Stack M5StickS3 · ESP32-S3 + 6-axis IMU</div>
+        <p class="what">The one sensor here you <strong>attach to an object</strong> — it measures that object's motion, tilt and vibration with a built-in accelerometer. Battery-powered, streams over WiFi. Not contactless like the other three, but the way to capture how something <em>physically moves</em>.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 · (2 to compare two points)</dd>
+          <dt>SENSES</dt><dd>Acceleration, tilt, vibration (6-axis)</dd>
+          <dt>SETUP</dt><dd>Flash on a Mac/PC (ESP32-S3) or M5 UIFlow</dd>
+          <dt>CONNECTS</dt><dd>WiFi (UDP) · USB-C · built-in battery</dd>
+        </dl>
+        <div class="gotcha"><b>Note →</b> This is the in-stock successor to the now-discontinued M5StickC PLUS2. It's the only sensor here you mount <em>on</em> the thing you're measuring — the radar, vitals and CSI sensors are all contactless.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0GZK27GN4" target="_blank" rel="noopener">Buy on Amazon ↗</a>
+      </div>
+
     </div>
   </div>
 </section>
@@ -452,6 +470,7 @@
           <tr><td>LD2450 radar</td><td class="mono">24 GHz</td><td>Precise 2D position &amp; speed</td><td>±5 cm XY</td><td>Limited</td></tr>
           <tr><td>MR60BHA2</td><td class="mono">60 GHz</td><td>Heart rate &amp; breathing</td><td>n/a (vitals)</td><td>Limited</td></tr>
           <tr><td>ESP32 WiFi CSI</td><td class="mono">2.4 / 5 GHz</td><td>Presence &amp; rough shape, anywhere</td><td>Coarse (~30 cm)</td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>M5StickS3 (IMU)</td><td class="mono">—</td><td>Motion/vibration of an attached object</td><td>n/a (on-object)</td><td><span class="pill amber">on-object</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -481,6 +500,14 @@
           <li class="yes">you want heart rate &amp; breathing with nothing worn</li>
           <li class="yes">the subject is roughly still, facing the sensor</li>
           <li class="no">they're moving around the room (use radar instead)</li>
+        </ul>
+      </div>
+      <div class="block reveal">
+        <h4>Reach for the M5StickS3 (IMU) when…</h4>
+        <ul>
+          <li class="yes">you can attach a sensor to the moving thing</li>
+          <li class="yes">you want fast, raw motion / vibration / tilt</li>
+          <li class="no">it must be contactless (an IMU has to be on the object)</li>
         </ul>
       </div>
       <div class="block reveal">
@@ -642,6 +669,7 @@
       <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (CSI node)</h4><span class="price">~$18 each</span></div><span class="sub">Dual-band WiFi 6 · USB-C · <b>buy 3+ for a mesh</b></span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">or ESP32-S3 (2.4 GHz)</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>M5StickS3 (motion / IMU)</h4><span class="price">~$41</span></div><span class="sub">ESP32-S3 + 6-axis IMU · attach to an object · in-stock M5StickC successor</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GZK27GN4" target="_blank" rel="noopener">B0GZK27GN4</a><a class="search" href="https://www.amazon.com/dp/B0GWHN8HK3" target="_blank" rel="noopener">or M5Stack official (~$22)</a></div></div>
     </div>
 
     <h3 class="reveal" style="color:var(--cyan); font-size:18px; margin:0 0 16px;">The brain (your host)</h3>
@@ -695,6 +723,7 @@
       <div><dt>CSI</dt><dd>Channel State Information — the fine detail of how a WiFi signal was distorted on its way to the receiver. Bodies distort it, so you can "see" with WiFi.</dd></div>
       <div><dt>Subcarrier</dt><dd>WiFi splits its channel into dozens of parallel frequency lanes. Each is a subcarrier. More subcarriers = more detail in a CSI reading.</dd></div>
       <div><dt>HT40</dt><dd>A "wide" 40 MHz WiFi channel. Wider channel = more subcarriers = richer CSI.</dd></div>
+      <div><dt>IMU</dt><dd>Inertial Measurement Unit — an accelerometer (+ gyro) chip that senses motion, tilt and vibration of whatever it's attached to. The M5StickS3 has one.</dd></div>
       <div><dt>Flashing</dt><dd>Loading firmware onto a chip over USB from a computer — the one-time step before an ESP32 sensor can do its job.</dd></div>
       <div><dt>UART / serial</dt><dd>A simple two-wire way (transmit + receive) for a sensor to talk to a computer. The LD2450 USB kit does this over its USB adapter.</dd></div>
       <div><dt>Baud rate</dt><dd>The speed of a serial connection. Both ends must agree exactly, or you get garbage/zeros. The LD2450 wants 256000.</dd></div>

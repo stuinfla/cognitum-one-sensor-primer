@@ -152,6 +152,11 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
         <pre class="code">tcpdump -ni any udp port 5005   <span class="c"># expect ~10 packets/sec from the node</span></pre>
         <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">Flash each node with a <b>different</b> node ID. Repeat for 3+ nodes — a single CSI node can't locate anything.</p></div></div>
     </div>
+
+    <div class="callout reveal" style="margin-top:24px;border-color:var(--line-strong);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">M5StickS3 (motion) — same idea, it's an ESP32-S3</h3>
+      <p style="margin:0;color:var(--muted);">If you added the M5StickS3, it's an ESP32-S3 board, so you flash it the same way (ESP-IDF / esptool) — or use M5's own no-code tool, <a href="https://uiflow2.m5stack.com/" target="_blank" rel="noopener">UIFlow</a>. Set your WiFi + the Seed's address, and it streams its IMU (motion/vibration) to the Seed over WiFi. It's the in-stock successor to the discontinued M5StickC PLUS2.</p>
+    </div>
   </div>
 </section>
 
