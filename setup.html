@@ -79,6 +79,12 @@
       </svg>
       <figcaption>The LD2450 USB kit skips steps 2–3 entirely — it just plugs into the Seed. The WiFi sensors need all five.</figcaption>
     </figure>
+
+    <div class="callout reveal" style="margin-top:30px;border-color:rgba(92,214,255,0.35);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">The easy way: let Claude Code do the fiddly parts</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">This guide assumes you're working in <b>VS Code with Claude Code</b>. The simplest path: open your project, add <b>RuView as a git submodule</b> (next section), install the <b>RuView plugin</b>, and then mostly just <em>tell Claude Code in plain English</em> what you want — it flashes the nodes, sets their WiFi, and helps wire up the dashboard for you. (Having <b>Ruflo</b> installed adds extra orchestration, but it's not required.)</p>
+      <p style="margin:0;color:var(--muted);">The exact commands below are "under the hood" — handy if you want to understand them or do it by hand, but you usually won't need to type them yourself.</p>
+    </div>
   </div>
 </section>
 
@@ -123,14 +129,17 @@
     <!-- MR60 -->
     <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(255,180,84,0.4);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">MR60BHA2 vitals — ships ready, configure over WiFi</h3>
-      <p style="margin:0 0 10px;color:var(--muted);">It comes pre-loaded with <b>ESPHome</b> firmware, so you don't flash it — you just give it WiFi credentials through ESPHome / Home Assistant. Then the Seed connects out to it and pulls heart rate &amp; breathing over TCP <span class="mono">6053</span>.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">It comes pre-loaded with <b>ESPHome</b> firmware, so you don't flash it — it just needs your WiFi credentials. The simplest way: <b style="color:var(--cyan)">ask Claude Code to provision its WiFi</b> (ESPHome is what's running under the hood). Then the Seed connects out to it and pulls heart rate &amp; breathing over TCP <span class="mono">6053</span>.</p>
       <p style="margin:0;color:var(--ink);font-size:14px;"><b>The trap:</b> the XIAO has two USB-C ports. The one on the case edge is <b>power only</b>. To configure it, open the case and use the XIAO's own inner USB-C port. <a href="https://esphome.io/" target="_blank" rel="noopener">ESPHome docs ↗</a></p>
     </div>
 
     <!-- CSI -->
     <div class="callout reveal" style="border-color:var(--phosphor-dim);">
-      <h3 style="margin:0 0 14px;font-size:19px;color:var(--phosphor);">ESP32 CSI nodes — flash on your Mac/PC</h3>
-      <p style="margin:0 0 16px;color:var(--muted);">These you do flash. It's a one-time setup with Espressif's free toolchain (ESP-IDF, which includes <span class="mono">esptool</span>). Here's the whole thing:</p>
+      <h3 style="margin:0 0 14px;font-size:19px;color:var(--phosphor);">ESP32 CSI nodes — these get flashed (once)</h3>
+      <p style="margin:0 0 12px;color:var(--muted);"><b style="color:var(--cyan)">Easiest:</b> with the RuView plugin loaded in Claude Code, just plug a node into your Mac/PC and <em>ask</em>. Type something like:</p>
+      <pre class="code" style="white-space:pre-wrap;">"Flash this ESP32-S3 as CSI node #1, join WiFi 'MyNetwork' / 'mypassword',
+and stream to my Seed at 10.0.0.50 on UDP 5005."</pre>
+      <p style="margin:12px 0 16px;color:var(--muted);">Claude Code (driving RuView) handles the toolchain, the config and the flash. Repeat for each node, bumping the number to 2, 3 … 7. <b style="color:var(--ink)">Prefer to do it by hand?</b> Here's exactly what's happening under the hood (Espressif's free <span class="mono">ESP-IDF</span> / <span class="mono">esptool</span>):</p>
 
       <div class="step reveal"><div class="n">1</div><div class="body"><h4>Install the toolchain (once)</h4>
         <p style="margin:0;color:var(--muted);font-size:14.5px;">Install <b>ESP-IDF 5.5.2</b> by following Espressif's official get-started guide. It brings the build tool <span class="mono">idf.py</span> and the flasher <span class="mono">esptool</span>. <a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/" target="_blank" rel="noopener">ESP-IDF Get Started ↗</a></p></div></div>
@@ -193,21 +202,33 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
       <p><b>RuView</b> (Ruv's open-source project) is the software that turns raw WiFi-CSI into presence, breathing, and the anonymous identity "fingerprint." Here's how to pull it in and build it. <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">github.com/ruvnet/RuView ↗</a></p>
     </div>
 
-    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Get RuView — easiest paths first</h4>
-      <pre class="code"><span class="c"># A) Zero hardware, just try it (Docker):</span>
-docker pull ruvnet/wifi-densepose:latest
-docker run -p 3000:3000 ruvnet/wifi-densepose:latest   <span class="c"># open http://localhost:3000</span>
+    <figure class="figure reveal" style="margin-bottom:24px;">
+      <div class="split" style="gap:18px;">
+        <div><img src="/assets/img/ruview-hero.jpg" alt="π RuView — Ambient Intelligence: turning invisible WiFi signals into real-time human insights, no cameras or wearables" loading="lazy" style="border-radius:8px;width:100%;display:block;" /></div>
+        <div><img src="/assets/img/ruview-screen.jpg" alt="RuView WiFi DensePose Sensing Observatory — live body figure, heart rate, respiration and presence from WiFi CSI" loading="lazy" style="border-radius:8px;width:100%;display:block;" /></div>
+      </div>
+      <figcaption>What RuView <em>is</em> (left) and what it <em>shows</em> once running (right): WiFi-only sensing — presence, breathing, heart rate and a live body figure, no camera, no wearable. <span style="color:var(--faint)">(Images from the RuView project.)</span></figcaption>
+    </figure>
 
-<span class="c"># B) Build the Rust core from source:</span>
+    <p class="reveal" style="color:var(--muted);margin:0 0 24px;max-width:80ch;"><b style="color:var(--ink)">So what is it?</b> RuView is Ruv's open-source "ambient intelligence" software. It takes the raw WiFi-CSI your ESP32 nodes stream in and turns it into a live read of the room — presence, breathing, heart rate, a rough body pose, and an anonymous identity "fingerprint" — all on-device, no cloud. It's the brain-software that makes your sensor array actually <em>mean</em> something.</p>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Bring in RuView &amp; build it</h4>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Clone it (simplest), or — if you're building your own project around it — add it as a git submodule so it's pinned inside your repo. Then build the Rust core:</p>
+      <pre class="code"><span class="c"># simplest — just clone it:</span>
 git clone https://github.com/ruvnet/RuView
-cd RuView/v2 &amp;&amp; cargo build --release</pre>
-      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">For the Python path, follow the install instructions in the repo's README rather than guessing a package name.</p></div></div>
 
-    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Optional · vendor it into your own project</h4>
-      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Only if you're building software <em>around</em> RuView and want it pinned inside your repo — add it as a git submodule (this mirrors how RuView vendors its own dependencies under <span class="mono">vendor/</span>):</p>
-      <pre class="code">git submodule add https://github.com/ruvnet/RuView vendor/RuView
-git submodule update --init --recursive</pre>
-      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">Most people don't need this — Docker or a plain clone (step 1) is simpler.</p></div></div>
+<span class="c"># …or pin it inside your own project as a submodule:</span>
+git submodule add https://github.com/ruvnet/RuView vendor/RuView
+git submodule update --init --recursive
+
+<span class="c"># then build it:</span>
+cd RuView/v2 &amp;&amp; cargo build --release</pre>
+      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">For the Python path, follow the repo's README rather than guessing a package name.</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Just want to peek first? (no hardware — optional)</h4>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Optional: spin up the demo in Docker to see the interface on simulated data before you wire anything up.</p>
+      <pre class="code">docker pull ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 ruvnet/wifi-densepose:latest   <span class="c"># open http://localhost:3000</span></pre></div></div>
 
     <div class="step reveal"><div class="n">3</div><div class="body"><h4>Use the RuView plugin (in Claude Code)</h4>
       <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">"The RuView plugin" is a <b>Claude Code plugin</b> — it gives an AI agent the skills and commands to drive RuView. Install it:</p>
