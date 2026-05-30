@@ -7,7 +7,7 @@
 <!-- ===================== SEO ===================== -->
 <title>Cognitum One Sensor Primer — ESP32, mmWave Radar, WiFi CSI &amp; IMU Sensors Explained</title>
 <meta name="description" content="A beginner's field guide to contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, LD2450 &amp; LD6004 mmWave radar, MR60BHA2 vital-signs radar, WiFi CSI, and IMU sensors actually do — how to power, wire and battery them, plus where to buy every part on Amazon." />
-<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, LD6004, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, presence detection, heart rate radar, IMU, M5StickC, sensor primer, ESP32 battery, LiPo, 18650, sensor wiring, GPIO UART, Raspberry Pi sensors" />
+<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, LD6004, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, presence detection, heart rate radar, IMU, M5StickC, sensor primer, ESP32 battery, LiPo, 18650, sensor wiring, GPIO UART, Raspberry Pi sensors, soul signature, WiFi re-identification, RuView, AETHER" />
 <meta name="author" content="Cognitum One" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/" />
@@ -78,6 +78,7 @@
       <a href="#power">Wiring</a>
       <a href="#batteries">Batteries</a>
       <a href="#further">Go further</a>
+      <a href="#soul">Soul signature</a>
       <a href="#buy">Buy it</a>
     </div>
   </div>
@@ -843,11 +844,54 @@
   </div>
 </section>
 
+<!-- ============ SOUL SIGNATURE ============ -->
+<section id="soul">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">10 — ADVANCED</span>
+      <h2>Soul Signature: recognising a person by their WiFi</h2>
+      <p>The most advanced idea in this whole stack — identifying <em>who</em> is present with no camera, from the unique way a body disturbs radio. Here's what's real today (honestly) and how to start, using Ruv's open-source <b>RuView</b>.</p>
+    </div>
+
+    <div class="when" style="grid-template-columns:1fr 1fr;">
+      <div class="block reveal">
+        <h4>What RuView gives you today</h4>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14.5px;">
+          <li>An <b>anonymous WiFi re-ID embedding</b> — a 128-dim vector (the "AETHER" encoder) that re-matches the <em>same body</em> across sessions</li>
+          <li>A privacy-safe, <b>daily-rotating hash</b> of that signature (un-correlatable across sites by design)</li>
+          <li>Runs on WiFi-CSI alone — no camera, no wearable</li>
+        </ul>
+      </div>
+      <div class="block amber reveal">
+        <h4>What it does <em>not</em> do (yet)</h4>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14.5px;">
+          <li>It does <b>not put a name</b> to you — a match is an opaque ID, not "it's Stuart"</li>
+          <li>It ships with <b>no trained weights</b> — you must train the encoder, or the vector is just noise</li>
+          <li>There's <b>no one-click "enroll"</b> yet — the full multi-signal Soul Signature (cardiac + gait + breathing + body-field + WiFi) is a published research spec, not finished code</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:26px;">
+      <h3 style="margin:0 0 14px;font-size:19px;color:var(--phosphor);">The realistic path to a signature</h3>
+      <ol style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;">
+        <li><b>Stand up a CSI mesh</b> — at least 3 ESP32-S3/C5 nodes streaming (see the sensors section; one node can't do identity).</li>
+        <li><b>Install RuView</b> (from its README): a no-hardware demo with <span class="mono">docker pull ruvnet/wifi-densepose:latest</span>, or the Python v2 wheel <span class="mono">pip install ruview</span>.</li>
+        <li><b>Find the identity embedding</b> — it's the 128-dim <span class="mono">IdentityEmbedding</span> in the <span class="mono">wifi-densepose-bfld</span> crate, produced by the AETHER re-ID head in <span class="mono">wifi-densepose-nn</span>.</li>
+        <li><b>Train the encoder on your own CSI</b> (contrastive / InfoNCE) — RuView ships <em>no</em> pretrained weights, so this step is mandatory; until then the embedding is random.</li>
+        <li><b>Match</b> — a trained encoder re-identifies a returning body as an opaque <span class="mono">person_id</span> (anonymous), plus the rotating hash.</li>
+      </ol>
+      <p style="margin:16px 0 0;"><a class="buybtn" style="--accent:var(--phosphor);" href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView on GitHub ↗</a></p>
+      <p style="margin:12px 0 0;color:var(--faint);font-size:13px;">Start reading here: <span class="mono">v2/crates/wifi-densepose-bfld/src/embedding.rs</span> (the embedding), <span class="mono">…/wifi-densepose-nn/src/rf_encoder.rs</span> (where it's computed), and <span class="mono">docs/research/soul/</span> (the full vision). Putting a name to a person is a <em>separate</em> layer, not part of RuView.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ============ BUY IT ============ -->
 <section id="buy">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">10 — SHOPPING LIST</span>
+      <span class="num">11 — SHOPPING LIST</span>
       <h2>Buy it: sensors, brain &amp; connectors</h2>
       <p>Everything below is something this ecosystem actually uses. We separate <span style="color:var(--phosphor)">▸ direct product links</span> from <span style="color:var(--amber)">⌕ search links</span> — see the note.</p>
     </div>
@@ -892,7 +936,7 @@
 <section id="faq">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">11 — FAQ</span>
+      <span class="num">12 — FAQ</span>
       <h2>Common questions</h2>
       <p>The things a brand-new owner usually asks next.</p>
     </div>
@@ -911,7 +955,7 @@
 <section id="glossary">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">12 — PLAIN ENGLISH</span>
+      <span class="num">13 — PLAIN ENGLISH</span>
       <h2>Glossary: the jargon, decoded</h2>
       <p>Every term in this guide, explained like you've never seen it before.</p>
     </div>
