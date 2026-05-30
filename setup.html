@@ -131,6 +131,10 @@
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">MR60BHA2 vitals — ships ready, configure over WiFi</h3>
       <p style="margin:0 0 10px;color:var(--muted);">It comes pre-loaded with <b>ESPHome</b> firmware, so you don't flash it — it just needs your WiFi credentials. The simplest way: <b style="color:var(--cyan)">ask Claude Code to provision its WiFi</b> (ESPHome is what's running under the hood). Then the Seed connects out to it and pulls heart rate &amp; breathing over TCP <span class="mono">6053</span>.</p>
       <p style="margin:0;color:var(--ink);font-size:14px;"><b>The trap:</b> the XIAO has two USB-C ports. The one on the case edge is <b>power only</b>. To configure it, open the case and use the XIAO's own inner USB-C port. <a href="https://esphome.io/" target="_blank" rel="noopener">ESPHome docs ↗</a></p>
+      <figure style="margin:16px 0 0;">
+        <img src="/assets/img/mr60-open.jpg" alt="The MR60BHA2 XIAO case opened into three parts, exposing the inner USB-C data/flash port and the 60 GHz radar module" loading="lazy" style="width:100%;border-radius:8px;border:1px solid var(--line-strong);display:block;" />
+        <figcaption style="color:var(--faint);font-family:'IBM Plex Mono';font-size:11.5px;margin-top:8px;">Good to know: the case pops apart easily. The middle carrier holds the XIAO with its <b style="color:var(--amber)">inner USB-C</b> (the data/flash port) plus the 60 GHz radar module — that inner port is the one you plug into, not the power-only port on the case edge.</figcaption>
+      </figure>
     </div>
 
     <!-- CSI -->
