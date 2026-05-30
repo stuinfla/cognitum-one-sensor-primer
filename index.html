@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ===================== SEO ===================== -->
+<title>Cognitum One Sensor Primer — ESP32, mmWave Radar, WiFi CSI &amp; IMU Sensors Explained</title>
+<meta name="description" content="A beginner's field guide to contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, LD2450 &amp; LD6004 mmWave radar, MR60BHA2 vital-signs radar, WiFi CSI, and IMU sensors actually do — how to power, wire and battery them, plus where to buy every part on Amazon." />
+<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, LD6004, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, presence detection, heart rate radar, IMU, M5StickC, sensor primer, ESP32 battery, LiPo, 18650, sensor wiring, GPIO UART, Raspberry Pi sensors" />
+<meta name="author" content="Cognitum One" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Cognitum One Sensor Primer" />
+<meta property="og:title" content="Cognitum One Sensor Primer — Contactless Sensing, Explained for Beginners" />
+<meta property="og:description" content="ESP32 chips, mmWave radar, WiFi CSI and IMUs — what each sensor gives you, how to power, wire and battery them, and where to buy every part. The primer for anyone who just got a Cognitum One Seed." />
+<meta property="og:url" content="https://cognitum-sensor-primer.vercel.app/" />
+<meta property="og:image" content="https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg" />
+<meta property="og:image:width" content="1376" />
+<meta property="og:image:height" content="768" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cognitum One Sensor Primer — Contactless Sensing, Explained" />
+<meta name="twitter:description" content="ESP32, mmWave radar, WiFi CSI &amp; IMU sensors — what they do, how to power &amp; wire them, and where to buy. A beginner's field guide." />
+<meta name="twitter:image" content="https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg" />
+
+<meta name="theme-color" content="#070b10" />
+<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+
+<!-- JSON-LD structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Cognitum One Sensor Primer — ESP32, mmWave Radar, WiFi CSI & IMU Sensors Explained",
+  "description": "A beginner's field guide to contactless sensing for the Cognitum One Seed: ESP32 chips, mmWave radar, WiFi CSI and IMU sensors — what they do, how to power, wire and battery them, and where to buy.",
+  "image": "https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg",
+  "author": { "@type": "Organization", "name": "Cognitum One", "url": "https://cognitum.one" },
+  "publisher": { "@type": "Organization", "name": "Cognitum One", "url": "https://cognitum.one" },
+  "about": ["ESP32", "mmWave radar", "WiFi CSI sensing", "contactless sensing", "Cognitum One Seed"],
+  "inLanguage": "en",
+  "keywords": "Cognitum One Seed, ESP32, mmWave radar, LD2450, LD6004, MR60BHA2, WiFi CSI, IMU, sensor primer, ESP32 battery"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is a Cognitum One Seed?", "acceptedAnswer": { "@type": "Answer", "text": "A tiny, self-contained AI computer that senses the space around it and recognises patterns and people passively, with no cloud required. It is the brain; the sensors in this guide are its senses." } },
+    { "@type": "Question", "name": "What is the difference between an ESP32 CSI sensor and an mmWave radar?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 WiFi CSI reads how radio waves scatter off a body to detect presence and rough shape, even through walls, but coarsely. mmWave radar (LD2450, LD6004) measures precise position; the MR60BHA2 mmWave radar measures heart rate and breathing." } },
+    { "@type": "Question", "name": "How do I power ESP32 sensors scattered around a room?", "acceptedAnswer": { "@type": "Answer", "text": "Use an ESP32 board with a built-in LiPo charger plus a 1000–2000 mAh LiPo pouch, an 18650 cell on a holder board, or a low-current 'always-on' USB power bank. Avoid standard power banks that auto-shut-off at low current." } }
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="https://cognitum.one" target="_blank" rel="noopener"><span class="dot"></span> COGNITUM&nbsp;ONE&nbsp;·&nbsp;SENSOR&nbsp;PRIMER</a>
+    <div class="nav-links">
+      <a href="#start">Start here</a>
+      <a href="#esp32">ESP32 chips</a>
+      <a href="#sensors">Sensor types</a>
+      <a href="#choose">Which one?</a>
+      <a href="#power">Power &amp; wiring</a>
+      <a href="#batteries">Batteries</a>
+      <a href="#buy">Buy it</a>
+      <a href="#glossary">Glossary</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <img class="hero-bg" src="/assets/img/hero-rf.jpg" alt="Oscilloscope radar waves" loading="eager" />
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Field guide · contactless sensing</span>
+      <h1>You got a Seed.<br/>Now give it <span class="glow">senses.</span></h1>
+      <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We start with the ESP32 family — then go well beyond it, to every kind of sensor you can wire to your Seed.</p>
+      <a class="hero-cta" href="#start">Start the tour ↓</a>
+      <div class="meta-row">
+        <span>READ TIME · <b>~18 min</b></span>
+        <span>LEVEL · <b>Absolute beginner</b></span>
+        <span>COVERS · <b>9 chips · 6 sensor classes</b></span>
+      </div>
+    </div>
+    <div>
+      <div class="scope" aria-hidden="true">
+        <div class="cross"><span></span><span></span></div>
+        <div class="sweep"></div>
+        <div class="blip b1"></div><div class="blip b2"></div><div class="blip b3"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ START HERE ============ -->
+<section id="start">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">01 — ORIENTATION</span>
+      <h2>What is a Cognitum One Seed?</h2>
+      <p>Before sensors, understand the thing you just unboxed. The Seed is not a sensor itself — it's a <strong>brain</strong>.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:34px;">
+      <p style="margin:0 0 14px; font-size:18px; color:var(--ink);">The <b>Cognitum One Seed</b> is a tiny, self-contained AI computer — it runs on-device intelligence with <em>no cloud required</em>. It senses the space around it, remembers what it learns as mathematical "fingerprints," and can recognise patterns and people <strong>passively</strong> — just by watching, never by asking you to scan anything.</p>
+      <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses (motion, vibration, temperature/humidity/pressure, and an analog input or two). Those are enough to learn the rhythm of a room. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you add the sensors in this guide.</p>
+      <p style="margin:18px 0 0;"><a href="https://cognitum.one" target="_blank" rel="noopener" class="mono" style="font-size:13.5px; letter-spacing:0.04em;">▸ Learn more about the Cognitum One Seed at cognitum.one</a></p>
+    </div>
+
+    <div class="model">
+      <div class="card-brain reveal">
+        <h3>🧠 The Seed = the brain</h3>
+        <p style="color:var(--muted); margin:0;">Runs everything locally. Turns raw sensor numbers into memory.</p>
+        <ul>
+          <li>On-device vector memory (remembers patterns as "fingerprints")</li>
+          <li>Passive recognition — learns who/what is present without enrollment</li>
+          <li>Local search &amp; small-language-model reasoning, no internet needed</li>
+          <li>A tamper-evident "witness chain" so its memory can be trusted</li>
+        </ul>
+      </div>
+      <div class="arrow reveal">⟶<br/><span style="font-size:11px; letter-spacing:.2em;">SENSES&nbsp;FEED&nbsp;BRAIN</span></div>
+      <div class="card-senses reveal">
+        <h3>📡 The sensors = the senses</h3>
+        <p style="color:var(--muted); margin:0;">Each one perceives a different slice of physical reality.</p>
+        <ul>
+          <li><b>Radar</b> — where a body is, how it moves (no camera, works in the dark)</li>
+          <li><b>mmWave vitals</b> — heart rate &amp; breathing, through clothing, across a room</li>
+          <li><b>WiFi CSI</b> — a body's rough shape &amp; presence, even through walls</li>
+          <li><b>IMU</b> — vibration, tilt and motion of a thing you attach it to</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- data-flow diagram -->
+    <figure class="figure reveal" style="margin-top:34px;">
+      <svg viewBox="0 0 1000 280" role="img" aria-label="Sensors feed the Seed brain, which stores passive memory">
+        <defs>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a9d68"/></marker>
+          <linearGradient id="seedg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e2a3c"/><stop offset="1" stop-color="#0a1822"/></linearGradient>
+        </defs>
+        <!-- sensor pills -->
+        <g font-family="IBM Plex Mono, monospace" font-size="14" fill="#dbe6f0">
+          <g><rect x="20" y="24" width="190" height="40" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="115" y="49" text-anchor="middle">Radar · position</text></g>
+          <g><rect x="20" y="80" width="190" height="40" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="115" y="105" text-anchor="middle">mmWave · vitals</text></g>
+          <g><rect x="20" y="136" width="190" height="40" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="115" y="161" text-anchor="middle">WiFi CSI · shape</text></g>
+          <g><rect x="20" y="192" width="190" height="40" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="115" y="217" text-anchor="middle">IMU · motion</text></g>
+        </g>
+        <!-- arrows to seed -->
+        <g stroke="#2a9d68" stroke-width="2" fill="none" marker-end="url(#ar)">
+          <path d="M210 44 C320 44 330 120 400 134"/>
+          <path d="M210 100 C320 100 330 128 400 138"/>
+          <path d="M210 156 C320 156 330 150 400 150"/>
+          <path d="M210 212 C320 212 330 170 400 158"/>
+        </g>
+        <!-- seed hexagon -->
+        <g>
+          <polygon points="500,70 575,112 575,196 500,238 425,196 425,112" fill="url(#seedg)" stroke="#5cd6ff" stroke-width="2"/>
+          <text x="500" y="146" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="20" font-weight="600" fill="#5cd6ff">SEED</text>
+          <text x="500" y="170" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#8293a6">the brain</text>
+        </g>
+        <!-- arrow to memory -->
+        <path d="M575 154 C660 154 680 154 760 154" stroke="#43f59b" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+        <g>
+          <rect x="760" y="118" width="220" height="72" rx="10" fill="#0e1824" stroke="#43f59b"/>
+          <text x="870" y="150" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="16" font-weight="600" fill="#43f59b">Passive memory</text>
+          <text x="870" y="172" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#8293a6">recognise · remember</text>
+        </g>
+      </svg>
+      <figcaption>The mental model: the Seed is the brain, the sensors are the senses. Everything in this guide plugs into the left side.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ ESP32 ============ -->
+<section id="esp32">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">02 — THE FOUNDATION</span>
+      <h2>The ESP32 family: the chip behind almost everything</h2>
+      <p>Most affordable sensors are built around an <strong>ESP32</strong> — a cheap WiFi/Bluetooth microcontroller from Espressif. Knowing the variants tells you what a sensor can and can't do. Here is the chip-by-chip comparison, then what it means for sensing work.</p>
+    </div>
+
+    <div class="table-scroll reveal">
+      <table>
+        <thead>
+          <tr><th>Chip</th><th>Architecture</th><th>Cores / Clock</th><th>SRAM</th><th>WiFi</th><th>Bluetooth</th><th>GPIO</th><th>Standout feature</th><th>~Price</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ESP32 <span class="pill cyan">original</span></td><td>Xtensa LX6</td><td>2 · 240&nbsp;MHz</td><td>520&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>Classic + BLE 4.2</td><td>34</td><td>The mature, do-everything default</td><td class="mono">$3–10</td></tr>
+          <tr><td>ESP32-S2</td><td>Xtensa LX7</td><td>1 · 240&nbsp;MHz</td><td>320&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>none</td><td>—</td><td>USB-OTG; far better deep-sleep</td><td class="mono">~$6</td></tr>
+          <tr><td>ESP32-S3 <span class="pill green">used here</span></td><td>Xtensa LX7</td><td>2 · 240&nbsp;MHz</td><td>512&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>45</td><td>AI/vector instructions, camera support</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-C2</td><td>RISC-V</td><td>1 · 120&nbsp;MHz</td><td>272&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>14</td><td>Smallest &amp; cheapest, 4×4&nbsp;mm</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-C3</td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>400&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>22</td><td>Best-in-class low power (~5&nbsp;µA sleep)</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-C5 <span class="pill green">used here</span></td><td>RISC-V</td><td>1 · 240&nbsp;MHz</td><td>400&nbsp;KB</td><td><b style="color:var(--phosphor)">Dual-band WiFi 6 · 2.4 + 5&nbsp;GHz</b></td><td>BLE 5.2</td><td>—</td><td>First ESP32 that does 5&nbsp;GHz WiFi</td><td class="mono">~$18</td></tr>
+          <tr><td>ESP32-C6 <span class="pill green">used here</span></td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>512&nbsp;KB</td><td>WiFi 6 (ax) · 2.4&nbsp;GHz</td><td>BLE 5.3</td><td>30</td><td>802.15.4 Thread/Zigbee/Matter</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-H2</td><td>RISC-V</td><td>1 · 96&nbsp;MHz</td><td>256&nbsp;KB</td><td><b style="color:var(--amber)">none</b></td><td>BLE 5.0</td><td>—</td><td>Dedicated Thread/Zigbee mesh radio</td><td class="mono">~$3</td></tr>
+          <tr><td>ESP32-P4</td><td>RISC-V ×2 + LP</td><td>2 · 400&nbsp;MHz</td><td>768&nbsp;KB</td><td><b style="color:var(--amber)">none</b></td><td>none</td><td>—</td><td>H.264 video, MIPI camera/display</td><td class="mono">n/a</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout reveal" style="margin-top:30px;">
+      <h3 style="margin:0 0 12px; font-size:20px; color:var(--phosphor);">The one fact that bites everyone first</h3>
+      <p style="margin:0; color:var(--muted);">Notice the <b style="color:var(--ink)">2.4 GHz vs. 5 GHz</b> column. The ESP32-S3 and the original ESP32 are <strong>2.4 GHz only — by silicon</strong>. They <em>physically cannot</em> join a 5 GHz-only WiFi network, no matter what you configure. Only the <b style="color:var(--phosphor)">ESP32-C5</b> speaks 5 GHz. If a board "won't connect" to your fast network, this is almost always why — it's not broken, it's the wrong band. Plan accordingly: a 2.4 GHz network for S3/C6 sensors, a 5 GHz one for C5 sensors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SENSOR TYPES ============ -->
+<section id="sensors">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">03 — THE SENSES</span>
+      <h2>The six sensor classes — and what each one gives you</h2>
+      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here is every sensor class in this ecosystem, in beginner terms.</p>
+    </div>
+
+    <figure class="figure reveal" style="margin-bottom:34px; padding:0; border:none; background:none;">
+      <img class="band-img" src="/assets/img/sensors-band.jpg" alt="A human body sensed by invisible radio waves, reconstructed as a glowing point cloud" loading="lazy" />
+      <figcaption class="cap">Radar and WiFi can "see" a body with no camera — by reading how radio waves bounce off it.</figcaption>
+    </figure>
+
+    <div class="cards">
+
+      <div class="scard reveal" style="--accent: var(--phosphor);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--phosphor)" stroke-width="2"><circle cx="10" cy="38" r="3" fill="var(--phosphor)" stroke="none"/><path d="M10 38 A18 18 0 0 1 28 20"/><path d="M10 38 A28 28 0 0 1 38 10"/><circle cx="33" cy="17" r="2.5" fill="var(--amber)" stroke="none"/></svg>
+        <span class="tag">24 GHz mmWave radar · position</span>
+        <h3>LD2450</h3>
+        <div class="model-line">HLK-LD2450 · Hi-Link 24 GHz FMCW radar</div>
+        <p class="what">Tells you <strong>where a person is</strong> on a 2D floor plan — their X/Y position and how fast they're moving — by bouncing 24 GHz radio off them. No camera, works in total darkness, sees through clothing.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>Position (X/Y), distance, speed</dd>
+          <dt>RANGE</dt><dd>~6 m, <span class="mono">±5 cm</span> precision</dd>
+          <dt>RATE</dt><dd><span class="mono">30 Hz</span></dd>
+          <dt>CONNECTS</dt><dd>USB-serial (UART) @ <span class="mono">256000</span> baud</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> It tracks <em>one point per person</em>, not individual limbs. And its baud rate is the unusual <span class="mono">256000</span> — set it to the common 115200 and you'll get pure zeros.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--cyan);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M24 6 L40 15 L40 33 L24 42 L8 33 L8 15 Z"/><path d="M24 6 L24 24 L40 15 M24 24 L8 15 M24 24 L24 42"/></svg>
+        <span class="tag">60 GHz mmWave radar · 3D</span>
+        <h3>LD6004</h3>
+        <div class="model-line">HLK-LD6004 · Hi-Link 60 GHz 3D radar</div>
+        <p class="what">Like the LD2450 but in <strong>three dimensions</strong> — it adds height (Z), so you get a body's sway and vertical position, not just floor location. Higher frequency means finer detail at close range.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>3D position (X/Y/Z), sway, presence</dd>
+          <dt>RANGE</dt><dd>close, <span class="mono">±5 cm</span> XY / <span class="mono">±15 cm</span> Z</dd>
+          <dt>RATE</dt><dd><span class="mono">30–50 Hz</span></dd>
+          <dt>CONNECTS</dt><dd>3.3 V GPIO UART @ <span class="mono">115200</span> baud</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> This one wires straight to the Pi's <em>GPIO header pins</em>, not USB. 60 GHz is heavily absorbed by walls — same-room only.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--amber);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 26 L14 26 L18 14 L24 36 L29 22 L33 26 L44 26"/></svg>
+        <span class="tag">60 GHz mmWave · vital signs</span>
+        <h3>MR60BHA2</h3>
+        <div class="model-line">Seeed XIAO MR60BHA2 · ADT6101P radar + ESP32-C6</div>
+        <p class="what">Measures <strong>heart rate and breathing rate</strong> contactlessly — it senses the millimetre-scale motion of your chest and skin via 60 GHz Doppler. No chest strap, no watch. Sits facing you within ~1.5 m.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>Heart rate, breathing rate, presence</dd>
+          <dt>RANGE</dt><dd>chest-facing, 0.4–1.5 m</dd>
+          <dt>RATE</dt><dd><span class="mono">~1 Hz</span> vitals</dd>
+          <dt>CONNECTS</dt><dd>WiFi (ESPHome native API, TCP 6053)</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> The XIAO has <em>two</em> USB-C ports. The case-edge one is <strong>power only</strong> — to flash it, open the case and use the inner port. It also reads null for ~60 s after power-on while it "warms up." That's normal.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--phosphor);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--phosphor)" stroke-width="2" stroke-linecap="round"><path d="M10 26 A20 20 0 0 1 38 26"/><path d="M16 31 A12 12 0 0 1 32 31"/><circle cx="24" cy="37" r="2.5" fill="var(--phosphor)" stroke="none"/></svg>
+        <span class="tag">WiFi CSI · presence &amp; shape</span>
+        <h3>ESP32 CSI nodes</h3>
+        <div class="model-line">ESP32-S3 (2.4 GHz) &amp; ESP32-C5 (5 GHz)</div>
+        <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
+          <dt>DETAIL</dt><dd>S3 → <span class="mono">192</span> subcarriers · C5 → <span class="mono">117</span></dd>
+          <dt>RATE</dt><dd><span class="mono">~10 Hz</span></dd>
+          <dt>CONNECTS</dt><dd>WiFi (UDP stream)</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> "Subcarriers" are how many frequency-slices of detail you get — more is sharper. Use a <em>mesh</em> of nodes; one node alone can't tell left from right.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--cyan);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="12" y="12" width="24" height="24" rx="3"/><circle cx="24" cy="24" r="5"/><path d="M24 4 L24 12 M24 36 L24 44 M4 24 L12 24 M36 24 L44 24"/></svg>
+        <span class="tag">IMU · vibration &amp; motion</span>
+        <h3>M5StickC PLUS2</h3>
+        <div class="model-line">ESP32 + MPU6886 6-axis accelerometer/gyro</div>
+        <p class="what">A tiny battery-powered gadget you <strong>attach to a moving thing</strong> to measure its acceleration and tilt — the only sensor here that streams <em>raw motion live over WiFi</em>. Used to measure how vibration travels through a body or a surface.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>Acceleration (3-axis), tilt, vibration</dd>
+          <dt>RATE</dt><dd><span class="mono">500 Hz</span> sampling</dd>
+          <dt>POWER</dt><dd>built-in LiPo (~8 h), USB-C charge</dd>
+          <dt>CONNECTS</dt><dd>WiFi (UDP stream)</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> Default range is ±2 g. Strong vibration (a shaking plate, ~5 g) <em>clips</em> — raise the range to ±8/16 g in firmware or your peaks are garbage.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--amber);">
+        <svg class="ico" viewBox="0 0 48 48" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6 L24 42 M24 6 L34 16 L24 26 M24 42 L34 32 L24 22"/></svg>
+        <span class="tag">BLE wearable · ground truth</span>
+        <h3>Polar H10</h3>
+        <div class="model-line">Bluetooth LE chest strap</div>
+        <p class="what">A medical-grade <strong>chest strap</strong> for heart rate and beat-to-beat (R-R) timing. You don't use it day-to-day — it's the <em>ruler</em> you measure your contactless sensors against, to prove the radar HR is accurate.</p>
+        <dl class="specs">
+          <dt>SENSES</dt><dd>Heart rate, R-R intervals (gold standard)</dd>
+          <dt>ROLE</dt><dd>Offline calibration / validation</dd>
+          <dt>CONNECTS</dt><dd>Bluetooth LE (Heart Rate Service)</dd>
+          <dt>WEARABLE</dt><dd>Yes — worn on the chest</dd>
+        </dl>
+        <div class="gotcha"><b>Good to know →</b> Optional. Add it when you need to <em>prove</em> a contactless heart-rate reading is correct, not for everyday sensing.</div>
+      </div>
+
+    </div>
+
+    <p class="reveal mono" style="color:var(--faint); font-size:12.5px; margin-top:24px;">
+      Also in the family but superseded: the <b style="color:var(--muted)">MPU-6050 (GY-521)</b> — a bare I²C accelerometer, the predecessor to the M5's MPU6886. It works, but the M5StickC replaces it for most uses because it adds WiFi streaming and a battery.
+    </p>
+  </div>
+</section>
+
+<!-- ============ WHICH ONE ============ -->
+<section id="choose">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">04 — DECISION GUIDE</span>
+      <h2>Radar vs. CSI vs. vitals vs. IMU — which do I use?</h2>
+      <p>They overlap, but each is best at one job. Here's the cheat sheet.</p>
+    </div>
+
+    <div class="table-scroll reveal" style="margin-bottom:32px;">
+      <table>
+        <thead><tr><th>Technology</th><th>Frequency</th><th>Best at</th><th>Spatial detail</th><th>Through walls?</th><th>Wearable-free?</th></tr></thead>
+        <tbody>
+          <tr><td>LD2450 radar</td><td class="mono">24 GHz</td><td>Precise 2D position &amp; speed</td><td>±5 cm XY</td><td>Limited</td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>LD6004 radar</td><td class="mono">60 GHz</td><td>3D position incl. height</td><td>±5 cm XY · ±15 cm Z</td><td>No</td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>MR60BHA2</td><td class="mono">60 GHz</td><td>Heart rate &amp; breathing</td><td>n/a (vitals)</td><td>Limited</td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>ESP32 WiFi CSI</td><td class="mono">2.4 / 5 GHz</td><td>Presence &amp; rough shape, anywhere</td><td>Coarse (~30 cm)</td><td><span class="pill green">yes</span></td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>M5 / IMU</td><td class="mono">—</td><td>Vibration &amp; tilt of an object</td><td>n/a (on-body)</td><td>n/a</td><td><span class="pill amber">attached</span></td></tr>
+          <tr><td>Polar H10</td><td class="mono">—</td><td>Reference-grade heart rate</td><td>n/a</td><td>n/a</td><td><span class="pill amber">worn</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="when">
+      <div class="block reveal">
+        <h4>Reach for RADAR (LD2450 / LD6004) when…</h4>
+        <ul>
+          <li class="yes">you need to know <em>where</em> a body is, precisely</li>
+          <li class="yes">you want speed / sway / depth-of-movement</li>
+          <li class="yes">lighting is bad or privacy rules out cameras</li>
+          <li class="no">you need heart rate (radar position can't do that)</li>
+        </ul>
+      </div>
+      <div class="block cyan reveal">
+        <h4>Reach for WiFi CSI when…</h4>
+        <ul>
+          <li class="yes">you want coverage through walls / whole-room</li>
+          <li class="yes">you can place several nodes for triangulation</li>
+          <li class="yes">rough presence &amp; shape is enough</li>
+          <li class="no">you need centimetre-accurate position (too coarse)</li>
+        </ul>
+      </div>
+      <div class="block amber reveal">
+        <h4>Reach for mmWave VITALS (MR60) when…</h4>
+        <ul>
+          <li class="yes">you want heart rate &amp; breathing with nothing worn</li>
+          <li class="yes">the subject is roughly still, facing the sensor</li>
+          <li class="no">they're moving around the room (use radar instead)</li>
+        </ul>
+      </div>
+      <div class="block reveal">
+        <h4>Reach for an IMU (M5 / MPU) when…</h4>
+        <ul>
+          <li class="yes">you can attach a sensor to the thing you're measuring</li>
+          <li class="yes">you need fast, raw vibration or tilt data</li>
+          <li class="no">contactless is a requirement (IMUs must be on-body)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:32px;">
+      <h3 style="margin:0 0 12px; font-size:19px; color:var(--phosphor);">The real power is in <em>combining</em> them</h3>
+      <p style="margin:0; color:var(--muted);">No single sensor is the whole picture. A radar says <em>where</em>, CSI says <em>roughly what shape</em>, the vitals radar says <em>how hard the heart is working</em>, the IMU says <em>how the body is vibrating</em>. The Seed's job is to <strong>fuse</strong> these streams into one understanding — and each sensor you add makes that understanding sharper and harder to fool. Start with one, add more as you grow.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POWER & WIRING ============ -->
+<section id="power">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">05 — HOOK IT UP</span>
+      <h2>Powering &amp; connecting your sensors</h2>
+      <p>Three connection styles cover everything: <strong>WiFi</strong> (just power + network), <strong>USB-serial</strong> (a little adapter), and <strong>GPIO pins</strong> (jumper wires to the board's header).</p>
+    </div>
+
+    <div class="table-scroll reveal" style="margin-bottom:34px;">
+      <table>
+        <thead><tr><th>Sensor</th><th>How it connects</th><th>Power</th><th>What you need to buy</th></tr></thead>
+        <tbody>
+          <tr><td>MR60BHA2 / ESP32 CSI / M5StickC</td><td>WiFi (UDP / native API)</td><td>5 V USB <span class="mono">or</span> built-in LiPo</td><td>A real <b>USB-C data cable</b> + USB power</td></tr>
+          <tr><td>LD2450</td><td>USB-serial (UART)</td><td>5 V over the USB adapter</td><td>A <b>CP210x USB-to-UART bridge</b></td></tr>
+          <tr><td>LD6004</td><td>GPIO pins on the board</td><td>3.3 V from the header</td><td><b>Dupont jumper wires</b> (4 of them)</td></tr>
+          <tr><td>Polar H10</td><td>Bluetooth LE</td><td>Coin cell (built in)</td><td>Nothing — it's wireless</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wire-grid">
+      <figure class="figure reveal" style="margin:0;">
+        <svg viewBox="0 0 460 250" role="img" aria-label="LD6004 wired to Raspberry Pi GPIO pins 1, 6, 8, 10">
+          <text x="60" y="24" font-family="Chakra Petch" font-size="14" fill="#43f59b">Raspberry Pi header</text>
+          <text x="330" y="24" font-family="Chakra Petch" font-size="14" fill="#ffb454">LD6004</text>
+          <!-- pi pins -->
+          <g font-family="IBM Plex Mono" font-size="12">
+            <rect x="40" y="40" width="150" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="52" y="61" fill="#ffb454">Pin 1</text><text x="100" y="61" fill="#8293a6">3.3 V</text>
+            <rect x="40" y="84" width="150" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="52" y="105" fill="#ffb454">Pin 6</text><text x="100" y="105" fill="#8293a6">GND</text>
+            <rect x="40" y="128" width="150" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="52" y="149" fill="#ffb454">Pin 8</text><text x="100" y="149" fill="#8293a6">TX →</text>
+            <rect x="40" y="172" width="150" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="52" y="193" fill="#ffb454">Pin 10</text><text x="100" y="193" fill="#8293a6">RX ←</text>
+          </g>
+          <!-- sensor pins -->
+          <g font-family="IBM Plex Mono" font-size="12">
+            <rect x="300" y="40" width="120" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="314" y="61" fill="#8293a6">VCC</text>
+            <rect x="300" y="84" width="120" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="314" y="105" fill="#8293a6">GND</text>
+            <rect x="300" y="128" width="120" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="314" y="149" fill="#8293a6">RX</text>
+            <rect x="300" y="172" width="120" height="34" rx="6" fill="#0e1824" stroke="#2a9d68"/><text x="314" y="193" fill="#8293a6">TX</text>
+          </g>
+          <!-- wires -->
+          <g stroke-width="2" fill="none">
+            <path d="M190 57 L300 57" stroke="#ffb454"/>
+            <path d="M190 101 L300 101" stroke="#8293a6"/>
+            <path d="M190 145 C240 145 250 189 300 189" stroke="#43f59b"/>
+            <path d="M190 189 C240 189 250 145 300 145" stroke="#5cd6ff"/>
+          </g>
+          <text x="230" y="232" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#ff6b6b">TX→RX and RX→TX always cross over</text>
+        </svg>
+        <figcaption>LD6004 → Raspberry Pi GPIO. The crossover (green &amp; cyan) is the #1 thing people get wrong.</figcaption>
+      </figure>
+
+      <div class="pinout reveal" style="font-family:'IBM Plex Sans';">
+        <h4 class="mono">▸ Power budget — don't overload the board</h4>
+        <div class="pinrow" style="font-family:'IBM Plex Mono';"><span style="color:var(--amber); width:130px;">USB ports</span><span class="arrow">~600 mA total</span></div>
+        <div class="pinrow" style="font-family:'IBM Plex Mono';"><span style="color:var(--amber); width:130px;">3.3 V GPIO rail</span><span class="arrow">~500 mA total</span></div>
+        <div class="pinrow" style="font-family:'IBM Plex Mono';"><span style="color:var(--amber); width:130px;">M5 LiPo</span><span class="arrow">~8 h streaming</span></div>
+        <p style="color:var(--muted); font-size:13.5px; margin:14px 0 0;">
+          Each USB radar draws ~100–200 mA; the 3.3 V rail is shared and small. If you add several USB sensors, use a <b>powered USB hub</b>. For more than one GPIO sensor, add an external 3.3 V supply. And give a Raspberry Pi 5 its proper <b>27 W (5 V / 5 A) supply</b> — underpowering causes mystery dropouts that look like sensor failures but aren't.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:32px;">
+      <h3 style="margin:0 0 14px; font-size:19px; color:var(--amber);">⚠ The five gotchas that waste an afternoon</h3>
+      <ul style="margin:0; padding-left:20px; color:var(--muted); columns:2; column-gap:36px;">
+        <li style="margin-bottom:10px;"><b style="color:var(--ink)">Power-only USB ports.</b> Some boards (the MR60 XIAO) have a charge-only port and a separate data port. Flashing fails silently on the wrong one.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink)">5 GHz vs 2.4 GHz.</b> An S3 or C6 will never see a 5 GHz network. Put it on 2.4 GHz.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink)">Wrong baud rate.</b> The LD2450 wants 256000, not the usual 115200. Wrong = all zeros.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink)">TX/RX not crossed.</b> Serial wires cross over. Swap them if you get nothing.</li>
+        <li style="margin-bottom:10px;"><b style="color:var(--ink)">Cheap "charge" cables.</b> Many USB-C cables carry power but no data. Buy cables labelled <em>data</em>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BATTERIES ============ -->
+<section id="batteries">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">06 — UNTETHER IT</span>
+      <h2>Batteries: powering ESP32s you scatter around a room</h2>
+      <p>The detail everyone forgets. The instant you place sensors <em>away</em> from a wall outlet — in corners, on shelves, around a room for a CSI mesh — each one needs its own small, light, rechargeable power source. Here's how to do it cheaply.</p>
+    </div>
+
+    <figure class="figure reveal" style="margin-bottom:34px; padding:0; border:none; background:none;">
+      <img class="band-img" src="/assets/img/mesh-room.jpg" alt="Small sensor nodes scattered around a room, connected by glowing wifi mesh arcs" loading="lazy" />
+      <figcaption class="cap">A whole-room CSI mesh: a dozen little nodes, each needing its own small battery.</figcaption>
+    </figure>
+
+    <div class="cards" style="margin-bottom:30px;">
+      <div class="scard reveal" style="--accent: var(--phosphor);">
+        <span class="tag">easiest · recommended</span>
+        <h3>LiPo pouch + a board that charges it</h3>
+        <p class="what">Pick an ESP32 board with a <strong>built-in battery connector and charger</strong>, then plug in a flat LiPo pouch. Recharge in place over USB — no extra electronics. Lightest option, perfect for scattering.</p>
+        <dl class="specs">
+          <dt>BATTERY</dt><dd>3.7 V LiPo pouch, <span class="mono">1000–2000 mAh</span></dd>
+          <dt>CONNECTOR</dt><dd>JST-PH 2.0 mm (the common one)</dd>
+          <dt>BOARDS</dt><dd>FireBeetle ESP32, LOLIN D32</dd>
+          <dt>WEIGHT</dt><dd>~20–40 g total</dd>
+        </dl>
+        <div class="gotcha"><b>Why this one →</b> No soldering, recharges itself, and a 2000 mAh pouch runs a WiFi-streaming ESP32 for roughly 10–16 hours.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--cyan);">
+        <span class="tag">longest runtime</span>
+        <h3>18650 cell + holder board</h3>
+        <p class="what">An ESP32 board with an <strong>onboard 18650 holder</strong> (the AA-sized lithium cell from laptops/flashlights). Cheap cells, big capacity, drop-in. Heavier than a pouch, but runs longest.</p>
+        <dl class="specs">
+          <dt>BATTERY</dt><dd>1× 18650 Li-ion, <span class="mono">2000–3500 mAh</span></dd>
+          <dt>CHARGING</dt><dd>USB on the holder board</dd>
+          <dt>RUNTIME</dt><dd><span class="mono">~16–28 h</span> streaming</dd>
+          <dt>WEIGHT</dt><dd>~70 g total</dd>
+        </dl>
+        <div class="gotcha"><b>Heads up →</b> Buy reputable cells. Bargain-bin 18650s often lie about capacity and can be unsafe.</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--amber);">
+        <span class="tag">zero-knowledge · watch the trap</span>
+        <h3>A small USB power bank</h3>
+        <p class="what">The no-thinking option: a pocket power bank + a USB cable into the ESP32. Works instantly, nothing to wire. But there's one infamous gotcha that makes them mysteriously die.</p>
+        <dl class="specs">
+          <dt>BATTERY</dt><dd>5000 mAh USB power bank</dd>
+          <dt>CONNECTS</dt><dd>USB-C / micro-USB cable</dd>
+          <dt>RUNTIME</dt><dd>days (but see gotcha)</dd>
+          <dt>WEIGHT</dt><dd>~100–120 g</dd>
+        </dl>
+        <div class="gotcha"><b>The trap →</b> Many power banks <strong>auto-shut-off</strong> when current drops below ~50–100 mA. An idle ESP32 sips too little, so the bank thinks nothing's plugged in and powers down. Use a bank with an "always-on / low-current / trickle" mode, or one sold for "IoT / low-power devices."</div>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--cyan);">
+        <span class="tag">DIY · most flexible</span>
+        <h3>Roll your own: LiPo + TP4056</h3>
+        <p class="what">If your board has no charger, add a <strong>TP4056 charging module</strong> (about $1) between a bare LiPo and the board. It safely charges over USB and protects the cell. The standard hobbyist battery pack.</p>
+        <dl class="specs">
+          <dt>PARTS</dt><dd>LiPo pouch + TP4056 module</dd>
+          <dt>SKILL</dt><dd>light soldering (3–4 joints)</dd>
+          <dt>COST</dt><dd><span class="mono">~$3–6</span> per node</dd>
+          <dt>BONUS</dt><dd>get the TP4056 with built-in protection</dd>
+        </dl>
+        <div class="gotcha"><b>Tip →</b> Use the "TP4056 with protection" variant (extra chip) so the cell can't over-discharge and die permanently.</div>
+      </div>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:28px;">
+      <h3 style="margin:0 0 12px; font-size:19px; color:var(--phosphor);">How long will it last? Quick runtime math</h3>
+      <p style="margin:0 0 10px; color:var(--muted);">A CSI/streaming ESP32 keeps its WiFi radio on, so budget roughly <b style="color:var(--ink)">120–160 mA average</b> (peaks higher). Runtime ≈ battery&nbsp;mAh ÷ average&nbsp;mA:</p>
+      <ul style="margin:0; padding-left:20px; color:var(--muted);">
+        <li><span class="mono" style="color:var(--phosphor)">1000 mAh</span> LiPo → ~6–8 hours</li>
+        <li><span class="mono" style="color:var(--phosphor)">2000 mAh</span> LiPo → ~12–16 hours (a full day of use)</li>
+        <li><span class="mono" style="color:var(--phosphor)">3500 mAh</span> 18650 → ~22–28 hours</li>
+      </ul>
+      <p style="margin:12px 0 0; color:var(--muted);">Want days instead of hours? Have the firmware <b style="color:var(--ink)">deep-sleep</b> between readings (drops to microamps) — but note continuous CSI sensing can't sleep, so for an always-on mesh, plan to recharge daily or wire those nodes to USB wall power where outlets allow.</p>
+    </div>
+
+    <div class="callout warn reveal" style="margin-bottom:30px;">
+      <h3 style="margin:0 0 10px; font-size:18px; color:var(--amber);">⚠ Battery safety — three rules</h3>
+      <p style="margin:0; color:var(--muted);">LiPo and Li-ion cells store a lot of energy. <b style="color:var(--ink)">(1)</b> Never charge them unattended on flammable surfaces. <b style="color:var(--ink)">(2)</b> Never puncture, crush, or fold a pouch — if it swells, retire it. <b style="color:var(--ink)">(3)</b> Always use a proper charger (TP4056 or an onboard charger), never raw voltage. For a room full of scattered nodes, lean toward boards with built-in protection circuits.</p>
+    </div>
+
+    <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">Power parts — where to buy</h3>
+    <div class="buy-note reveal">These are <span style="color:var(--amber)">⌕ search links</span> — battery listings churn constantly, so we point you at the right product category rather than a code that may expire. Confirm voltage (3.7 V), connector (JST-PH 2.0), and capacity before buying.</div>
+    <div class="buy-grid">
+      <div class="buy reveal"><div class="bt"><h4>FireBeetle ESP32 (battery-ready)</h4><span class="price">~$8</span></div><span class="sub">Built-in LiPo charger, very low sleep current</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=DFRobot+FireBeetle+ESP32" target="_blank" rel="noopener">search: FireBeetle ESP32</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>LOLIN/WEMOS D32 ESP32</h4><span class="price">~$10</span></div><span class="sub">Onboard LiPo connector + charging</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=LOLIN+D32+ESP32" target="_blank" rel="noopener">search: LOLIN D32</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>ESP32 18650 dev board</h4><span class="price">~$9</span></div><span class="sub">ESP32 with onboard 18650 holder + charging</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=ESP32+18650+development+board" target="_blank" rel="noopener">search: ESP32 18650 board</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>3.7 V LiPo pouch (1000–2000 mAh)</h4><span class="price">~$8</span></div><span class="sub">JST-PH 2.0 connector — match your board</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=3.7V+lipo+battery+2000mAh+JST+PH+2.0" target="_blank" rel="noopener">search: 3.7V LiPo JST-PH</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>18650 Li-ion cells (quality)</h4><span class="price">~$10</span></div><span class="sub">Reputable brand, true capacity</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=18650+rechargeable+battery+button+top" target="_blank" rel="noopener">search: 18650 cells</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>TP4056 charging module (protected)</h4><span class="price">~$1</span></div><span class="sub">DIY LiPo charging + protection</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=TP4056+charging+module+protection" target="_blank" rel="noopener">search: TP4056 protected</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Low-current / always-on power bank</h4><span class="price">~$15</span></div><span class="sub">"IoT" bank that won't auto-shut-off</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=power+bank+low+current+mode+always+on" target="_blank" rel="noopener">search: always-on power bank</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>JST-PH 2.0 connector pigtails</h4><span class="price">~$6</span></div><span class="sub">Make or extend battery leads</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=JST+PH+2.0+connector+pigtail" target="_blank" rel="noopener">search: JST-PH pigtails</a></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BUY IT ============ -->
+<section id="buy">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">07 — SHOPPING LIST</span>
+      <h2>Buy it: sensors, brain &amp; connectors</h2>
+      <p>Everything below is something this ecosystem actually uses. We separate <span style="color:var(--phosphor)">▸ direct product links</span> from <span style="color:var(--amber)">⌕ search links</span> — see the note.</p>
+    </div>
+
+    <div class="buy-note reveal">
+      <b>Read this first.</b> Direct links (<span style="color:var(--phosphor)">▸</span>) point to specific products that were correct when last ordered — but Amazon reassigns listings, prices move, and some kits sell accessories separately. <strong>Always open the page and confirm the exact model, price, and "included vs. compatible" before buying.</strong> Where we only have a model name, we give a <span style="color:var(--amber)">⌕ search</span> link rather than guess a product code.
+    </div>
+
+    <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">Sensors</h3>
+    <div class="buy-grid" style="margin-bottom:34px;">
+      <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">vitals</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>HLK-LD2450 radar</h4><span class="price">~$8</span></div><span class="sub">24 GHz position/motion · UART</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CGNMCTRC" target="_blank" rel="noopener">B0CGNMCTRC</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (3-pack)</h4><span class="price">~$54</span></div><span class="sub">Dual-band WiFi 6 · for 5 GHz CSI</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>M5StickC PLUS2</h4><span class="price">IMU</span></div><span class="sub">ESP32 + accelerometer, battery, WiFi</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0D6LCQ19Z" target="_blank" rel="noopener">B0D6LCQ19Z</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>ESP32-S3 dev board</h4><span class="price">2.4 GHz CSI</span></div><span class="sub">For 192-subcarrier CSI nodes</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">search: ESP32-S3-DevKitC</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>HLK-LD6004 radar</h4><span class="price">3D</span></div><span class="sub">60 GHz 3D · GPIO UART</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=HLK-LD6004" target="_blank" rel="noopener">search: HLK-LD6004</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>GY-521 MPU-6050</h4><span class="price">IMU (basic)</span></div><span class="sub">Bare I²C accelerometer/gyro</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=HiLetgo+GY-521+MPU-6050" target="_blank" rel="noopener">search: GY-521 MPU-6050</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Polar H10</h4><span class="price">reference</span></div><span class="sub">BLE chest strap · ground-truth HR</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=Polar+H10+heart+rate+sensor" target="_blank" rel="noopener">search: Polar H10</a></div></div>
+    </div>
+
+    <h3 class="reveal" style="color:var(--cyan); font-size:18px; margin:0 0 16px;">The brain &amp; its add-ons</h3>
+    <div class="buy-grid" style="margin-bottom:34px;">
+      <div class="buy reveal"><div class="bt"><h4>CanaKit Raspberry Pi 5 (8 GB) — PRO kit</h4><span class="price">starter</span></div><span class="sub">Pi 5 + power + case + storage</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CRSNCJ6Y" target="_blank" rel="noopener">B0CRSNCJ6Y</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>CanaKit Pi 5 (8 GB) — Essentials</h4><span class="price">~$160</span></div><span class="sub">Pi 5 + the basics</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CVQT445P" target="_blank" rel="noopener">B0CVQT445P</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Waveshare PCIe → M.2 WiFi HAT</h4><span class="price">~$35</span></div><span class="sub">Pi 5 WiFi 6E HAT (AX210)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DXBR8VX5" target="_blank" rel="noopener">B0DXBR8VX5</a></div><span class="sub" style="color:var(--amber)">⚠ the AX210 card may be sold separately — check</span></div>
+      <div class="buy reveal"><div class="bt"><h4>Alfa AWUS036ACM USB WiFi</h4><span class="price">~$50</span></div><span class="sub">HT40-capable WiFi adapter</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B08BJS8FXD" target="_blank" rel="noopener">B08BJS8FXD</a></div></div>
+    </div>
+
+    <h3 class="reveal" style="color:var(--amber); font-size:18px; margin:0 0 16px;">Cables &amp; connectors (don't forget these)</h3>
+    <div class="buy-grid">
+      <div class="buy reveal"><div class="bt"><h4>CP210x USB-to-UART bridge</h4><span class="price">~$7</span></div><span class="sub">Connects LD2450 &amp; other UART radars</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B00LODGRV8" target="_blank" rel="noopener">B00LODGRV8</a><a class="search" href="https://www.amazon.com/s?k=CP2102+USB+to+TTL+UART+adapter" target="_blank" rel="noopener">more options</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>USB-C data cables</h4><span class="price">essential</span></div><span class="sub">Must carry data, not just power</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=USB-C+data+cable+short" target="_blank" rel="noopener">search: USB-C data cable</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Dupont jumper wires</h4><span class="price">~$7</span></div><span class="sub">GPIO wiring (F-F, M-F, M-M assortment)</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=Dupont+jumper+wires+assortment" target="_blank" rel="noopener">search: Dupont jumpers</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>JST-GH 1.25 mm cables</h4><span class="price">~$8</span></div><span class="sub">Common on Seeed/Grove sensor breakouts</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=JST-GH+1.25mm+cable" target="_blank" rel="noopener">search: JST-GH cable</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Raspberry Pi 5 27 W PSU</h4><span class="price">~$15</span></div><span class="sub">5 V / 5 A — prevents brownout dropouts</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=Raspberry+Pi+5+27W+USB-C+power+supply" target="_blank" rel="noopener">search: Pi 5 27W PSU</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Powered USB hub</h4><span class="price">~$20</span></div><span class="sub">When you add several USB sensors</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=powered+USB+hub+5V" target="_blank" rel="noopener">search: powered USB hub</a></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section id="glossary">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">08 — PLAIN ENGLISH</span>
+      <h2>Glossary: the jargon, decoded</h2>
+      <p>Every term in this guide, explained like you've never seen it before.</p>
+    </div>
+    <dl class="gloss reveal">
+      <div><dt>mmWave</dt><dd>"Millimetre-wave" radio (24–60 GHz). Very short wavelengths bounce cleanly off bodies, giving fine motion and position detail.</dd></div>
+      <div><dt>FMCW radar</dt><dd>The technique radar sensors use: sweep a frequency, listen for the echo, and read distance &amp; speed from the shift.</dd></div>
+      <div><dt>Doppler</dt><dd>The frequency change when something moves toward/away — how mmWave vitals sensors detect a chest rising or a heart beating.</dd></div>
+      <div><dt>CSI</dt><dd>Channel State Information — the fine detail of how a WiFi signal was distorted on its way to the receiver. Bodies distort it, so you can "see" with WiFi.</dd></div>
+      <div><dt>Subcarrier</dt><dd>WiFi splits its channel into dozens of parallel frequency lanes. Each is a subcarrier. More subcarriers = more detail in a CSI reading.</dd></div>
+      <div><dt>HT40</dt><dd>A "wide" 40 MHz WiFi channel. Wider channel = more subcarriers = richer CSI. (HT20 is the narrower, lower-detail mode.)</dd></div>
+      <div><dt>IMU</dt><dd>Inertial Measurement Unit — an accelerometer (+gyro) chip that senses motion, tilt and vibration of whatever it's attached to.</dd></div>
+      <div><dt>UART / serial</dt><dd>A simple two-wire way (transmit + receive) for a sensor to talk to a computer. Needs a USB-UART adapter or GPIO pins.</dd></div>
+      <div><dt>GPIO</dt><dd>The row of pins on a Raspberry Pi you connect wires to — for power, ground, and serial data.</dd></div>
+      <div><dt>Baud rate</dt><dd>The speed of a serial connection. Both ends must agree exactly, or you get garbage/zeros.</dd></div>
+      <div><dt>LiPo / 18650</dt><dd>Rechargeable lithium batteries. LiPo is a flat light pouch; 18650 is a AA-sized cylinder with more capacity.</dd></div>
+      <div><dt>HNSW</dt><dd>The fast "nearest-neighbour" search the Seed uses to recognise a fingerprint instantly among thousands of stored ones.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div style="color:var(--phosphor); font-weight:600; margin-bottom:6px;">COGNITUM ONE · SENSOR PRIMER</div>
+      <div>A beginner's field guide to contactless sensing.</div>
+      <div style="margin-top:10px;"><a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a></div>
+    </div>
+    <div style="text-align:right;">
+      <div>Brain + senses · radar · mmWave · WiFi CSI · IMU</div>
+      <div style="color:var(--faint); margin-top:6px;">Verify every part link before purchase. Specs current at publication.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/main.js" defer></script>
+</body>
+</html>

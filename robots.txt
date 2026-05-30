@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cognitum-sensor-primer.vercel.app/sitemap.xml
