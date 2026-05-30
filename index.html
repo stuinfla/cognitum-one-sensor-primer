@@ -70,13 +70,15 @@
     <a class="brand" href="https://cognitum.one" target="_blank" rel="noopener"><span class="dot"></span> COGNITUM&nbsp;ONE&nbsp;·&nbsp;SENSOR&nbsp;PRIMER</a>
     <div class="nav-links">
       <a href="#start">Start here</a>
+      <a href="#connect">How it senses</a>
+      <a href="#quickstart">Quick start</a>
       <a href="#esp32">ESP32 chips</a>
       <a href="#sensors">Sensor types</a>
       <a href="#choose">Which one?</a>
-      <a href="#power">Power &amp; wiring</a>
+      <a href="#power">Wiring</a>
       <a href="#batteries">Batteries</a>
+      <a href="#further">Go further</a>
       <a href="#buy">Buy it</a>
-      <a href="#glossary">Glossary</a>
     </div>
   </div>
 </nav>
@@ -90,9 +92,9 @@
       <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We start with the ESP32 family — then go well beyond it, to every kind of sensor you can wire to your Seed.</p>
       <a class="hero-cta" href="#start">Start the tour ↓</a>
       <div class="meta-row">
-        <span>READ TIME · <b>~18 min</b></span>
+        <span>READ TIME · <b>~22 min</b></span>
         <span>LEVEL · <b>Absolute beginner</b></span>
-        <span>COVERS · <b>9 chips · 6 sensor classes</b></span>
+        <span>COVERS · <b>quick-start · 9 chips · 6 sensors</b></span>
       </div>
     </div>
     <div>
@@ -116,7 +118,7 @@
 
     <div class="callout reveal" style="margin-bottom:34px;">
       <p style="margin:0 0 14px; font-size:18px; color:var(--ink);">The <b>Cognitum One Seed</b> is a tiny, self-contained AI computer — it runs on-device intelligence with <em>no cloud required</em>. It senses the space around it, remembers what it learns as mathematical "fingerprints," and can recognise patterns and people <strong>passively</strong> — just by watching, never by asking you to scan anything.</p>
-      <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses (motion, vibration, temperature/humidity/pressure, and an analog input or two). Those are enough to learn the rhythm of a room. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you add the sensors in this guide.</p>
+      <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses (motion, vibration, temperature/humidity/pressure, and an analog input or two). Those are enough to learn the rhythm of a room. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you connect the sensors in this guide. Some wire straight into the Seed; the richer ones run on a small companion computer that talks to it (that's the very next section).</p>
       <p style="margin:18px 0 0;"><a href="https://cognitum.one" target="_blank" rel="noopener" class="mono" style="font-size:13.5px; letter-spacing:0.04em;">▸ Learn more about the Cognitum One Seed at cognitum.one</a></p>
     </div>
 
@@ -184,11 +186,143 @@
   </div>
 </section>
 
+<!-- ============ HOW IT SENSES ============ -->
+<section id="connect">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">02 — HOW IT SENSES</span>
+      <h2>How sensors actually reach the Seed</h2>
+      <p>This is the part most guides skip — and the thing you most need to know. There are <strong>two</strong> ways a sensor's data gets to your Seed, and picking the right one saves you days.</p>
+    </div>
+
+    <figure class="figure reveal" style="margin-bottom:30px;">
+      <svg viewBox="0 0 1000 360" role="img" aria-label="Two ways sensors connect: wired directly into the Seed, or via a companion host">
+        <defs>
+          <marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a9d68"/></marker>
+          <marker id="ac" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#3a8fb0"/></marker>
+        </defs>
+        <text x="20" y="26" font-family="IBM Plex Mono" font-size="12" fill="#43f59b">PATH A · WIRE INTO THE SEED</text>
+        <text x="20" y="226" font-family="IBM Plex Mono" font-size="12" fill="#5cd6ff">PATH B · VIA A COMPANION HOST</text>
+        <g font-family="IBM Plex Mono" font-size="13" fill="#dbe6f0">
+          <rect x="20" y="42" width="240" height="44" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="140" y="69" text-anchor="middle">PIR · vibration · reed → GPIO</text>
+          <rect x="20" y="98" width="240" height="44" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="140" y="125" text-anchor="middle">analog → ADS1115 (I²C)</text>
+        </g>
+        <g stroke="#2a9d68" stroke-width="2" fill="none" marker-end="url(#ag)">
+          <path d="M260 64 C470 64 540 120 660 150"/>
+          <path d="M260 120 C470 120 540 142 660 162"/>
+        </g>
+        <g font-family="IBM Plex Mono" font-size="13" fill="#dbe6f0">
+          <rect x="20" y="244" width="200" height="58" rx="8" fill="#0e1824" stroke="#5cd6ff"/><text x="120" y="268" text-anchor="middle">Radar · mmWave</text><text x="120" y="288" text-anchor="middle">WiFi CSI · IMU</text>
+        </g>
+        <path d="M220 273 L286 273" stroke="#5cd6ff" stroke-width="2" fill="none" marker-end="url(#ac)"/>
+        <g font-family="IBM Plex Mono" font-size="13" fill="#dbe6f0">
+          <rect x="288" y="240" width="210" height="66" rx="10" fill="#0e1824" stroke="#5cd6ff"/><text x="393" y="268" text-anchor="middle" font-family="Chakra Petch" font-weight="600" fill="#5cd6ff">Companion host</text><text x="393" y="290" text-anchor="middle" fill="#8293a6">e.g. Raspberry Pi 5</text>
+        </g>
+        <path d="M498 273 C590 273 600 200 660 178" stroke="#5cd6ff" stroke-width="2" fill="none" marker-end="url(#ac)"/>
+        <text x="556" y="232" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">HTTP / MCP</text>
+        <polygon points="745,93 820,135 820,219 745,261 670,219 670,135" fill="#0a1822" stroke="#43f59b" stroke-width="2"/>
+        <text x="745" y="170" text-anchor="middle" font-family="Chakra Petch" font-size="20" font-weight="600" fill="#43f59b">SEED</text>
+        <text x="745" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">the brain</text>
+        <text x="860" y="180" font-family="IBM Plex Mono" font-size="12" fill="#8293a6">10 Hz →</text>
+        <text x="860" y="198" font-family="IBM Plex Mono" font-size="12" fill="#8293a6">fingerprint</text>
+      </svg>
+      <figcaption>Two paths in. Simple sensors wire straight into the Seed; rich radar &amp; WiFi-CSI run on a companion computer that relays to it.</figcaption>
+    </figure>
+
+    <div class="when" style="grid-template-columns:1fr 1fr;">
+      <div class="block reveal">
+        <h4>Path A — wire it straight into the Seed</h4>
+        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The Seed reads simple sensors bolted to its own pins, 10 times a second, and folds them into its memory "fingerprint." This works on the Seed <em>today</em>, with no extra computer.</p>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;">
+          <li><b>Digital pins (GPIO):</b> motion (PIR), vibration, a door/reed switch — simple on/off signals</li>
+          <li><b>Analog sensors</b> go through an <b>ADS1115</b> analog-to-digital converter on the I²C bus (a ~$5 chip) — flex sensor, light, a load-cell amp, a potentiometer</li>
+          <li>Declare each one in the Seed's <span class="mono">sensor-config.json</span>; it samples at <span class="mono">10 Hz</span></li>
+        </ul>
+      </div>
+      <div class="block cyan reveal">
+        <h4>Path B — run it on a companion computer</h4>
+        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">Rich sensors — mmWave radar, vital-signs radar, WiFi CSI, fast IMUs — produce far more data than the Seed's pins can take. They run on a small <b>companion computer</b> (e.g. a Raspberry Pi 5) that does the heavy sensing and talks to the Seed over the network (HTTP / MCP).</p>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;">
+          <li>Radar &amp; IMU stream over USB/serial or WiFi to the host</li>
+          <li>WiFi-CSI nodes (ESP32-S3/C5) stream to the host over WiFi</li>
+          <li>The host fuses everything and shares results with the Seed</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:26px;">
+      <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ The honest truth about WiFi CSI &amp; the Seed</h3>
+      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) streaming to a companion host. If you read "WiFi DensePose, no cameras" and expected your Seed to do it alone, this is why it doesn't: the Seed's WiFi radio doesn't expose the raw data. Plan for ESP32 nodes + a host.</p>
+    </div>
+
+    <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config field names in this guide come from one reference build. Always confirm against your own device's <span style="color:var(--muted)">sensor-config.json</span> and firmware before wiring.</p>
+  </div>
+</section>
+
+<!-- ============ QUICK START ============ -->
+<section id="quickstart">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">03 — YOUR FIRST 15 MINUTES</span>
+      <h2>From box to first signal</h2>
+      <p>Pick the path that matches what you bought. Each ends in a concrete "you should now see this" moment — your first win.</p>
+    </div>
+    <div class="when" style="grid-template-columns:1fr 1fr;">
+      <div class="block reveal">
+        <h4>Path A · a sensor wired to the Seed</h4>
+        <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
+          <li>Power the Seed and give it a minute to boot.</li>
+          <li>Wire one simple sensor — a <b>PIR motion</b> module: signal → a GPIO pin, VCC → 3V3, GND → GND. (Analog sensor instead? Run it through an <b>ADS1115</b> on the I²C pins.)</li>
+          <li>Add the sensor to the Seed's <span class="mono">sensor-config.json</span> (name + pin/driver) and let the 10 Hz loop pick it up.</li>
+          <li><b style="color:var(--phosphor)">Win:</b> wave your hand — the Seed registers the motion and its activity "fingerprint" shifts. You're now feeding the brain.</li>
+        </ol>
+      </div>
+      <div class="block cyan reveal">
+        <h4>Path B · a sensor + a companion host</h4>
+        <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
+          <li>Power the companion host and open its sensor dashboard.</li>
+          <li>Power your sensor with a real <b>USB-C data cable</b> (not power-only).</li>
+          <li>It auto-joins the WiFi it was flashed for — <b>2.4 GHz</b> for S3/C6, <b>5 GHz</b> for C5.</li>
+          <li><b style="color:var(--cyan)">Win:</b> within ~30 s the sensor's address appears on the host; CSI packets land ~10×/sec, or an MR60 shows heart &amp; breathing after a ~60 s warm-up.</li>
+        </ol>
+      </div>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--ink);margin:30px 0 14px;">What "success" looks like</h3>
+    <div class="table-scroll reveal" style="margin-bottom:30px;">
+      <table>
+        <thead><tr><th>Sensor</th><th>Where data goes</th><th>You should see</th><th>Timeline</th></tr></thead>
+        <tbody>
+          <tr><td>PIR / analog on Seed</td><td>GPIO / ADS1115 → 10 Hz loop</td><td>Activity "fingerprint" changes when you move</td><td>instant</td></tr>
+          <tr><td>ESP32-S3 CSI</td><td class="mono">UDP :5005</td><td>Address on host (2.4 GHz), packets ~10×/s</td><td>~30 s</td></tr>
+          <tr><td>ESP32-C5 CSI</td><td class="mono">UDP :5005</td><td>Address on host (5 GHz), packets ~10×/s</td><td>~30 s</td></tr>
+          <tr><td>M5StickC IMU</td><td class="mono">UDP :5007</td><td>Accelerometer stream on host</td><td>~15 s</td></tr>
+          <tr><td>MR60BHA2</td><td class="mono">TCP :6053</td><td>Heart &amp; breathing rate, non-zero</td><td>~60 s warm-up</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--ink);margin:0 0 14px;">Spot it in the box</h3>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>If it looks like…</th><th>It's probably…</th><th>It does…</th></tr></thead>
+        <tbody>
+          <tr><td>A stamp-sized board with a tiny PCB antenna + USB-C</td><td>ESP32-S3 / C5 CSI node</td><td>WiFi sensing</td></tr>
+          <tr><td>A small module behind a plastic lens, USB-C</td><td>MR60BHA2 (Seeed XIAO)</td><td>Heart &amp; breathing</td></tr>
+          <tr><td>A flat board with a metal-can antenna + 4-pin cable</td><td>LD2450 / LD6004 radar</td><td>Position</td></tr>
+          <tr><td>A little orange/black brick with a screen + button</td><td>M5StickC PLUS2</td><td>Motion / vibration</td></tr>
+          <tr><td>A chest strap with a snap-on pod</td><td>Polar H10</td><td>Reference heart rate</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- ============ ESP32 ============ -->
 <section id="esp32">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">02 — THE FOUNDATION</span>
+      <span class="num">04 — THE FOUNDATION</span>
       <h2>The ESP32 family: the chip behind almost everything</h2>
       <p>Most affordable sensors are built around an <strong>ESP32</strong> — a cheap WiFi/Bluetooth microcontroller from Espressif. Knowing the variants tells you what a sensor can and can't do. Here is the chip-by-chip comparison, then what it means for sensing work.</p>
     </div>
@@ -223,7 +357,7 @@
 <section id="sensors">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">03 — THE SENSES</span>
+      <span class="num">05 — THE SENSES</span>
       <h2>The six sensor classes — and what each one gives you</h2>
       <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here is every sensor class in this ecosystem, in beginner terms.</p>
     </div>
@@ -337,7 +471,7 @@
 <section id="choose">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">04 — DECISION GUIDE</span>
+      <span class="num">06 — DECISION GUIDE</span>
       <h2>Radar vs. CSI vs. vitals vs. IMU — which do I use?</h2>
       <p>They overlap, but each is best at one job. Here's the cheat sheet.</p>
     </div>
@@ -404,7 +538,7 @@
 <section id="power">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">05 — HOOK IT UP</span>
+      <span class="num">07 — HOOK IT UP</span>
       <h2>Powering &amp; connecting your sensors</h2>
       <p>Three connection styles cover everything: <strong>WiFi</strong> (just power + network), <strong>USB-serial</strong> (a little adapter), and <strong>GPIO pins</strong> (jumper wires to the board's header).</p>
     </div>
@@ -480,7 +614,7 @@
 <section id="batteries">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">06 — UNTETHER IT</span>
+      <span class="num">08 — UNTETHER IT</span>
       <h2>Batteries: powering ESP32s you scatter around a room</h2>
       <p>The detail everyone forgets. The instant you place sensors <em>away</em> from a wall outlet — in corners, on shelves, around a room for a CSI mesh — each one needs its own small, light, rechargeable power source. Here's how to do it cheaply.</p>
     </div>
@@ -575,11 +709,73 @@
   </div>
 </section>
 
+<!-- ============ GO FURTHER ============ -->
+<section id="further">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">09 — GO FURTHER</span>
+      <h2>Flash a node, then grow your system</h2>
+      <p>Once your first sensor works, here's how to program a fresh WiFi-CSI node, where the data goes, what to do when something breaks, and the order to add sensors as you scale.</p>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--phosphor);margin:0 0 14px;">Flashing an ESP32 CSI node — the short version</h3>
+    <div class="callout reveal" style="margin-bottom:30px;">
+      <ol style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;">
+        <li>Install the toolchain once: <b>ESP-IDF</b> (Espressif's SDK), which brings <span class="mono">esptool</span>, the flasher.</li>
+        <li>Open the firmware config (<span class="mono">idf.py menuconfig</span>) and set four things that live on the chip after flashing: a <b>node ID</b>, the <b>WiFi SSID + password</b> to join, the <b>host IP</b> to send to, and the <b>UDP port</b> (<span class="mono">5005</span> for CSI).</li>
+        <li>Build &amp; flash: <span class="mono">idf.py set-target esp32s3</span> (or <span class="mono">esp32c5</span>) → <span class="mono">idf.py build</span> → <span class="mono">idf.py -p /dev/&lt;your-port&gt; flash monitor</span>.</li>
+        <li><b style="color:var(--phosphor)">Verify:</b> on the host, run <span class="mono">tcpdump -ni any udp port 5005</span> — you should see ~10 packets/second arriving from the new node.</li>
+      </ol>
+      <p style="margin:14px 0 0;color:var(--amber);font-size:13.5px;">Remember the data-vs-power port: flash over a port that carries <b>data</b>. On the MR60 XIAO that means opening the case for the inner USB-C.</p>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--cyan);margin:0 0 14px;">Where the data goes</h3>
+    <div class="table-scroll reveal" style="margin-bottom:30px;">
+      <table>
+        <thead><tr><th>Sensor</th><th>Protocol</th><th>Endpoint</th><th>Carries</th></tr></thead>
+        <tbody>
+          <tr><td>ESP32-S3 / C5 CSI</td><td>UDP</td><td class="mono">:5005</td><td>raw WiFi CSI frames</td></tr>
+          <tr><td>M5StickC IMU</td><td>UDP</td><td class="mono">:5007</td><td>accelerometer stream</td></tr>
+          <tr><td>MR60BHA2</td><td>TCP (ESPHome API)</td><td class="mono">:6053</td><td>heart + breathing</td></tr>
+          <tr><td>LD2450 radar</td><td>Serial UART</td><td class="mono">256000 baud</td><td>position frames</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--amber);margin:0 0 14px;">"Why isn't it working?" — run this checklist</h3>
+    <div class="callout warn reveal" style="margin-bottom:30px;">
+      <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.85;">
+        <li><b style="color:var(--ink)">No power / wrong cable.</b> Confirm the LED, then swap to a known <em>data</em> cable.</li>
+        <li><b style="color:var(--ink)">Wrong WiFi band.</b> An S3/C6 can't see 5 GHz; a C5 may be looking for the 5 GHz network. Match the band.</li>
+        <li><b style="color:var(--ink)">Port blocked.</b> Open UDP 5005 / 5007 on the host's firewall.</li>
+        <li><b style="color:var(--ink)">Wrong baud.</b> The LD2450 wants 256000, not 115200.</li>
+        <li><b style="color:var(--ink)">TX/RX not crossed</b> on GPIO sensors. Swap the two data wires.</li>
+        <li><b style="color:var(--ink)">IP drifted.</b> The sensor got a new DHCP address — reserve its MAC in your router, or look it up fresh.</li>
+        <li><b style="color:var(--ink)">Still warming up.</b> Vital-signs radar reads null for the first ~60 s. Wait.</li>
+      </ul>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--phosphor);margin:0 0 14px;">Your growth path</h3>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>Stage</th><th>You add</th><th>You unlock</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1 · First signal</td><td>1 sensor on the Seed, or 1 CSI/MR60 on a host</td><td>Presence, or heart &amp; breathing</td><td><span class="pill green">works today</span></td></tr>
+          <tr><td>2 · A pair</td><td>2 of the same (CSI mesh seed, or sternum + reference IMU)</td><td>Coarse direction; vibration transmissibility</td><td><span class="pill green">works today</span></td></tr>
+          <tr><td>3 · Whole-room mesh</td><td>3–4 CSI nodes across both bands</td><td>Room-wide presence &amp; breathing, coarse shape</td><td><span class="pill amber">early / dev</span></td></tr>
+          <tr><td>4 · Position + vitals</td><td>mesh + radar + vitals + IMU</td><td>Fused position with heart &amp; breathing</td><td><span class="pill amber">in progress</span></td></tr>
+          <tr><td>5 · Identity</td><td>everything, enrolled per person</td><td>Same-person recognition over time</td><td><span class="pill amber">planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- ============ BUY IT ============ -->
 <section id="buy">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">07 — SHOPPING LIST</span>
+      <span class="num">10 — SHOPPING LIST</span>
       <h2>Buy it: sensors, brain &amp; connectors</h2>
       <p>Everything below is something this ecosystem actually uses. We separate <span style="color:var(--phosphor)">▸ direct product links</span> from <span style="color:var(--amber)">⌕ search links</span> — see the note.</p>
     </div>
@@ -624,7 +820,7 @@
 <section id="glossary">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">08 — PLAIN ENGLISH</span>
+      <span class="num">11 — PLAIN ENGLISH</span>
       <h2>Glossary: the jargon, decoded</h2>
       <p>Every term in this guide, explained like you've never seen it before.</p>
     </div>
