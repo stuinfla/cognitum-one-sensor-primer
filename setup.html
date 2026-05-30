@@ -117,7 +117,7 @@
     <!-- LD2450 -->
     <div class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">LD2450 radar — no flashing needed ✓</h3>
-      <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Cognitum One Seed (or your Mac to test). The Seedreads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
+      <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Cognitum One Seed (or your Mac to test). The Seed reads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
     </div>
 
     <!-- MR60 -->
@@ -159,7 +159,7 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
 <section id="wifi">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">03 — WIFI → PI</span>
+      <span class="num">03 — WIFI → SEED</span>
       <h2>How the data actually reaches the Seed</h2>
       <p>A point that confuses everyone: there are different ports for different jobs. Don't mix them up.</p>
     </div>
@@ -168,13 +168,13 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
         <thead><tr><th>Sensor</th><th>How it reaches the Seed</th><th>Port</th></tr></thead>
         <tbody>
           <tr><td>ESP32 CSI nodes</td><td>Stream UDP over WiFi to the Seed</td><td class="mono">UDP 5005</td></tr>
-          <tr><td>MR60BHA2 vitals</td><td>The Seedconnects out and pulls from it</td><td class="mono">TCP 6053</td></tr>
+          <tr><td>MR60BHA2 vitals</td><td>The Seed connects out and pulls from it</td><td class="mono">TCP 6053</td></tr>
           <tr><td>LD2450 radar</td><td>USB cable straight into the Seed (serial)</td><td class="mono">USB · 256000 baud</td></tr>
         </tbody>
       </table>
     </div>
     <div class="callout warn reveal">
-      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send to <span class="mono">5005</span> / <span class="mono">6053</span>. The Seed's fused-output WebSocket — what a dashboard or the Seed reads — is a <em>different</em> socket (<span class="mono">:9090</span>). Sensors never talk to 9090. Bands matter too: <b>2.4 GHz</b> for the S3 &amp; MR60, <b>5 GHz</b> for the C5.</p>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send their data <em>to</em> the Seed — CSI on UDP <span class="mono">5005</span>, vitals on TCP <span class="mono">6053</span>. What the Seed sends back <em>out</em> to a dashboard is a separate connection — don't mix up the inbound sensor ports with the outbound one. Bands matter too: <b>2.4 GHz</b> for the S3 &amp; MR60, <b>5 GHz</b> for the C5.</p>
     </div>
   </div>
 </section>
@@ -188,23 +188,21 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
       <p><b>RuView</b> (Ruv's open-source project) is the software that turns raw WiFi-CSI into presence, breathing, and the anonymous identity "fingerprint." Here's how to pull it in and build it. <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">github.com/ruvnet/RuView ↗</a></p>
     </div>
 
-    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Get the repo — clone, or add as a submodule</h4>
-      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">If you're building your own project around it, the ecosystem convention (RuView vendors its own dependencies under <span class="mono">vendor/</span>) is to add it as a git submodule:</p>
-      <pre class="code">git submodule add https://github.com/ruvnet/RuView vendor/RuView
-git submodule update --init --recursive</pre>
-      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">Note: the README itself recommends Docker / pip / the plugin (below) rather than a submodule — use whichever fits. The submodule path is the convention, not a documented command.</p></div></div>
-
-    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Build it — pick the easiest path for you</h4>
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Get RuView — easiest paths first</h4>
       <pre class="code"><span class="c"># A) Zero hardware, just try it (Docker):</span>
 docker pull ruvnet/wifi-densepose:latest
 docker run -p 3000:3000 ruvnet/wifi-densepose:latest   <span class="c"># open http://localhost:3000</span>
 
 <span class="c"># B) Build the Rust core from source:</span>
-cd vendor/RuView/v2
-cargo build --release
+git clone https://github.com/ruvnet/RuView
+cd RuView/v2 &amp;&amp; cargo build --release</pre>
+      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">For the Python path, follow the install instructions in the repo's README rather than guessing a package name.</p></div></div>
 
-<span class="c"># C) Python:</span>
-pip install ruview</pre></div></div>
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Optional · vendor it into your own project</h4>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Only if you're building software <em>around</em> RuView and want it pinned inside your repo — add it as a git submodule (this mirrors how RuView vendors its own dependencies under <span class="mono">vendor/</span>):</p>
+      <pre class="code">git submodule add https://github.com/ruvnet/RuView vendor/RuView
+git submodule update --init --recursive</pre>
+      <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">Most people don't need this — Docker or a plain clone (step 1) is simpler.</p></div></div>
 
     <div class="step reveal"><div class="n">3</div><div class="body"><h4>Use the RuView plugin (in Claude Code)</h4>
       <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">"The RuView plugin" is a <b>Claude Code plugin</b> — it gives an AI agent the skills and commands to drive RuView. Install it:</p>
@@ -218,7 +216,7 @@ pip install ruview</pre></div></div>
     <div class="callout warn reveal" style="margin-top:8px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">Be honest with yourself about what ships today</h3>
       <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.8;">
-        <li><b style="color:var(--ink)">No pretrained weights.</b> Run the sensing server <em>without</em> a <span class="mono">--model</span> flag — pointing it at the shipped model file errors. The encoder is random until <b>you train it</b> (contrastive learning).</li>
+        <li><b style="color:var(--ink)">No pretrained weights.</b> The <span class="mono">--model</span> flag is optional — the server runs fine without it, but the encoder produces <em>random</em> vectors until <b>you train it</b> (contrastive learning). There's no ready-made model to load yet.</li>
         <li><b style="color:var(--ink)">Identity is anonymous.</b> The fingerprint re-identifies the same body across sessions; it does not put a name to anyone.</li>
         <li><b style="color:var(--ink)">Pose is rough.</b> Camera-free pose accuracy is low today; presence &amp; breathing are the solid wins.</li>
       </ul>

@@ -116,7 +116,7 @@
 
     <div class="callout reveal" style="margin-bottom:34px;">
       <p style="margin:0 0 14px; font-size:18px; color:var(--ink);">The <b>Cognitum One Seed</b> is a tiny, self-contained AI computer — it runs on-device intelligence with <em>no cloud required</em>. It senses the space around it, remembers what it learns as mathematical "fingerprints," and can recognise patterns <strong>passively</strong> — just by watching, never by asking you to scan or wear anything.</p>
-      <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you connect the sensors in this guide. Some wire straight into the Seed; the richer ones run on a small companion computer that talks to it (that's the next section).</p>
+      <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you connect the sensors in this guide. Some wire straight into the Seed's pins; the richer ones connect to the same Seed over USB or WiFi (that's the next section).</p>
       <p style="margin:18px 0 0;"><a href="https://cognitum.one" target="_blank" rel="noopener" class="mono" style="font-size:13.5px; letter-spacing:0.04em;">▸ Learn more about the Cognitum One Seed at cognitum.one</a></p>
     </div>
 
@@ -186,13 +186,13 @@
     </div>
 
     <figure class="figure reveal" style="margin-bottom:30px;">
-      <svg viewBox="0 0 1000 360" role="img" aria-label="Two ways sensors connect: wired into the Seed, or via a companion host">
+      <svg viewBox="0 0 1000 360" role="img" aria-label="Two ways sensors connect to the Seed: wired into its pins, or over USB or WiFi">
         <defs>
           <marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a9d68"/></marker>
           <marker id="ac" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#3a8fb0"/></marker>
         </defs>
         <text x="20" y="26" font-family="IBM Plex Mono" font-size="12" fill="#43f59b">PATH A · WIRE INTO THE SEED</text>
-        <text x="20" y="226" font-family="IBM Plex Mono" font-size="12" fill="#5cd6ff">PATH B · VIA A COMPANION HOST</text>
+        <text x="20" y="226" font-family="IBM Plex Mono" font-size="12" fill="#5cd6ff">PATH B · CONNECT OVER USB / WiFi</text>
         <g font-family="IBM Plex Mono" font-size="13" fill="#dbe6f0">
           <rect x="20" y="42" width="240" height="44" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="140" y="69" text-anchor="middle">PIR · vibration · reed → GPIO</text>
           <rect x="20" y="98" width="240" height="44" rx="8" fill="#0e1824" stroke="#2a9d68"/><text x="140" y="125" text-anchor="middle">analog → ADS1115 (I²C)</text>
@@ -214,7 +214,7 @@
         <text x="745" y="170" text-anchor="middle" font-family="Chakra Petch" font-size="20" font-weight="600" fill="#43f59b">SEED</text>
         <text x="745" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">the brain</text>
       </svg>
-      <figcaption>Two paths in. Simple sensors wire straight into the Seed; rich radar &amp; WiFi-CSI run on a companion computer that relays to it.</figcaption>
+      <figcaption>Two paths in. Simple sensors wire into the Seed's pins; rich radar &amp; WiFi-CSI connect to the same Seed over USB or WiFi.</figcaption>
     </figure>
 
     <div class="when" style="grid-template-columns:1fr 1fr;">
@@ -300,7 +300,7 @@
           <g fill="#2a9d68"><rect x="768" y="150" width="8" height="34"/><rect x="782" y="160" width="8" height="24"/><rect x="796" y="142" width="8" height="42"/><rect x="810" y="158" width="8" height="26"/><rect x="824" y="150" width="8" height="34"/><rect x="838" y="166" width="8" height="18"/><rect x="852" y="146" width="8" height="38"/><rect x="866" y="156" width="8" height="28"/><rect x="880" y="152" width="8" height="32"/><rect x="894" y="162" width="8" height="22"/><rect x="908" y="148" width="8" height="36"/><rect x="922" y="158" width="8" height="26"/><rect x="936" y="150" width="8" height="34"/><rect x="950" y="164" width="8" height="20"/><rect x="964" y="146" width="8" height="38"/></g>
         </g>
       </svg>
-      <figcaption>Example readout — the kind of live panel your companion host shows once data is flowing. <span style="color:var(--faint)">(Illustrative.)</span></figcaption>
+      <figcaption>Example readout — the kind of live panel your Seed shows once data is flowing. <span style="color:var(--faint)">(Illustrative.)</span></figcaption>
     </figure>
 
     <h3 class="reveal" style="font-size:17px;color:var(--ink);margin:0 0 14px;">Spot it in the box</h3>
@@ -379,7 +379,7 @@
           </tbody>
         </table>
       </div>
-      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Minimums are set by physics — WiFi-CSI triangulation needs ≥3 nodes. "Recommended" reflects a working whole-room build.</p>
+      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Minimums are physics: three is the geometric minimum to locate a point in 2D (you need sightlines from three directions to triangulate); 6–8 covers occlusions and furniture. "Recommended" reflects a working whole-room build.</p>
     </div>
 
     <div class="cards">
@@ -619,7 +619,7 @@
       <ol style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;">
         <li><b>Stand up a CSI mesh</b> — at least 3 ESP32 nodes streaming (see the sensors + Setup pages).</li>
         <li><b>Get RuView</b>: zero-hardware demo with <span class="mono">docker pull ruvnet/wifi-densepose:latest</span>, or build the Rust workspace: <span class="mono">cd v2 &amp;&amp; cargo build --release</span>.</li>
-        <li><b>Run the sensing server WITHOUT a model</b> for now — RuView ships no pretrained weights, so a model flag errors; the encoder is random until you train it (contrastive / InfoNCE).</li>
+        <li><b>Run it without a model for now</b> — RuView ships no pretrained weights, so the encoder produces random vectors until you train it (contrastive / InfoNCE). The <span class="mono">--model</span> flag is optional; there's just no ready-made model to load yet.</li>
         <li><b>Match</b>: a trained encoder re-identifies a returning body as an opaque <span class="mono">person_id</span> (anonymous), plus the rotating hash.</li>
       </ol>
       <p style="margin:16px 0 0;"><a class="buybtn" style="--accent:var(--phosphor);" href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView on GitHub ↗</a></p>
@@ -675,7 +675,7 @@
       <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD2450 USB kit</b> (~$16) — it needs no flashing, you just plug it into the Seed over USB and it reports position immediately.</dd></div>
       <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD2450 USB kit needs no flashing at all.</dd></div>
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera, nothing worn).</dd></div>
-      <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming to a companion host — the Seed's own WiFi chip can't produce CSI.</dd></div>
+      <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming their CSI to the Seed over WiFi — the Seed's own WiFi chip can't produce CSI.</dd></div>
       <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (6–8 ideal); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table.</dd></div>
     </dl>
   </div>
