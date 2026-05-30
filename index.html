@@ -392,6 +392,25 @@
       <figcaption class="cap">Radar and WiFi can "see" a body with no camera — by reading how radio waves bounce off it.</figcaption>
     </figure>
 
+    <div class="callout warn reveal" style="margin-bottom:32px;">
+      <h3 style="margin:0 0 12px;font-size:20px;color:var(--amber);">⚠ Read this first: one sensor is almost never enough</h3>
+      <p style="margin:0 0 16px;color:var(--muted);">The expectation-setter nobody tells you. A single sensor gives a single, narrow viewpoint — a lone WiFi node can tell "something moved" but not <em>where</em>; a single IMU <em>cannot</em> measure how vibration travels, because that's a ratio between two. Plan for multiples from the start, or you'll be disappointed.</p>
+      <div class="table-scroll" style="box-shadow:none;">
+        <table>
+          <thead><tr><th>Sensor</th><th>Bare minimum</th><th>Recommended</th><th>Why one won't do</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32 WiFi CSI</td><td><b style="color:var(--amber)">3 nodes</b></td><td><b>6–8</b> (mix 2.4 + 5 GHz)</td><td>One node only senses "something changed." Position &amp; shape need several sightlines to triangulate.</td></tr>
+            <tr><td>LD2450 radar</td><td>1</td><td><b>2–3</b> per room</td><td>One covers a cone; corners, blind spots and left/right asymmetry need a second and third.</td></tr>
+            <tr><td>MR60BHA2 vitals</td><td>1</td><td><b>1 per seat/spot</b></td><td>It reads one subject facing it — it can't follow someone moving around the room.</td></tr>
+            <tr><td>LD6004 3D radar</td><td>1</td><td>1–2</td><td>One adds height (Z); a second fills coverage.</td></tr>
+            <tr><td>IMU (M5StickC)</td><td><b style="color:var(--amber)">2</b></td><td><b>2</b> (a pair)</td><td>Transmissibility is the <em>ratio</em> of two accelerometers (source vs. body) — a single one literally can't compute it.</td></tr>
+            <tr><td>Polar H10</td><td>1</td><td>1</td><td>Reference / calibration only — one is all you need.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Minimums are set by physics — CSI triangulation needs ≥3 nodes; transmissibility needs 2 IMUs. "Recommended" reflects a working whole-room build.</p>
+    </div>
+
     <div class="cards">
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
@@ -402,6 +421,7 @@
         <div class="model-line">HLK-LD2450 · Hi-Link 24 GHz FMCW radar</div>
         <p class="what">Tells you <strong>where a person is</strong> on a 2D floor plan — their X/Y position and how fast they're moving — by bouncing 24 GHz radio off them. No camera, works in total darkness, sees through clothing.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 works · 2–3 for full room</dd>
           <dt>SENSES</dt><dd>Position (X/Y), distance, speed</dd>
           <dt>RANGE</dt><dd>~6 m, <span class="mono">±5 cm</span> precision</dd>
           <dt>RATE</dt><dd><span class="mono">30 Hz</span></dd>
@@ -419,6 +439,7 @@
         <div class="model-line">HLK-LD6004 · Hi-Link 60 GHz 3D radar</div>
         <p class="what">Like the LD2450 but in <strong>three dimensions</strong> — it adds height (Z), so you get a body's sway and vertical position, not just floor location. Higher frequency means finer detail at close range.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1–2</dd>
           <dt>SENSES</dt><dd>3D position (X/Y/Z), sway, presence</dd>
           <dt>RANGE</dt><dd>close, <span class="mono">±5 cm</span> XY / <span class="mono">±15 cm</span> Z</dd>
           <dt>RATE</dt><dd><span class="mono">30–50 Hz</span></dd>
@@ -436,6 +457,7 @@
         <div class="model-line">Seeed XIAO MR60BHA2 · ADT6101P radar + ESP32-C6</div>
         <p class="what">Measures <strong>heart rate and breathing rate</strong> contactlessly — it senses the millimetre-scale motion of your chest and skin via 60 GHz Doppler. No chest strap, no watch. Sits facing you within ~1.5 m.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 per person / spot</dd>
           <dt>SENSES</dt><dd>Heart rate, breathing rate, presence</dd>
           <dt>RANGE</dt><dd>chest-facing, 0.4–1.5 m</dd>
           <dt>RATE</dt><dd><span class="mono">~1 Hz</span> vitals</dd>
@@ -453,6 +475,7 @@
         <div class="model-line">ESP32-S3 (2.4 GHz) &amp; ESP32-C5 (5 GHz)</div>
         <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 6–8 ideal</dd>
           <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
           <dt>DETAIL</dt><dd>S3 → <span class="mono">192</span> subcarriers · C5 → <span class="mono">117</span></dd>
           <dt>RATE</dt><dd><span class="mono">~10 Hz</span></dd>
@@ -470,6 +493,7 @@
         <div class="model-line">ESP32 + MPU6886 6-axis accelerometer/gyro</div>
         <p class="what">A tiny battery-powered gadget you <strong>attach to a moving thing</strong> to measure its acceleration and tilt — the only sensor here that streams <em>raw motion live over WiFi</em>. Used to measure how vibration travels through a body or a surface.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">2 (a pair — it's a ratio)</dd>
           <dt>SENSES</dt><dd>Acceleration (3-axis), tilt, vibration</dd>
           <dt>RATE</dt><dd><span class="mono">500 Hz</span> sampling</dd>
           <dt>POWER</dt><dd>built-in LiPo (~8 h), USB-C charge</dd>
@@ -487,6 +511,7 @@
         <div class="model-line">Bluetooth LE chest strap</div>
         <p class="what">A medical-grade <strong>chest strap</strong> for heart rate and beat-to-beat (R-R) timing. You don't use it day-to-day — it's the <em>ruler</em> you measure your contactless sensors against, to prove the radar HR is accurate.</p>
         <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1</dd>
           <dt>SENSES</dt><dd>Heart rate, R-R intervals (gold standard)</dd>
           <dt>ROLE</dt><dd>Offline calibration / validation</dd>
           <dt>CONNECTS</dt><dd>Bluetooth LE (Heart Rate Service)</dd>
@@ -877,7 +902,7 @@
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera). What you do with a companion host is your choice.</dd></div>
       <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming to a companion host — the Seed's own WiFi chip can't produce CSI.</dd></div>
       <div><dt>Which sensor should I buy first?</dt><dd>Match it to your goal: precise position → <b>LD2450</b>; heart &amp; breathing → <b>MR60BHA2</b>; whole-room / through-wall presence → <b>ESP32 CSI</b> nodes; vibration of an object → an <b>IMU</b> (M5StickC).</dd></div>
-      <div><dt>How many sensors do I need?</dt><dd>Start with one. A useful WiFi-CSI mesh wants 3–4+ nodes; position + vitals wants a radar plus an MR60. Follow the growth path above and add as you go.</dd></div>
+      <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing here works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (6–8 ideal) to locate anything; an IMU needs <b>2</b> (transmissibility is a ratio of two); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table in the sensors section.</dd></div>
     </dl>
   </div>
 </section>
