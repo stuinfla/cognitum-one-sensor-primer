@@ -302,6 +302,31 @@
       </table>
     </div>
 
+    <figure class="figure reveal" style="margin:0 0 30px;">
+      <svg viewBox="0 0 1000 220" role="img" aria-label="Example live readout: presence on, heart rate 72 bpm, breathing 16 rpm, WiFi CSI streaming">
+        <g font-family="IBM Plex Mono" font-size="12">
+          <rect x="10" y="20" width="230" height="180" rx="12" fill="#0e1824" stroke="#2a9d68"/>
+          <text x="30" y="50" fill="#8293a6">PRESENCE</text>
+          <circle cx="44" cy="112" r="15" fill="#43f59b"/><text x="72" y="120" font-family="Chakra Petch" font-size="26" fill="#43f59b">ON</text>
+          <text x="30" y="180" fill="#4a5a6c">someone in range</text>
+          <rect x="256" y="20" width="230" height="180" rx="12" fill="#0e1824" stroke="#ffb454"/>
+          <text x="276" y="50" fill="#8293a6">HEART</text>
+          <text x="276" y="112" font-family="Chakra Petch" font-size="38" fill="#ffb454">72<tspan font-size="16" fill="#8293a6"> bpm</tspan></text>
+          <path d="M276 162 l20 0 l8 -24 l10 42 l10 -32 l8 14 l60 0" fill="none" stroke="#ffb454" stroke-width="2"/>
+          <rect x="502" y="20" width="230" height="180" rx="12" fill="#0e1824" stroke="#5cd6ff"/>
+          <text x="522" y="50" fill="#8293a6">BREATHING</text>
+          <text x="522" y="112" font-family="Chakra Petch" font-size="38" fill="#5cd6ff">16<tspan font-size="16" fill="#8293a6"> rpm</tspan></text>
+          <path d="M522 164 q30 -34 60 0 t60 0 t60 0" fill="none" stroke="#5cd6ff" stroke-width="2"/>
+          <rect x="748" y="20" width="242" height="180" rx="12" fill="#0e1824" stroke="#43f59b"/>
+          <text x="768" y="50" fill="#8293a6">WiFi CSI</text>
+          <text x="768" y="104" font-family="Chakra Petch" font-size="20" fill="#43f59b">streaming</text>
+          <text x="768" y="128" fill="#8293a6">~10 packets / sec</text>
+          <g fill="#2a9d68"><rect x="768" y="150" width="8" height="34"/><rect x="782" y="160" width="8" height="24"/><rect x="796" y="142" width="8" height="42"/><rect x="810" y="158" width="8" height="26"/><rect x="824" y="150" width="8" height="34"/><rect x="838" y="166" width="8" height="18"/><rect x="852" y="146" width="8" height="38"/><rect x="866" y="156" width="8" height="28"/><rect x="880" y="152" width="8" height="32"/><rect x="894" y="162" width="8" height="22"/><rect x="908" y="148" width="8" height="36"/><rect x="922" y="158" width="8" height="26"/><rect x="936" y="150" width="8" height="34"/><rect x="950" y="164" width="8" height="20"/><rect x="964" y="146" width="8" height="38"/></g>
+        </g>
+      </svg>
+      <figcaption>Example readout — the kind of live panel your companion host shows once data is flowing. <span style="color:var(--faint)">(Illustrative.)</span></figcaption>
+    </figure>
+
     <h3 class="reveal" style="font-size:17px;color:var(--ink);margin:0 0 14px;">Spot it in the box</h3>
     <div class="table-scroll reveal">
       <table>
@@ -767,6 +792,16 @@
           <tr><td>5 · Identity</td><td>everything, enrolled per person</td><td>Same-person recognition over time</td><td><span class="pill amber">planned</span></td></tr>
         </tbody>
       </table>
+    </div>
+
+    <h3 class="reveal" style="font-size:17px;color:var(--cyan);margin:36px 0 14px;">Where to learn more</h3>
+    <div class="buy-grid">
+      <div class="buy reveal"><div class="bt"><h4>Flash an ESP32 (ESP-IDF)</h4></div><span class="sub">Espressif's official get-started + toolchain</span><div class="links"><a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/" target="_blank" rel="noopener">docs.espressif.com ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>WiFi CSI deep-dive</h4></div><span class="sub">ESP-IDF WiFi / CSI API guide</span><div class="links"><a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/wifi.html" target="_blank" rel="noopener">CSI API guide ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Raspberry Pi GPIO pinout</h4></div><span class="sub">Every pin, interactive — for wiring</span><div class="links"><a href="https://pinout.xyz/" target="_blank" rel="noopener">pinout.xyz ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>MR60BHA2 official guide</h4></div><span class="sub">Seeed Studio wiki — the vitals sensor</span><div class="links"><a href="https://wiki.seeedstudio.com/getting_started_with_mr60bha2_mmwave_kit/" target="_blank" rel="noopener">wiki.seeedstudio.com ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>ESPHome (sensor firmware)</h4></div><span class="sub">Flash &amp; configure vitals / radar sensors</span><div class="links"><a href="https://esphome.io/" target="_blank" rel="noopener">esphome.io ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>The Cognitum One Seed</h4></div><span class="sub">Your brain — docs &amp; updates</span><div class="links"><a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a></div></div>
     </div>
   </div>
 </section>
