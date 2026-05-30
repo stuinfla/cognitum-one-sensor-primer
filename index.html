@@ -48,7 +48,7 @@
   "mainEntity": [
     { "@type": "Question", "name": "What is a Cognitum One Seed?", "acceptedAnswer": { "@type": "Answer", "text": "A tiny, self-contained AI computer that senses the space around it and recognises patterns passively, with no cloud required. It is the brain; the sensors in this guide are its senses." } },
     { "@type": "Question", "name": "Which sensors are passive and contactless?", "acceptedAnswer": { "@type": "Answer", "text": "The LD2450 mmWave radar (position), the MR60BHA2 mmWave radar (heart rate and breathing), and ESP32 WiFi CSI nodes (presence and rough shape). None are worn or attached to a person." } },
-    { "@type": "Question", "name": "How many sensors do I need?", "acceptedAnswer": { "@type": "Answer", "text": "Almost nothing works with one. WiFi CSI needs at least 3 nodes (6-8 ideal) to locate anything; radar is 1-3 depending on room coverage; vitals is 1 per person/spot." } },
+    { "@type": "Question", "name": "How many sensors do I need?", "acceptedAnswer": { "@type": "Answer", "text": "Almost nothing works with one. WiFi CSI needs at least 3 nodes (7 ideal) to locate anything; radar is 1-3 depending on room coverage; vitals is 1 per person/spot." } },
     { "@type": "Question", "name": "Do I have to flash the sensors first?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 CSI nodes must be flashed on a Mac/PC and given WiFi credentials before they stream to your Seed. The MR60BHA2 ships pre-flashed (configure WiFi via ESPHome). The LD2450 USB kit needs no flashing — plug it into the Seed over USB." } }
   ]
 }
@@ -241,7 +241,7 @@
 
     <div class="callout warn reveal" style="margin-top:26px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ The honest truth about WiFi CSI &amp; the Seed</h3>
-      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for several ESP32 nodes, not the Seed's own radio. The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
+      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for <b>7 nodes</b> — not two; one or two can't locate anything (here's <a href="#array">how to build the array</a>). The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
     </div>
 
     <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config names here come from one reference build. Always confirm against your own device's config and firmware.</p>
@@ -375,14 +375,14 @@
         <table>
           <thead><tr><th>Sensor</th><th>Bare minimum</th><th>Recommended</th><th>Why one won't do</th></tr></thead>
           <tbody>
-            <tr><td>ESP32 WiFi CSI</td><td><b style="color:var(--amber)">3 nodes</b></td><td><b>6–8</b> (mix 2.4 + 5 GHz)</td><td>One node only senses "something changed." Position &amp; shape need several sightlines to triangulate.</td></tr>
+            <tr><td>ESP32 WiFi CSI</td><td><b style="color:var(--amber)">3 nodes</b></td><td><b>7</b> (3 on 2.4 GHz + 4 on 5 GHz)</td><td>One node only senses "something changed." Position &amp; shape need several sightlines to triangulate; 7 wraps the room with a spare.</td></tr>
             <tr><td>LD2450 radar</td><td>1</td><td><b>2–3</b> per room</td><td>One covers a cone; corners, blind spots and left/right asymmetry need a second and third.</td></tr>
             <tr><td>MR60BHA2 vitals</td><td>1</td><td><b>1 per seat/spot</b></td><td>It reads one subject facing it — it can't follow someone moving around the room.</td></tr>
             <tr><td>M5StickS3 (IMU)</td><td>1</td><td><b>1–2</b></td><td>One reads an object's motion; two let you compare two points (e.g. how vibration travels from a source to a body).</td></tr>
           </tbody>
         </table>
       </div>
-      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Minimums are physics: three is the geometric minimum to locate a point in 2D (you need sightlines from three directions to triangulate); 6–8 covers occlusions and furniture. "Recommended" reflects a working whole-room build.</p>
+      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Minimums are physics: three is the geometric minimum to locate a point in 2D (you need sightlines from three directions to triangulate); seven gives full wrap-around coverage with a spare node. "Recommended" reflects a working whole-room build.</p>
     </div>
 
     <div class="cards">
@@ -426,13 +426,13 @@
         <div class="model-line">ESP32-C5 (5 GHz) &amp; ESP32-S3 (2.4 GHz)</div>
         <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
         <dl class="specs">
-          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 6–8 ideal</dd>
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 7 ideal</dd>
           <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
           <dt>SETUP</dt><dd>Flash on a Mac/PC, then WiFi (see Setup)</dd>
           <dt>CONNECTS</dt><dd>WiFi → Seed over UDP <span class="mono">5005</span></dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> Use a <em>mesh</em> of nodes; one node alone can't tell left from right. These must be flashed first — see the <a href="/setup">Setup &amp; flashing page</a>.</div>
-        <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 (buy 3+) ↗</a>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 (buy 7 total) ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--cyan);">
@@ -534,12 +534,12 @@
     </div>
 
     <div class="callout reveal" style="margin-bottom:30px;">
-      <h3 style="margin:0 0 10px;font-size:20px;color:var(--phosphor);">Plan on about <span style="color:var(--ink)">6 ESP32 nodes</span></h3>
-      <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Six</b> is the number that wraps a proper sensing "cloud" all the way around a person — front, back and sides — with enough overlap that furniture and bodies don't create blind spots. A common split is <b>3 on 2.4 GHz (ESP32-S3)</b> + <b>3 on 5 GHz (ESP32-C5)</b>.</p>
+      <h3 style="margin:0 0 10px;font-size:20px;color:var(--phosphor);">Plan on <span style="color:var(--ink)">7 ESP32 nodes</span></h3>
+      <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Seven</b> is the sweet spot — it wraps a proper sensing "cloud" all the way around a person (front, back and sides) with enough overlap that furniture and bodies don't create blind spots, <em>plus</em> a spare node or two so one dropout doesn't ruin your coverage. They're cheap, and that headroom is what keeps setup from being frustrating. (Ruv's rule of thumb is <b>7</b> — a prime number, and the count where it just works.) A typical split is <b>3 on 2.4 GHz (ESP32-S3)</b> + <b>4 on 5 GHz (ESP32-C5)</b>.</p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:30px;">
-      <svg viewBox="0 0 1000 540" role="img" aria-label="Top-down room: six ESP32 nodes arranged in a ring around a person, each antenna pointing inward toward the subject">
+      <svg viewBox="0 0 1000 540" role="img" aria-label="Top-down room: seven ESP32 nodes arranged in a ring around a person, each antenna pointing inward toward the subject">
         <defs>
           <marker id="ant" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#43f59b"/></marker>
         </defs>
@@ -553,21 +553,23 @@
         <text x="500" y="330" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8293a6">you / subject</text>
         <!-- antenna arrows (point inward toward subject) -->
         <g stroke="#43f59b" stroke-width="2.5" fill="none" marker-end="url(#ant)">
-          <line x1="500" y1="118" x2="500" y2="232"/>
-          <line x1="812" y1="172" x2="690" y2="240"/>
-          <line x1="812" y1="388" x2="690" y2="320"/>
-          <line x1="500" y1="442" x2="500" y2="328"/>
-          <line x1="188" y1="388" x2="310" y2="320"/>
-          <line x1="188" y1="172" x2="310" y2="240"/>
+          <line x1="500" y1="140" x2="500" y2="236"/>
+          <line x1="688" y1="166" x2="543" y2="253"/>
+          <line x1="782" y1="280" x2="548" y2="280"/>
+          <line x1="668" y1="392" x2="540" y2="308"/>
+          <line x1="332" y1="392" x2="460" y2="308"/>
+          <line x1="218" y1="280" x2="452" y2="280"/>
+          <line x1="312" y1="166" x2="457" y2="253"/>
         </g>
-        <!-- node boxes -->
+        <!-- node boxes (7) -->
         <g font-family="Chakra Petch" font-size="15" font-weight="600" fill="#070b10">
-          <g><rect x="468" y="86" width="64" height="32" rx="7" fill="#43f59b"/><text x="500" y="108" text-anchor="middle">#1</text></g>
-          <g><rect x="780" y="140" width="64" height="32" rx="7" fill="#43f59b"/><text x="812" y="162" text-anchor="middle">#2</text></g>
-          <g><rect x="780" y="356" width="64" height="32" rx="7" fill="#43f59b"/><text x="812" y="378" text-anchor="middle">#3</text></g>
-          <g><rect x="468" y="442" width="64" height="32" rx="7" fill="#43f59b"/><text x="500" y="464" text-anchor="middle">#4</text></g>
-          <g><rect x="156" y="356" width="64" height="32" rx="7" fill="#43f59b"/><text x="188" y="378" text-anchor="middle">#5</text></g>
-          <g><rect x="156" y="140" width="64" height="32" rx="7" fill="#43f59b"/><text x="188" y="162" text-anchor="middle">#6</text></g>
+          <g><rect x="468" y="94" width="64" height="32" rx="7" fill="#43f59b"/><text x="500" y="116" text-anchor="middle">#1</text></g>
+          <g><rect x="668" y="134" width="64" height="32" rx="7" fill="#43f59b"/><text x="700" y="156" text-anchor="middle">#2</text></g>
+          <g><rect x="780" y="264" width="64" height="32" rx="7" fill="#43f59b"/><text x="812" y="286" text-anchor="middle">#3</text></g>
+          <g><rect x="648" y="394" width="64" height="32" rx="7" fill="#43f59b"/><text x="680" y="416" text-anchor="middle">#4</text></g>
+          <g><rect x="288" y="394" width="64" height="32" rx="7" fill="#43f59b"/><text x="320" y="416" text-anchor="middle">#5</text></g>
+          <g><rect x="156" y="264" width="64" height="32" rx="7" fill="#43f59b"/><text x="188" y="286" text-anchor="middle">#6</text></g>
+          <g><rect x="268" y="134" width="64" height="32" rx="7" fill="#43f59b"/><text x="300" y="156" text-anchor="middle">#7</text></g>
         </g>
         <text x="660" y="206" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">≈ 1.5–2.5 m</text>
         <text x="500" y="492" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#43f59b">→ each antenna / sensing face points INWARD, at the people</text>
@@ -600,10 +602,10 @@
     <div class="callout reveal" style="margin-bottom:30px;">
       <ol style="margin:0;padding-left:20px;color:var(--muted);line-height:1.95;">
         <li><b style="color:var(--ink)">Flash them all first.</b> Each node gets firmware on your Mac/PC before it goes on the wall (see the <a href="/setup">Setup &amp; flashing page</a>).</li>
-        <li><b style="color:var(--ink)">Number each one (node ID 1–6).</b> Set a unique ID when you flash it, and physically label the case — so when the dashboard says "#5 is dead," you know which one to walk over to.</li>
+        <li><b style="color:var(--ink)">Number each one (node ID 1–7).</b> Set a unique ID when you flash it, and physically label the case — so when the dashboard says "#5 is dead," you know which one to walk over to.</li>
         <li><b style="color:var(--ink)">Place them in the ring</b> per the diagram — antennas inward, off the floor.</li>
         <li><b style="color:var(--ink)">Power each one</b> (small battery or USB — see Batteries below).</li>
-        <li><b style="color:var(--ink)">Verify on a status dashboard</b> that all six are live <em>before</em> you trust the data.</li>
+        <li><b style="color:var(--ink)">Verify on a status dashboard</b> that all seven are live <em>before</em> you trust the data.</li>
       </ol>
     </div>
 
@@ -617,7 +619,7 @@
           <rect x="14" y="34" width="210" height="102" rx="10" fill="#0e1824" stroke="#2a9d68"/>
           <text x="119" y="58" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#dbe6f0">Your sensors</text>
           <text x="119" y="82" text-anchor="middle" fill="#8293a6">LD2450 · MR60</text>
-          <text x="119" y="102" text-anchor="middle" fill="#8293a6">6× ESP32 CSI</text>
+          <text x="119" y="102" text-anchor="middle" fill="#8293a6">7× ESP32 CSI</text>
           <text x="119" y="122" text-anchor="middle" fill="#43f59b">all streaming →</text>
         </g>
         <line x1="224" y1="85" x2="286" y2="85" stroke="#43f59b" stroke-width="2.5" marker-end="url(#fl)"/>
@@ -815,7 +817,7 @@
     <div class="buy-grid" style="margin-bottom:34px;">
       <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (CSI node)</h4><span class="price">~$18 each</span></div><span class="sub">Dual-band WiFi 6 · USB-C · <b>buy 3+ for a mesh</b></span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">or ESP32-S3 (2.4 GHz)</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (CSI node)</h4><span class="price">~$18 each</span></div><span class="sub">Dual-band WiFi 6 · USB-C · <b>buy 7 for a full array</b></span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">or ESP32-S3 (2.4 GHz)</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>M5StickS3 (motion / IMU)</h4><span class="price">~$41</span></div><span class="sub">ESP32-S3 + 6-axis IMU · attach to an object · in-stock M5StickC successor</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GZK27GN4" target="_blank" rel="noopener">B0GZK27GN4</a><a class="search" href="https://www.amazon.com/dp/B0GWHN8HK3" target="_blank" rel="noopener">or M5Stack official (~$22)</a></div></div>
     </div>
 
@@ -851,7 +853,7 @@
       <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD2450 USB kit needs no flashing at all.</dd></div>
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera, nothing worn).</dd></div>
       <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming their CSI to the Seed over WiFi — the Seed's own WiFi chip can't produce CSI.</dd></div>
-      <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (6–8 ideal); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table.</dd></div>
+      <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (<b>7</b> is the sweet spot — Ruv's pick, a prime with headroom); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table.</dd></div>
     </dl>
   </div>
 </section>
