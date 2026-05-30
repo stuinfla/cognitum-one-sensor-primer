@@ -851,11 +851,30 @@
   </div>
 </section>
 
+<!-- ============ FAQ ============ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">11 — FAQ</span>
+      <h2>Common questions</h2>
+      <p>The things a brand-new owner usually asks next.</p>
+    </div>
+    <dl class="gloss reveal">
+      <div><dt>Can I start with just the Seed?</dt><dd>Yes. Wire a simple sensor — motion, vibration, or an analog sensor via an ADS1115 — straight into the Seed. That's Path A and it works today. Radar, vital-signs and WiFi-CSI sensors need a companion host (Path B).</dd></div>
+      <div><dt>What's the cheapest way to begin?</dt><dd>For position, a single <b>LD2450</b> (~$8) + a USB-UART bridge. For heart &amp; breathing, one <b>MR60BHA2</b>. For wired-to-the-Seed sensing, a PIR module and an ADS1115 are only a few dollars.</dd></div>
+      <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera). What you do with a companion host is your choice.</dd></div>
+      <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming to a companion host — the Seed's own WiFi chip can't produce CSI.</dd></div>
+      <div><dt>Which sensor should I buy first?</dt><dd>Match it to your goal: precise position → <b>LD2450</b>; heart &amp; breathing → <b>MR60BHA2</b>; whole-room / through-wall presence → <b>ESP32 CSI</b> nodes; vibration of an object → an <b>IMU</b> (M5StickC).</dd></div>
+      <div><dt>How many sensors do I need?</dt><dd>Start with one. A useful WiFi-CSI mesh wants 3–4+ nodes; position + vitals wants a radar plus an MR60. Follow the growth path above and add as you go.</dd></div>
+    </dl>
+  </div>
+</section>
+
 <!-- ============ GLOSSARY ============ -->
 <section id="glossary">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="num">11 — PLAIN ENGLISH</span>
+      <span class="num">12 — PLAIN ENGLISH</span>
       <h2>Glossary: the jargon, decoded</h2>
       <p>Every term in this guide, explained like you've never seen it before.</p>
     </div>
