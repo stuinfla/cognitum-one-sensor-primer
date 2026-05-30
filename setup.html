@@ -4,12 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Setup &amp; Flashing — Cognitum One Sensor Primer</title>
-<meta name="description" content="The end-to-end setup walkthrough: what cables and tools you need, how to flash ESP32 sensors on your Mac or PC, get them onto WiFi, have them talk to your Raspberry Pi, and bring in RuView as a submodule to read the data." />
+<meta name="description" content="The end-to-end setup walkthrough: what cables and tools you need, how to flash ESP32 sensors on your Mac or PC, get them onto WiFi, have them talk to your Cognitum One Seed, and bring in RuView as a submodule to read the data." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/setup" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Setup &amp; Flashing — Cognitum One Sensor Primer" />
-<meta property="og:description" content="Cables &amp; tools → flash on a Mac/PC → join WiFi → talk to the Pi → bring in RuView. The honest, step-by-step workflow." />
+<meta property="og:description" content="Cables &amp; tools → flash on a Mac/PC → join WiFi → talk to the Seed → bring in RuView. The honest, step-by-step workflow." />
 <meta property="og:url" content="https://cognitum-sensor-primer.vercel.app/setup" />
 <meta property="og:image" content="https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -38,7 +38,7 @@
       <a href="/">← Primer home</a>
       <a href="#tools">Tools</a>
       <a href="#flash">Flash</a>
-      <a href="#wifi">WiFi → Pi</a>
+      <a href="#wifi">WiFi → Seed</a>
       <a href="#ruview">RuView</a>
       <a href="#trouble">Troubleshoot</a>
     </div>
@@ -50,7 +50,7 @@
   <div class="wrap" style="position:relative;z-index:2;">
     <span class="eyebrow">Setup &amp; flashing · the real workflow</span>
     <h1 style="font-size:clamp(34px,5vw,58px);margin:16px 0 0;">From a box of parts<br/>to a sensing room.</h1>
-    <p class="lede" style="max-width:60ch;">Buying the sensors is the easy part. This page is the part that actually matters: the tools you need, how to <b>flash</b> a sensor on your Mac or PC, get it on <b>WiFi</b>, have it <b>talk to your Pi</b>, and then bring in <b>RuView</b> to make sense of the data. Honest, step-by-step, no hand-waving.</p>
+    <p class="lede" style="max-width:60ch;">Buying the sensors is the easy part. This page is the part that actually matters: the tools you need, how to <b>flash</b> a sensor on your Mac or PC, get it on <b>WiFi</b>, have it <b>talk to your Cognitum One Seed</b>, and then bring in <b>RuView</b> to make sense of the data. Honest, step-by-step, no hand-waving.</p>
     <p style="margin-top:8px;"><a href="/" style="font-family:'IBM Plex Mono';font-size:13px;">← back to the sensor primer</a></p>
   </div>
 </header>
@@ -64,20 +64,20 @@
       <p>Every WiFi sensor follows the same five-step path. Get this mental model first and nothing below is confusing.</p>
     </div>
     <figure class="figure reveal">
-      <svg viewBox="0 0 1000 130" role="img" aria-label="Buy, flash on a computer, set WiFi, power near the Pi, it streams to the Pi">
+      <svg viewBox="0 0 1000 130" role="img" aria-label="Buy, flash on a computer, set WiFi, power near the Seed, it streams to the Seed">
         <defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a9d68"/></marker></defs>
         <g font-family="Chakra Petch" font-size="13" fill="#dbe6f0" text-anchor="middle">
           <g><rect x="10" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="90" y="62">1 · Buy</text><text x="90" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">the kit</text></g>
           <g><rect x="208" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="288" y="62">2 · Flash</text><text x="288" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">on Mac / PC</text></g>
-          <g><rect x="406" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="486" y="62">3 · Set WiFi</text><text x="486" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">+ the Pi's address</text></g>
-          <g><rect x="604" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="684" y="62">4 · Power it</text><text x="684" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">near the Pi</text></g>
-          <g><rect x="802" y="40" width="188" height="50" rx="10" fill="#0e1824" stroke="#43f59b"/><text x="896" y="62" fill="#43f59b">5 · It streams</text><text x="896" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">to the Pi</text></g>
+          <g><rect x="406" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="486" y="62">3 · Set WiFi</text><text x="486" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">+ the Seed's address</text></g>
+          <g><rect x="604" y="40" width="160" height="50" rx="10" fill="#0e1824" stroke="#2a9d68"/><text x="684" y="62">4 · Power it</text><text x="684" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">near the Seed</text></g>
+          <g><rect x="802" y="40" width="188" height="50" rx="10" fill="#0e1824" stroke="#43f59b"/><text x="896" y="62" fill="#43f59b">5 · It streams</text><text x="896" y="80" font-family="IBM Plex Mono" font-size="10" fill="#8293a6">to the Seed</text></g>
         </g>
         <g stroke="#2a9d68" stroke-width="2" marker-end="url(#a)">
           <line x1="170" y1="65" x2="206" y2="65"/><line x1="368" y1="65" x2="404" y2="65"/><line x1="566" y1="65" x2="602" y2="65"/><line x1="764" y1="65" x2="800" y2="65"/>
         </g>
       </svg>
-      <figcaption>The LD2450 USB kit skips steps 2–3 entirely — it just plugs into the Pi. The WiFi sensors need all five.</figcaption>
+      <figcaption>The LD2450 USB kit skips steps 2–3 entirely — it just plugs into the Seed. The WiFi sensors need all five.</figcaption>
     </figure>
   </div>
 </section>
@@ -96,9 +96,9 @@
         <tbody>
           <tr><td><b>USB-C data cable</b></td><td>Connecting an ESP32 to your Mac/PC to flash it</td><td>Many cables are <b>charge-only</b> — they power the board but carry no data, so flashing silently fails. Buy one labelled "data".</td></tr>
           <tr><td><b>A Mac or PC</b></td><td>Running the flashing tool</td><td>You flash once per node, then it runs on its own.</td></tr>
-          <tr><td><b>Raspberry Pi 5 (the host)</b> + 27 W PSU</td><td>Receives the sensor streams; talks to the Seed</td><td>Underpowering the Pi causes random dropouts that look like sensor failures. Use the real 27 W supply.</td></tr>
+          <tr><td><b>Your Cognitum One Seed</b> (the host)</td><td>Receives the sensor streams — this is the brain</td><td>Give it the power supply specified for your model. Underpowering causes random dropouts that look like sensor failures.</td></tr>
           <tr><td><b>Your WiFi name + password</b></td><td>The sensor needs to join your network</td><td>2.4 GHz for ESP32-S3 &amp; the MR60; 5 GHz for the ESP32-C5. They are not interchangeable.</td></tr>
-          <tr><td><b>The Pi's IP address</b></td><td>So the sensor knows where to send data</td><td>If the Pi's IP changes (DHCP), sensors "disappear" — reserve the Pi's address in your router.</td></tr>
+          <tr><td><b>The Seed's IP address</b></td><td>So the sensor knows where to send data</td><td>If the Seed's IP changes (DHCP), sensors "disappear" — reserve the Seed's address in your router.</td></tr>
         </tbody>
       </table>
     </div>
@@ -117,13 +117,13 @@
     <!-- LD2450 -->
     <div class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">LD2450 radar — no flashing needed ✓</h3>
-      <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Raspberry Pi (or your Mac to test). The Pi reads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
+      <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Cognitum One Seed (or your Mac to test). The Seedreads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
     </div>
 
     <!-- MR60 -->
     <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(255,180,84,0.4);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">MR60BHA2 vitals — ships ready, configure over WiFi</h3>
-      <p style="margin:0 0 10px;color:var(--muted);">It comes pre-loaded with <b>ESPHome</b> firmware, so you don't flash it — you just give it WiFi credentials through ESPHome / Home Assistant. Then the Pi connects out to it and pulls heart rate &amp; breathing over TCP <span class="mono">6053</span>.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">It comes pre-loaded with <b>ESPHome</b> firmware, so you don't flash it — you just give it WiFi credentials through ESPHome / Home Assistant. Then the Seed connects out to it and pulls heart rate &amp; breathing over TCP <span class="mono">6053</span>.</p>
       <p style="margin:0;color:var(--ink);font-size:14px;"><b>The trap:</b> the XIAO has two USB-C ports. The one on the case edge is <b>power only</b>. To configure it, open the case and use the XIAO's own inner USB-C port. <a href="https://esphome.io/" target="_blank" rel="noopener">ESPHome docs ↗</a></p>
     </div>
 
@@ -139,16 +139,16 @@
         <p style="margin:0;color:var(--muted);font-size:14.5px;">Use a real <b>USB-C data cable</b>. It appears as a serial port (e.g. <span class="mono">/dev/cu.usbmodem…</span> on a Mac).</p></div></div>
 
       <div class="step reveal"><div class="n">3</div><div class="body"><h4>Set four things, then build &amp; flash</h4>
-        <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Open <span class="mono">menuconfig</span> and set: a <b>node ID</b> (1, 2, 3… one per board), your <b>WiFi SSID + password</b>, the <b>Pi's IP</b>, and the <b>UDP port</b> (5005). Then:</p>
+        <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Open <span class="mono">menuconfig</span> and set: a <b>node ID</b> (1, 2, 3… one per board), your <b>WiFi SSID + password</b>, the <b>Seed's IP</b>, and the <b>UDP port</b> (5005). Then:</p>
         <pre class="code"><span class="c"># for an ESP32-C5 node (5 GHz); use esp32s3 for S3 (2.4 GHz)</span>
 cd firmware/esp32c5-csi-node
 idf.py set-target esp32c5
-idf.py menuconfig        <span class="c"># node ID, WiFi SSID/password, Pi IP, port 5005</span>
+idf.py menuconfig        <span class="c"># node ID, WiFi SSID/password, Seed IP, port 5005</span>
 idf.py build
 idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
 
       <div class="step reveal"><div class="n">4</div><div class="body"><h4>Confirm it's sending</h4>
-        <p style="margin:0;color:var(--muted);font-size:14.5px;">On the Pi, watch for its packets:</p>
+        <p style="margin:0;color:var(--muted);font-size:14.5px;">On the Seed, watch for its packets:</p>
         <pre class="code">tcpdump -ni any udp port 5005   <span class="c"># expect ~10 packets/sec from the node</span></pre>
         <p style="margin:8px 0 0;color:var(--faint);font-size:13px;">Flash each node with a <b>different</b> node ID. Repeat for 3+ nodes — a single CSI node can't locate anything.</p></div></div>
     </div>
@@ -160,21 +160,21 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="num">03 — WIFI → PI</span>
-      <h2>How the data actually reaches the Pi (and the Seed)</h2>
+      <h2>How the data actually reaches the Seed</h2>
       <p>A point that confuses everyone: there are different ports for different jobs. Don't mix them up.</p>
     </div>
     <div class="table-scroll reveal" style="margin-bottom:24px;">
       <table>
-        <thead><tr><th>Sensor</th><th>How it reaches the Pi</th><th>Port</th></tr></thead>
+        <thead><tr><th>Sensor</th><th>How it reaches the Seed</th><th>Port</th></tr></thead>
         <tbody>
-          <tr><td>ESP32 CSI nodes</td><td>Stream UDP over WiFi to the Pi</td><td class="mono">UDP 5005</td></tr>
-          <tr><td>MR60BHA2 vitals</td><td>The Pi connects out and pulls from it</td><td class="mono">TCP 6053</td></tr>
-          <tr><td>LD2450 radar</td><td>USB cable straight into the Pi (serial)</td><td class="mono">USB · 256000 baud</td></tr>
+          <tr><td>ESP32 CSI nodes</td><td>Stream UDP over WiFi to the Seed</td><td class="mono">UDP 5005</td></tr>
+          <tr><td>MR60BHA2 vitals</td><td>The Seedconnects out and pulls from it</td><td class="mono">TCP 6053</td></tr>
+          <tr><td>LD2450 radar</td><td>USB cable straight into the Seed (serial)</td><td class="mono">USB · 256000 baud</td></tr>
         </tbody>
       </table>
     </div>
     <div class="callout warn reveal">
-      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send to <span class="mono">5005</span> / <span class="mono">6053</span>. The Pi's fused-output WebSocket — what a dashboard or the Seed reads — is a <em>different</em> socket (<span class="mono">:9090</span>). Sensors never talk to 9090. Bands matter too: <b>2.4 GHz</b> for the S3 &amp; MR60, <b>5 GHz</b> for the C5.</p>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send to <span class="mono">5005</span> / <span class="mono">6053</span>. The Seed's fused-output WebSocket — what a dashboard or the Seed reads — is a <em>different</em> socket (<span class="mono">:9090</span>). Sensors never talk to 9090. Bands matter too: <b>2.4 GHz</b> for the S3 &amp; MR60, <b>5 GHz</b> for the C5.</p>
     </div>
   </div>
 </section>
@@ -238,9 +238,9 @@ pip install ruview</pre></div></div>
       <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;">
         <li><b style="color:var(--ink)">Flashing fails silently.</b> Your USB-C cable is charge-only — swap for a data cable. (MR60: you're on the case-edge power-only port; use the inner one.)</li>
         <li><b style="color:var(--ink)">Board won't join WiFi.</b> Wrong band: an S3/C6 can't see 5 GHz; a C5 may be set to the 5 GHz network. Match the band.</li>
-        <li><b style="color:var(--ink)">Flashed, but no data on the Pi.</b> Open UDP 5005 on the Pi's firewall; check you set the correct Pi IP in menuconfig.</li>
+        <li><b style="color:var(--ink)">Flashed, but no data on the Seed.</b> Open UDP 5005 on the Seed's firewall; check you set the correct Seed IP in menuconfig.</li>
         <li><b style="color:var(--ink)">LD2450 reads zeros.</b> Baud must be 256000, not the usual 115200.</li>
-        <li><b style="color:var(--ink)">A sensor "disappeared".</b> Its DHCP IP changed — reserve sensor + Pi MACs in your router.</li>
+        <li><b style="color:var(--ink)">A sensor "disappeared".</b> Its DHCP IP changed — reserve sensor + Seed MACs in your router.</li>
         <li><b style="color:var(--ink)">MR60 shows null.</b> It's still warming up — wait ~60 seconds after power-on.</li>
       </ul>
     </div>
@@ -252,7 +252,7 @@ pip install ruview</pre></div></div>
   <div class="wrap">
     <div>
       <div style="color:var(--phosphor); font-weight:600; margin-bottom:6px;">COGNITUM ONE · SETUP &amp; FLASHING</div>
-      <div>Buy → flash → WiFi → Pi → RuView.</div>
+      <div>Buy → flash → WiFi → Seed → RuView.</div>
       <div style="margin-top:10px;"><a href="/">Primer home →</a> · <a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a> · <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a></div>
     </div>
     <div style="text-align:right;">

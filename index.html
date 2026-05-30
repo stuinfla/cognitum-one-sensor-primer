@@ -7,7 +7,7 @@
 <!-- ===================== SEO ===================== -->
 <title>Cognitum One Sensor Primer — ESP32, mmWave Radar &amp; WiFi CSI Sensing Explained</title>
 <meta name="description" content="A beginner's field guide to passive, contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, the LD2450 mmWave radar, the MR60BHA2 vital-signs radar, and WiFi CSI sensors actually do — how to power, wire, flash and battery them, where to buy the plug-and-play kits, and how to set it all up." />
-<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Raspberry Pi sensors" />
+<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Cognitum One appliance" />
 <meta name="author" content="Cognitum One" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/" />
@@ -49,7 +49,7 @@
     { "@type": "Question", "name": "What is a Cognitum One Seed?", "acceptedAnswer": { "@type": "Answer", "text": "A tiny, self-contained AI computer that senses the space around it and recognises patterns passively, with no cloud required. It is the brain; the sensors in this guide are its senses." } },
     { "@type": "Question", "name": "Which sensors are passive and contactless?", "acceptedAnswer": { "@type": "Answer", "text": "The LD2450 mmWave radar (position), the MR60BHA2 mmWave radar (heart rate and breathing), and ESP32 WiFi CSI nodes (presence and rough shape). None are worn or attached to a person." } },
     { "@type": "Question", "name": "How many sensors do I need?", "acceptedAnswer": { "@type": "Answer", "text": "Almost nothing works with one. WiFi CSI needs at least 3 nodes (6-8 ideal) to locate anything; radar is 1-3 depending on room coverage; vitals is 1 per person/spot." } },
-    { "@type": "Question", "name": "Do I have to flash the sensors first?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 CSI nodes must be flashed on a Mac/PC and given WiFi credentials before they stream to your Pi. The MR60BHA2 ships pre-flashed (configure WiFi via ESPHome). The LD2450 USB kit needs no flashing — plug it into the Pi over USB." } }
+    { "@type": "Question", "name": "Do I have to flash the sensors first?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 CSI nodes must be flashed on a Mac/PC and given WiFi credentials before they stream to your Seed. The MR60BHA2 ships pre-flashed (configure WiFi via ESPHome). The LD2450 USB kit needs no flashing — plug it into the Seed over USB." } }
   ]
 }
 </script>
@@ -206,7 +206,7 @@
         </g>
         <path d="M220 273 L286 273" stroke="#5cd6ff" stroke-width="2" fill="none" marker-end="url(#ac)"/>
         <g font-family="IBM Plex Mono" font-size="13" fill="#dbe6f0">
-          <rect x="288" y="240" width="210" height="66" rx="10" fill="#0e1824" stroke="#5cd6ff"/><text x="393" y="268" text-anchor="middle" font-family="Chakra Petch" font-weight="600" fill="#5cd6ff">Companion host</text><text x="393" y="290" text-anchor="middle" fill="#8293a6">e.g. Raspberry Pi 5</text>
+          <rect x="288" y="240" width="210" height="66" rx="10" fill="#0e1824" stroke="#5cd6ff"/><text x="393" y="268" text-anchor="middle" font-family="Chakra Petch" font-weight="600" fill="#5cd6ff">via USB / WiFi</text><text x="393" y="290" text-anchor="middle" fill="#8293a6">(not GPIO pins)</text>
         </g>
         <path d="M498 273 C590 273 600 200 660 178" stroke="#5cd6ff" stroke-width="2" fill="none" marker-end="url(#ac)"/>
         <text x="556" y="232" font-family="IBM Plex Mono" font-size="11" fill="#8293a6">WiFi / HTTP</text>
@@ -228,19 +228,19 @@
         </ul>
       </div>
       <div class="block cyan reveal">
-        <h4>Path B — run it on a companion computer</h4>
-        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The three sensors in this guide — radar, vital-signs radar, WiFi CSI — produce far more data than the Seed's pins can take. They run on a small <b>companion computer</b> (e.g. a Raspberry Pi 5) that does the heavy sensing and talks to the Seed.</p>
+        <h4>Path B — connect it to the Seed over USB / WiFi</h4>
+        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The three sensors in this guide — radar, vital-signs radar, WiFi CSI — produce far more data than the Seed's GPIO pins can take. Instead they connect to your <b>Cognitum One Seed</b> over USB or WiFi, and it does the heavier sensing.</p>
         <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;">
-          <li>The LD2450 radar plugs into the host over <b>USB</b></li>
-          <li>The MR60 &amp; ESP32 CSI nodes stream to the host over <b>WiFi</b></li>
-          <li>The host fuses everything and shares results with the Seed</li>
+          <li>The LD2450 radar plugs into the Seed over <b>USB</b></li>
+          <li>The MR60 &amp; ESP32 CSI nodes stream to the Seed over <b>WiFi</b></li>
+          <li>The Seed fuses everything into its memory</li>
         </ul>
       </div>
     </div>
 
     <div class="callout warn reveal" style="margin-top:26px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ The honest truth about WiFi CSI &amp; the Seed</h3>
-      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) streaming to a companion host. Plan for ESP32 nodes + a host, not the Seed alone. The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
+      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for several ESP32 nodes, not the Seed's own radio. The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
     </div>
 
     <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config names here come from one reference build. Always confirm against your own device's config and firmware.</p>
@@ -253,14 +253,14 @@
     <div class="sec-head reveal">
       <span class="num">03 — YOUR FIRST 15 MINUTES</span>
       <h2>From box to first signal</h2>
-      <p>The short version of your first win. The full, careful walkthrough — cables, flashing on your Mac/PC, WiFi, talking to the Pi — lives on the <a href="/setup">Setup &amp; flashing page</a>.</p>
+      <p>The short version of your first win. The full, careful walkthrough — cables, flashing on your Mac/PC, WiFi, talking to the Seed — lives on the <a href="/setup">Setup &amp; flashing page</a>.</p>
     </div>
     <div class="when" style="grid-template-columns:1fr 1fr;">
       <div class="block reveal">
         <h4>Easiest first win · the LD2450 USB kit</h4>
         <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
           <li>Buy the LD2450 <b>USB kit</b> (radar + cable + USB adapter — no soldering).</li>
-          <li>Plug the USB adapter into your Pi (or Mac to test). No flashing needed.</li>
+          <li>Plug the USB adapter into your Seed (or Mac to test). No flashing needed.</li>
           <li>It streams position data over a serial port right away.</li>
           <li><b style="color:var(--phosphor)">Win:</b> walk around — the radar reports your X/Y position moving.</li>
         </ol>
@@ -269,8 +269,8 @@
         <h4>The WiFi sensors · a bit more setup</h4>
         <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
           <li>ESP32 CSI nodes must be <b>flashed</b> on a Mac/PC first (see Setup page).</li>
-          <li>Give them your WiFi (2.4 GHz for S3, 5 GHz for C5) + the Pi's address.</li>
-          <li>Power them near the Pi; they stream over WiFi (UDP :5005).</li>
+          <li>Give them your WiFi (2.4 GHz for S3, 5 GHz for C5) + the Seed's address.</li>
+          <li>Power them near the Seed; they stream over WiFi (UDP :5005).</li>
           <li><b style="color:var(--cyan)">Win:</b> the host shows packets arriving ~10×/sec; or an MR60 shows heart &amp; breathing after a ~60 s warm-up.</li>
         </ol>
       </div>
@@ -393,7 +393,7 @@
         <dl class="specs">
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 works · 2–3 for full room</dd>
           <dt>SENSES</dt><dd>Position (X/Y), distance, speed</dd>
-          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Pi</dd>
+          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
           <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> Buy the <em>USB kit</em> version (radar + cable + USB adapter), not a bare module — otherwise you'll be soldering. It tracks one point per person, and its baud rate is the unusual <span class="mono">256000</span>.</div>
@@ -410,7 +410,7 @@
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 per person / spot</dd>
           <dt>SENSES</dt><dd>Heart rate, breathing rate, presence</dd>
           <dt>SETUP</dt><dd>Ships ready; set WiFi via ESPHome</dd>
-          <dt>CONNECTS</dt><dd>WiFi → Pi over TCP <span class="mono">6053</span></dd>
+          <dt>CONNECTS</dt><dd>WiFi → Seed over TCP <span class="mono">6053</span></dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> The XIAO has <em>two</em> USB-C ports. The case-edge one is <strong>power only</strong> — to configure it, open the case and use the inner port. It reads null for ~60 s after power-on while it "warms up." That's normal.</div>
         <a class="buybtn" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">Buy on Amazon ↗</a>
@@ -426,7 +426,7 @@
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 6–8 ideal</dd>
           <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
           <dt>SETUP</dt><dd>Flash on a Mac/PC, then WiFi (see Setup)</dd>
-          <dt>CONNECTS</dt><dd>WiFi → Pi over UDP <span class="mono">5005</span></dd>
+          <dt>CONNECTS</dt><dd>WiFi → Seed over UDP <span class="mono">5005</span></dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> Use a <em>mesh</em> of nodes; one node alone can't tell left from right. These must be flashed first — see the <a href="/setup">Setup &amp; flashing page</a>.</div>
         <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 (buy 3+) ↗</a>
@@ -644,11 +644,10 @@
       <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (CSI node)</h4><span class="price">~$18 each</span></div><span class="sub">Dual-band WiFi 6 · USB-C · <b>buy 3+ for a mesh</b></span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">or ESP32-S3 (2.4 GHz)</a></div></div>
     </div>
 
-    <h3 class="reveal" style="color:var(--cyan); font-size:18px; margin:0 0 16px;">The brain &amp; the host</h3>
+    <h3 class="reveal" style="color:var(--cyan); font-size:18px; margin:0 0 16px;">The brain (your host)</h3>
     <div class="buy-grid" style="margin-bottom:34px;">
-      <div class="buy reveal"><div class="bt"><h4>The Cognitum One Seed</h4><span class="price">the brain</span></div><span class="sub">On-device intelligence — get yours</span><div class="links"><a class="verified" href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>CanaKit Raspberry Pi 5 (8 GB)</h4><span class="price">~$160</span></div><span class="sub">The companion host for radar + CSI</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CVQT445P" target="_blank" rel="noopener">B0CVQT445P</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>Raspberry Pi 5 27 W PSU</h4><span class="price">~$15</span></div><span class="sub">5 V / 5 A — prevents brownout dropouts</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=Raspberry+Pi+5+27W+USB-C+power+supply" target="_blank" rel="noopener">search: Pi 5 27W PSU</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>The Cognitum One Seed</h4><span class="price">the brain</span></div><span class="sub">On-device intelligence + the host your sensors connect to</span><div class="links"><a class="verified" href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Power supply for your Seed</h4><span class="price">essential</span></div><span class="sub">Use the supply specified for your Cognitum One model — underpowering causes dropouts</span><div class="links"><a href="https://cognitum.one" target="_blank" rel="noopener">see cognitum.one ↗</a></div></div>
     </div>
 
     <h3 class="reveal" style="color:var(--amber); font-size:18px; margin:0 0 16px;">Cables &amp; tools (you'll need these to flash &amp; connect)</h3>
@@ -656,7 +655,7 @@
       <div class="buy reveal"><div class="bt"><h4>USB-C data cables</h4><span class="price">essential</span></div><span class="sub">Must carry data, not just power — for flashing</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=USB-C+data+cable+short" target="_blank" rel="noopener">search: USB-C data cable</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>CP210x USB-to-UART bridge</h4><span class="price">~$7</span></div><span class="sub">Spare adapter for bare UART radars</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B00LODGRV8" target="_blank" rel="noopener">B00LODGRV8</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Dupont jumper wires</h4><span class="price">~$7</span></div><span class="sub">For any GPIO wiring (F-F, M-F, M-M)</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=Dupont+jumper+wires+assortment" target="_blank" rel="noopener">search: Dupont jumpers</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>Powered USB hub</h4><span class="price">~$20</span></div><span class="sub">When you add several USB sensors to the Pi</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=powered+USB+hub+5V" target="_blank" rel="noopener">search: powered USB hub</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Powered USB hub</h4><span class="price">~$20</span></div><span class="sub">When you add several USB sensors to the Seed</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=powered+USB+hub+5V" target="_blank" rel="noopener">search: powered USB hub</a></div></div>
     </div>
 
     <p class="reveal" style="margin-top:30px;"><a class="hero-cta" href="/setup">Next: how to flash &amp; set it all up →</a></p>
@@ -672,8 +671,8 @@
       <p>The things a brand-new owner usually asks next.</p>
     </div>
     <dl class="gloss reveal">
-      <div><dt>Can I start with just the Seed?</dt><dd>For the three sensors in this guide, no — they run on a small companion computer (like a Pi 5) that talks to the Seed. The Seed alone handles only simple wired sensors (motion, vibration, an analog sensor via an ADS1115).</dd></div>
-      <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD2450 USB kit</b> (~$16) — it needs no flashing, you just plug it into the Pi over USB and it reports position immediately.</dd></div>
+      <div><dt>Do the sensors plug into the Seed directly?</dt><dd>Simple sensors (motion, vibration, an analog sensor via an ADS1115) wire to the Seed's own GPIO pins. The three sensors in this guide connect to the same Seed over USB (the LD2450) or WiFi (the MR60 and ESP32 CSI nodes) — same device, just a different connection.</dd></div>
+      <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD2450 USB kit</b> (~$16) — it needs no flashing, you just plug it into the Seed over USB and it reports position immediately.</dd></div>
       <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD2450 USB kit needs no flashing at all.</dd></div>
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera, nothing worn).</dd></div>
       <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming to a companion host — the Seed's own WiFi chip can't produce CSI.</dd></div>
