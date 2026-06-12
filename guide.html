@@ -366,7 +366,7 @@ curl http://localhost:3000/api/v1/sensing/latest</pre></div></div>
     <div class="sec-head reveal">
       <span class="num">09 — SKELETAL POSE</span>
       <h2>The honest pose ladder: three rungs</h2>
-      <p>The dashboard's skeleton works out of the box — but know what you're looking at, and what it takes to make it real.</p>
+      <p>The dashboard's skeleton works out of the box — but know what you're looking at, and what it takes to make it real. The training answer everyone asks: <b>calibration is 60 seconds, enrollment ~4 minutes, real pose needs one ~40-minute camera-teacher session + ~1 hour of training</b> — never hours or days of empty-room recording. And it's a <b>17-point</b> skeleton by physics and by benchmark standard: a 2.4 GHz wave is ~12.5 cm long, so fingers and faces (most of MediaPipe's extra 16 points) are below what the radio can resolve — finer grain comes from sensor fusion (LD6004 Z-axis, 60 GHz radar, camera point-cloud), not more WiFi keypoints.</p>
     </div>
 
     <div class="callout reveal" style="margin-bottom:18px;">

@@ -137,6 +137,25 @@
       <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Cognitum One Seed (or your Mac to test). The Seed reads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
     </div>
 
+    <!-- LD6004 GPIO wiring -->
+    <div id="wiring-radar" class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">LD6004 radar — wire it to GPIO, and never brown-out ✓</h3>
+      <p style="margin:0 0 12px;color:var(--muted);">No flashing either — the LD6004 talks plain serial. But <b>how you power it decides whether it stays alive.</b> Field lesson from our own rig: LD2450s on a <b>USB hub froze repeatedly</b> (USB-serial adapters die under hub power variance; only re-seating directly into the Pi fixed them). The LD6004 avoids that class of failure entirely by skipping USB: four jumper wires straight to the Pi's GPIO header, powered by the Pi's own 3.3 V rail. Result on our rig: <b>zero brown-outs in 7+ weeks of continuous duty</b> (the module draws an estimated &lt;50 mA against the rail's ~300 mA budget).</p>
+      <div class="table-scroll" style="margin-bottom:12px;">
+        <table>
+          <thead><tr><th>LD6004 pin</th><th>Wire color (typical)</th><th>Raspberry Pi header pin</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><td><b>VCC</b></td><td style="color:#ff6b6b;"><b>Red</b></td><td><b>Pin 1</b></td><td>3.3 V power</td></tr>
+            <tr><td><b>GND</b></td><td><b>Black</b></td><td><b>Pin 6</b></td><td>Ground</td></tr>
+            <tr><td><b>TX</b> (sensor out)</td><td style="color:var(--amber);"><b>Yellow</b></td><td><b>Pin 8</b> (GPIO 14)</td><td>Pi receives data here</td></tr>
+            <tr><td><b>RX</b> (sensor in)</td><td style="color:var(--phosphor);"><b>Green</b></td><td><b>Pin 10</b> (GPIO 15)</td><td>Pi transmits here</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">It appears as <span class="mono">/dev/serial0</span> at <span class="mono">115200</span> baud (8N1, fixed — there's no command to change it). The "rich" firmware variant streams X/Y/Z floats in meters at ~10 Hz; when the room is empty you still get heartbeat packets, which is your "sensor alive" signal. Wire colors are convention, not guarantee — <b>trust the pin labels on the module, not the wire colors</b>.</p>
+      <p style="margin:0;color:var(--ink);font-size:14px;"><b>Rules of thumb for any radar:</b> GPIO UART beats USB; if a sensor must be USB (LD2450), plug it <em>directly</em> into the Pi or use a <em>powered</em> hub; and your AX210/BE200 card never competes for this power — it lives on the Pi 5's PCIe HAT, a separate rail. <span style="color:var(--faint);font-size:13px;">(Honest gaps: the LD6004's exact current draw and in-field Z-axis noise floor aren't formally specified — our numbers are observed-in-deployment, not datasheet.)</span></p>
+    </div>
+
     <!-- MR60 -->
     <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(255,180,84,0.4);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">MR60BHA2 vitals — ships ready, configure over WiFi</h3>

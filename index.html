@@ -431,8 +431,24 @@
           <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
           <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
         </dl>
-        <div class="gotcha"><b>Gotcha →</b> Buy the <em>USB kit</em> version (radar + cable + USB adapter), not a bare module — otherwise you'll be soldering. It tracks one point per person, and its baud rate is the unusual <span class="mono">256000</span>.</div>
+        <div class="gotcha"><b>Gotcha →</b> Buy the <em>USB kit</em> version (radar + cable + USB adapter), not a bare module — otherwise you'll be soldering. It tracks one point per person, baud is the unusual <span class="mono">256000</span> — and know that for <em>3D movement</em> it's been <b>largely supplanted by the LD6004</b> (next card). The LD2450 keeps two wins: cheapest plug-and-play start, and it tracks <b>3 people at once</b> (the LD6004 tracks one).</div>
         <a class="buybtn" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">Buy the USB kit on Amazon ↗</a>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--phosphor);">
+        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="HLK-LD6004 60 GHz mmWave radar module with true XYZ 3D position tracking" loading="lazy" />
+        <span class="tag">60 GHz mmWave · TRUE 3D position</span>
+        <h3>LD6004 <span style="font-size:12px;color:var(--phosphor);">— NEW, the movement pick</span></h3>
+        <div class="model-line">HLK-LD6004 · 60 GHz FMCW · X / Y / <b>Z</b> tracking</div>
+        <p class="what">The LD2450's successor for movement: it reports a person's position in <strong>true 3D — including the vertical Z axis</strong> the 2450 never had. Squat depth, sway, fall trajectories, micro-tremor — measured directly, no training, no camera. 60 GHz gives finer resolution than the 2450's 24 GHz. Field-proven here: <b>7+ weeks continuous uptime</b> wired to a Pi's GPIO.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 (tracks one primary target)</dd>
+          <dt>SENSES</dt><dd>Position X/Y/Z (meters), presence heartbeat</dd>
+          <dt>SETUP</dt><dd>4 jumper wires to the Pi's GPIO — pinout on the <a href="/setup#wiring-radar">Setup page</a></dd>
+          <dt>CONNECTS</dt><dd>GPIO UART <span class="mono">/dev/serial0</span> @ <span class="mono">115200</span></dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> It ships with bare 0.1" pins — you need 4 female-female Dupont jumpers (you probably have them). One target at a time, ~5 m range. Wire it to <b>GPIO, not a USB hub</b> — that's the brown-out story on the Setup page.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">Buy LD6004 on Amazon ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--amber);">
@@ -516,12 +532,32 @@
       <table>
         <thead><tr><th>Technology</th><th>Frequency</th><th>Best at</th><th>Spatial detail</th><th>Through walls?</th></tr></thead>
         <tbody>
-          <tr><td>LD2450 radar</td><td class="mono">24 GHz</td><td>Precise 2D position &amp; speed</td><td>±5 cm XY</td><td>Limited</td></tr>
+          <tr><td>LD2450 radar</td><td class="mono">24 GHz</td><td>Precise 2D position &amp; speed · 3 people</td><td>±5 cm XY</td><td>Limited</td></tr>
+          <tr><td>LD6004 radar</td><td class="mono">60 GHz</td><td><b style="color:var(--phosphor)">True 3D movement (X/Y/Z)</b> · 1 person</td><td>fine, incl. vertical</td><td>Limited</td></tr>
           <tr><td>MR60BHA2</td><td class="mono">60 GHz</td><td>Heart rate &amp; breathing</td><td>n/a (vitals)</td><td>Limited</td></tr>
-          <tr><td>ESP32 WiFi CSI</td><td class="mono">2.4 / 5 GHz</td><td>Presence &amp; rough shape, anywhere</td><td>Coarse (~30 cm)</td><td><span class="pill green">yes</span></td></tr>
+          <tr><td>ESP32 WiFi CSI</td><td class="mono">2.4 GHz (WiFi 6)</td><td>Presence &amp; skeleton-after-training, anywhere</td><td>Coarse (~30 cm)</td><td><span class="pill green">yes</span></td></tr>
           <tr><td>M5StickS3 (IMU)</td><td class="mono">—</td><td>Motion/vibration of an attached object</td><td>n/a (on-object)</td><td><span class="pill amber">on-object</span></td></tr>
         </tbody>
       </table>
+
+    <div class="callout warn reveal" style="margin-bottom:32px;">
+      <h3 style="margin:0 0 12px;font-size:20px;color:var(--amber);">🦴 Tracking people &amp; skeletons — the myth, the reality, and exactly how long training takes</h3>
+      <p style="margin:0 0 14px;color:var(--muted);"><b style="color:var(--ink)">The myth:</b> you watched Ruv's demos, so you plug in some ESP32s and instantly see a skeleton through every wall. <b style="color:var(--ink)">The reality:</b> out of the box you get <em>presence, person count, breathing, heart rate and motion</em> — genuinely impressive, and real. The <em>skeleton</em> you saw is the end of a training journey. Nobody tells beginners this, so here is the entire timeline, honestly:</p>
+      <div class="table-scroll" style="margin-bottom:14px;">
+        <table>
+          <thead><tr><th>Stage</th><th>How long — really</th><th>What you get after</th></tr></thead>
+          <tbody>
+            <tr><td><b>1 · Empty-room calibration</b></td><td><b style="color:var(--phosphor)">60 seconds.</b> Not 3 minutes, not 3 hours, and definitely not 3 days — one minute with the room empty (pets out too)</td><td>Presence stops flickering; everything downstream gets accurate</td></tr>
+            <tr><td><b>2 · Room enrollment</b></td><td><b style="color:var(--phosphor)">~4 minutes</b> — the system coaches you through 8 poses (stand, sit, lie, walk…)</td><td>Six specialists tuned to <em>your</em> room: presence, posture, breathing, heartbeat, restlessness, anomaly</td></tr>
+            <tr><td><b>3 · Specialist training</b></td><td><b style="color:var(--phosphor)">Seconds</b> (it's six tiny models, not a giant network)</td><td>Reliable vitals + posture classification in that room</td></tr>
+            <tr><td><b>4 · Real skeletal pose</b></td><td><b style="color:var(--amber)">~40 min recording + ~1 hour training.</b> A webcam acts as a one-time teacher while you move through varied activities; then it's WiFi-only forever</td><td>A trained 17-keypoint skeleton from WiFi alone</td></tr>
+            <tr><td style="color:var(--faint)">(Re-calibration)</td><td style="color:var(--faint)">60 s again — only after moving furniture or nodes</td><td style="color:var(--faint)">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:0 0 14px;color:var(--muted);"><b style="color:var(--ink)">"How many LD6004s do I need to track a body in space?"</b> Start with <b>one</b>: a single LD6004 gives true X/Y/Z for one person across a ~5 m cone — that's full trajectory-in-a-room tracking, no training at all. Mount it high in a corner facing the activity area. A <b>second unit at a roughly 90° angle</b> helps with occlusion (furniture, your own body blocking the beam) — though that dual setup is our recommendation from experience, not an upstream-verified configuration. Tracking <em>several people's</em> positions at once is the one thing it won't do (one primary target per unit) — that's the LD2450's niche (3 targets, 2D) or a zone-per-LD6004 layout.</p>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">"Why only a 17-point skeleton? MediaPipe does 33!"</b> Fair question — and it's not laziness. Three reasons. <b>(1) Physics:</b> a 2.4 GHz WiFi wave is ~12.5 cm long — the radio literally cannot resolve fingers, facial landmarks or foot detail; those are most of MediaPipe's extra 16 points. The C6's 242-tone CSI sharpens the picture but doesn't change the wavelength. <b>(2) Benchmarks:</b> 17 points is the COCO standard every WiFi-pose dataset (MM-Fi) and every published result is scored on — a 33-point model couldn't be honestly compared to anything. <b>(3) Training signal:</b> the camera teacher could emit 33 labels, but you'd be training the radio to predict detail it can't sense — the model would memorize noise. The honest path to finer grain isn't more keypoints from WiFi; it's <b>sensor fusion</b> — the LD6004's true Z-axis, 60 GHz mmWave, the camera-CSI point-cloud pipeline. That's exactly the direction RuView is built around.</p>
+    </div>
     </div>
 
     <div class="when">
@@ -868,7 +904,8 @@
 
     <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">The three sensors</h3>
     <div class="buy-grid" style="margin-bottom:34px;">
-      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder · tracks 3 people (2D)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>LD6004 radar — true 3D movement</h4><span class="price">~$19–38</span></div><span class="sub">60 GHz · X/Y/Z position · wires to Pi GPIO (4 Dupont jumpers) · the movement-tracking pick</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">B0GKNCY7G7</a><a class="verified" href="https://www.amazon.com/dp/B0GKNYXWCK" target="_blank" rel="noopener">alt: B0GKNYXWCK</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32-C6 3-pack (CSI node — the pick)</h4><span class="price">~$24 / 3</span></div><span class="sub">WiFi 6 · 242-tone HE-LTF CSI · <b>buy 7 nodes for a full array</b> (mix with S3s)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX</a><a class="verified" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">or LONELY BINARY S3 3-pack</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32S3 Sense (camera S3 — pose teacher)</h4><span class="price">~$27</span></div><span class="sub">S3 CSI node + OV2640 camera + mic · the camera-supervised pose-training teacher</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">B0DRNW6KMG</a></div></div>
