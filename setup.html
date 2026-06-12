@@ -114,7 +114,7 @@
           <tr><td><b>USB-C data cable</b></td><td>Connecting an ESP32 to your Mac/PC to flash it</td><td>Many cables are <b>charge-only</b> — they power the board but carry no data, so flashing silently fails. Buy one labelled "data".</td></tr>
           <tr><td><b>A Mac or PC</b></td><td>Running the flashing tool</td><td>You flash once per node, then it runs on its own.</td></tr>
           <tr><td><b>Your Cognitum One Seed</b> (the host)</td><td>Receives the sensor streams — this is the brain</td><td>Give it the power supply specified for your model. Underpowering causes random dropouts that look like sensor failures.</td></tr>
-          <tr><td><b>Your WiFi name + password</b></td><td>The sensor needs to join your network</td><td>2.4 GHz for ESP32-S3 &amp; the MR60; 5 GHz for the ESP32-C5. They are not interchangeable.</td></tr>
+          <tr><td><b>Your WiFi name + password</b></td><td>The sensor needs to join your network</td><td>All the sensing nodes (S3, C6, MR60) are <b>2.4 GHz only</b>. Bonus: enable WiFi 6 (802.11ax) on your router's 2.4 GHz band — that's what unlocks the C6's 242-tone high-fidelity CSI.</td></tr>
           <tr><td><b>The Seed's IP address</b></td><td>So the sensor knows where to send data</td><td>If the Seed's IP changes (DHCP), sensors "disappear" — reserve the Seed's address in your router.</td></tr>
         </tbody>
       </table>
@@ -164,12 +164,14 @@ and stream to my Seed at 10.0.0.50 on UDP 5005."</pre>
 
       <div class="step reveal"><div class="n">3</div><div class="body"><h4>Set four things, then build &amp; flash</h4>
         <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Open <span class="mono">menuconfig</span> and set: a <b>node ID</b> (1, 2, 3… one per board), your <b>WiFi SSID + password</b>, the <b>Seed's IP</b>, and the <b>UDP port</b> (5005). Then:</p>
-        <pre class="code"><span class="c"># for an ESP32-C5 node (5 GHz); use esp32s3 for S3 (2.4 GHz)</span>
-cd firmware/esp32c5-csi-node
-idf.py set-target esp32c5
-idf.py menuconfig        <span class="c"># node ID, WiFi SSID/password, Seed IP, port 5005</span>
+        <pre class="code"><span class="c"># RuView's CSI firmware builds for the C6 and S3 (there is NO C5 target)</span>
+cd RuView/firmware/esp32-csi-node
+idf.py set-target esp32c6        <span class="c"># or: esp32s3 — needs ESP-IDF 5.5.2+ for the C6</span>
 idf.py build
-idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
+idf.py -p /dev/cu.usbmodemXXXX flash monitor
+<span class="c"># then provision WiFi + node ID + Seed IP (no reflash needed):</span>
+python provision.py --port /dev/cu.usbmodemXXXX \
+  --ssid "YourWiFi" --password "secret" --target-ip 192.168.1.20 --node-id 1</pre></div></div>
 
       <div class="step reveal"><div class="n">4</div><div class="body"><h4>Confirm it's sending</h4>
         <p style="margin:0;color:var(--muted);font-size:14.5px;">On the Seed, watch for its packets:</p>
@@ -203,7 +205,7 @@ idf.py -p /dev/cu.usbmodemXXXX flash monitor</pre></div></div>
       </table>
     </div>
     <div class="callout warn reveal">
-      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send their data <em>to</em> the Seed — CSI on UDP <span class="mono">5005</span>, vitals on TCP <span class="mono">6053</span>. What the Seed sends back <em>out</em> to a dashboard is a separate connection — don't mix up the inbound sensor ports with the outbound one. Bands matter too: <b>2.4 GHz</b> for the S3 &amp; MR60, <b>5 GHz</b> for the C5.</p>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">Don't confuse the ports.</b> Sensors send their data <em>to</em> the Seed — CSI on UDP <span class="mono">5005</span>, vitals on TCP <span class="mono">6053</span>. What the Seed sends back <em>out</em> to a dashboard is a separate connection — don't mix up the inbound sensor ports with the outbound one. Bands matter too: every sensing node here (S3, C6, MR60) lives on <b>2.4 GHz</b> — and WiFi 6 on that band is what feeds the C6 its full 242-tone fidelity.</p>
     </div>
   </div>
 </section>
@@ -276,7 +278,7 @@ docker run -p 3000:3000 ruvnet/wifi-densepose:latest   <span class="c"># open ht
     <div class="callout warn reveal">
       <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;">
         <li><b style="color:var(--ink)">Flashing fails silently.</b> Your USB-C cable is charge-only — swap for a data cable. (MR60: you're on the case-edge power-only port; use the inner one.)</li>
-        <li><b style="color:var(--ink)">Board won't join WiFi.</b> Wrong band: an S3/C6 can't see 5 GHz; a C5 may be set to the 5 GHz network. Match the band.</li>
+        <li><b style="color:var(--ink)">Board won't join WiFi.</b> Wrong band: an S3/C6 physically can't see 5 GHz networks. Point it at your 2.4 GHz SSID.</li>
         <li><b style="color:var(--ink)">Flashed, but no data on the Seed.</b> Open UDP 5005 on the Seed's firewall; check you set the correct Seed IP in menuconfig.</li>
         <li><b style="color:var(--ink)">LD2450 reads zeros.</b> Baud must be 256000, not the usual 115200.</li>
         <li><b style="color:var(--ink)">A sensor "disappeared".</b> Its DHCP IP changed — reserve sensor + Seed MACs in your router.</li>

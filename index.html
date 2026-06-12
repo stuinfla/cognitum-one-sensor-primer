@@ -261,13 +261,13 @@
 
     <div class="callout warn reveal" style="margin-top:26px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ The honest truth about WiFi CSI &amp; the Seed</h3>
-      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for <b>7 nodes</b> — not two; one or two can't locate anything (here's <a href="#array">how to build the array</a>). The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
+      <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-C6 / S3</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for <b>7 nodes</b> — not two; one or two can't locate anything (here's <a href="#array">how to build the array</a>). The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
     </div>
 
     <div class="callout warn reveal" style="margin-top:18px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ Seed vs. V0 — you can't HAT your way to WiFi 6E / WiFi 7 sensing</h3>
       <p style="margin:0 0 10px;color:var(--muted);">The base <b>Seed is a Raspberry Pi Zero 2&nbsp;W</b>. It has GPIO pins (so simple wired sensors are fine), but <strong>no PCIe bus</strong> — which means <strong>no HAT exists</strong> that can attach an Intel <b>AX210 (WiFi&nbsp;6E)</b> or <b>BE200 (WiFi&nbsp;7)</b> M.2 radio to it. Those cards need the PCIe-to-M.2 E-Key adapter HATs, and those HATs plug into the PCIe ribbon connector found <em>only on the Pi&nbsp;5</em>.</p>
-      <p style="margin:0;color:var(--muted);">So the rule of thumb: <b style="color:var(--ink)">5&nbsp;GHz CSI from ESP32-C5 nodes works with any Seed</b> (the nodes stream over your network — the Seed never touches 5&nbsp;GHz itself). Mounting an Intel card in the brain at all <b style="color:var(--ink)">requires the V0 appliance</b> (the Pi&nbsp;5 + Hailo-8 unit), where the M.2 card rides a PCIe HAT — and even then, treat it as an experiment: the public CSI tools for the AX210 (PicoScenes, FeitCSI) are built for x86 Linux and are <strong>unproven on the Pi&nbsp;5's ARM</strong>, and <strong>no public tool extracts CSI from the BE200 (WiFi&nbsp;7) yet</strong> — on any machine. If you only have a Seed, stick to the ESP32 node path; if you have a V0, the Intel cards are a frontier to explore, not a supported feature.</p>
+      <p style="margin:0;color:var(--muted);">So the rule of thumb: <b style="color:var(--ink)">high-fidelity WiFi-6 CSI from ESP32-C6 nodes works with any Seed</b> (the nodes stream over your network — the Seed's own radio never matters). Mounting an Intel card in the brain at all <b style="color:var(--ink)">requires the V0 appliance</b> (the Pi&nbsp;5 + Hailo-8 unit), where the M.2 card rides a PCIe HAT — and even then, treat it as an experiment: the public CSI tools for the AX210 (PicoScenes, FeitCSI) are built for x86 Linux and are <strong>unproven on the Pi&nbsp;5's ARM</strong>, and <strong>no public tool extracts CSI from the BE200 (WiFi&nbsp;7) yet</strong> — on any machine. If you only have a Seed, stick to the ESP32 node path; if you have a V0, the Intel cards are a frontier to explore, not a supported feature.</p>
     </div>
 
     <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config names here come from one reference build. Always confirm against your own device's config and firmware.</p>
@@ -296,7 +296,7 @@
         <h4>The WiFi sensors · a bit more setup</h4>
         <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
           <li>ESP32 CSI nodes must be <b>flashed</b> on a Mac/PC first (see Setup page).</li>
-          <li>Give them your WiFi (2.4 GHz for S3, 5 GHz for C5) + the Seed's address.</li>
+          <li>Give them your WiFi (the 2.4 GHz network — S3 and C6 are 2.4-only) + the Seed's address.</li>
           <li>Power them near the Seed; they stream over WiFi (UDP :5005).</li>
           <li><b style="color:var(--cyan)">Win:</b> the host shows packets arriving ~10×/sec; or an MR60 shows heart &amp; breathing after a ~60 s warm-up.</li>
         </ol>
@@ -337,7 +337,7 @@
         <tbody>
           <tr><td>A small radar board with a 4-pin cable + a USB adapter dongle</td><td>LD2450 USB kit</td><td>Position tracking</td></tr>
           <tr><td>A small black module behind a textured cover, USB-C</td><td>MR60BHA2 (Seeed XIAO)</td><td>Heart &amp; breathing</td></tr>
-          <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C5 / S3 CSI node</td><td>WiFi sensing</td></tr>
+          <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C6 / S3 CSI node</td><td>WiFi sensing</td></tr>
           <tr><td>A small grey stick with a screen, a button &amp; USB-C</td><td>M5StickS3</td><td>Motion / vibration</td></tr>
         </tbody>
       </table>
@@ -365,8 +365,8 @@
           <tr><td>ESP32-S3 <span class="pill green">used here</span></td><td>Xtensa LX7</td><td>2 · 240&nbsp;MHz</td><td>512&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>AI/vector instructions; 192-subcarrier CSI</td><td class="mono">~$4</td></tr>
           <tr><td>ESP32-C2</td><td>RISC-V</td><td>1 · 120&nbsp;MHz</td><td>272&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>Smallest &amp; cheapest, 4×4&nbsp;mm</td><td class="mono">~$4</td></tr>
           <tr><td>ESP32-C3</td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>400&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>Best-in-class low power (~5&nbsp;µA sleep)</td><td class="mono">~$4</td></tr>
-          <tr><td>ESP32-C5 <span class="pill green">used here</span></td><td>RISC-V</td><td>1 · 240&nbsp;MHz</td><td>400&nbsp;KB</td><td><b style="color:var(--phosphor)">Dual-band WiFi 6 · 2.4 + 5&nbsp;GHz</b></td><td>BLE 5.2</td><td>First ESP32 that does 5&nbsp;GHz WiFi</td><td class="mono">~$18</td></tr>
-          <tr><td>ESP32-C6 <span class="pill green">in the MR60</span></td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>512&nbsp;KB</td><td>WiFi 6 (ax) · 2.4&nbsp;GHz</td><td>BLE 5.3</td><td>802.15.4 Thread/Zigbee/Matter</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-C5</td><td>RISC-V</td><td>1 · 240&nbsp;MHz</td><td>400&nbsp;KB</td><td>Dual-band WiFi 6 · 2.4 + 5&nbsp;GHz</td><td>BLE 5.2</td><td>First ESP32 with 5&nbsp;GHz — but <b style="color:var(--amber)">no RuView firmware support</b></td><td class="mono">~$18</td></tr>
+          <tr><td>ESP32-C6 <span class="pill green">buy this one</span></td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>512&nbsp;KB</td><td><b style="color:var(--phosphor)">WiFi 6 (ax) · 2.4&nbsp;GHz</b></td><td>BLE 5.3</td><td><b style="color:var(--phosphor)">242-tone HE-LTF CSI (4× the detail)</b> · 802.15.4 mesh time-sync · also inside the MR60</td><td class="mono">~$5</td></tr>
           <tr><td>ESP32-H2</td><td>RISC-V</td><td>1 · 96&nbsp;MHz</td><td>256&nbsp;KB</td><td><b style="color:var(--amber)">none</b></td><td>BLE 5.0</td><td>Dedicated Thread/Zigbee mesh radio</td><td class="mono">~$3</td></tr>
           <tr><td>ESP32-P4</td><td>RISC-V ×2 + LP</td><td>2 · 400&nbsp;MHz</td><td>768&nbsp;KB</td><td><b style="color:var(--amber)">none</b></td><td>none</td><td>H.264 video, MIPI camera/display</td><td class="mono">n/a</td></tr>
         </tbody>
@@ -375,7 +375,13 @@
 
     <div class="callout reveal" style="margin-top:30px;">
       <h3 style="margin:0 0 12px; font-size:20px; color:var(--phosphor);">The one fact that bites everyone first</h3>
-      <p style="margin:0; color:var(--muted);">Notice the <b style="color:var(--ink)">2.4 GHz vs. 5 GHz</b> column. The ESP32-S3 and the original ESP32 are <strong>2.4 GHz only — by silicon</strong>. They <em>physically cannot</em> join a 5 GHz-only WiFi network, no matter what you configure. Only the <b style="color:var(--phosphor)">ESP32-C5</b> speaks 5 GHz. If a board "won't connect" to your fast network, that's almost always why — it's not broken, it's the wrong band.</p>
+      <p style="margin:0; color:var(--muted);">Notice the <b style="color:var(--ink)">2.4 GHz vs. 5 GHz</b> column. The ESP32-S3, C6 and the original ESP32 are <strong>2.4 GHz only — by silicon</strong>. They <em>physically cannot</em> join a 5 GHz-only WiFi network, no matter what you configure. If a board "won't connect" to your fast network, that's almost always why — it's not broken, it's the wrong band.</p>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:18px;">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">⚡ June 2026 buying verdict: skip the C5, go straight to the C6</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">This changed in the last few weeks, so older advice (including ours) is out of date. Two facts decide it: <b style="color:var(--ink)">(1) RuView has no ESP32-C5 firmware</b> — the CSI node firmware builds for the S3 and C6 only, so a C5 simply can't join your sensing array today. <b style="color:var(--ink)">(2) The C6 became the fidelity king</b> — RuView's v0.8.0-esp32 release (June 11, 2026) unlocked true WiFi-6 HE-LTF CSI on the C6: <b>242 active tones, 4× the spectral detail</b> of the S3's best, on any 802.11ax 2.4 GHz router. Ruv's own release notes call the C6 "the precision instrument of the fleet."</p>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">So the play is:</b> C6 nodes for fidelity (~$5, e.g. the Seeed XIAO ESP32-C6), S3 nodes as cheap workhorses, and the C5 only if you specifically want to <em>experiment</em> with 5 GHz capture outside RuView. C6 caveats: build with ESP-IDF 5.5.2+, you need WiFi 6 enabled on your router's 2.4 GHz band for full fidelity, and there's no over-the-air update — reflashing is by USB.</p>
     </div>
   </div>
 </section>
@@ -446,10 +452,10 @@
       </div>
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
-        <img class="shot" src="/assets/img/amz-c5.jpg" alt="Waveshare ESP32-C5 dual-band WiFi 6 dev board for CSI sensing" loading="lazy" />
+        <img class="shot" src="/assets/img/amz-c5.jpg" alt="ESP32 WiFi 6 dev board for CSI sensing" loading="lazy" />
         <span class="tag">WiFi CSI · presence &amp; shape</span>
         <h3>ESP32 CSI nodes</h3>
-        <div class="model-line">ESP32-C5 (5 GHz) &amp; ESP32-S3 (2.4 GHz)</div>
+        <div class="model-line">ESP32-C6 (WiFi 6, 242-tone — <b>the pick</b>) &amp; ESP32-S3 (workhorse)</div>
         <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
         <dl class="specs">
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 7 ideal</dd>
@@ -458,7 +464,7 @@
           <dt>CONNECTS</dt><dd>WiFi → Seed over UDP <span class="mono">5005</span></dd>
         </dl>
         <div class="gotcha"><b>Gotcha →</b> Use a <em>mesh</em> of nodes; one node alone can't tell left from right. These must be flashed first — see the <a href="/setup">Setup &amp; flashing page</a>.</div>
-        <a class="buybtn" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">Buy ESP32-C5 (buy 7 total) ↗</a>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">Buy XIAO ESP32-C6 3-pack (buy 7 nodes total) ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--cyan);">
@@ -561,7 +567,7 @@
 
     <div class="callout reveal" style="margin-bottom:30px;">
       <h3 style="margin:0 0 10px;font-size:20px;color:var(--phosphor);">Plan on <span style="color:var(--ink)">7 ESP32 nodes</span></h3>
-      <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Seven</b> is the sweet spot — it wraps a proper sensing "cloud" all the way around a person (front, back and sides) with enough overlap that furniture and bodies don't create blind spots, <em>plus</em> a spare node or two so one dropout doesn't ruin your coverage. They're cheap, and that headroom is what keeps setup from being frustrating. (Ruv's rule of thumb is <b>7</b> — a prime number, and the count where it just works.) A typical split is <b>3 on 2.4 GHz (ESP32-S3)</b> + <b>4 on 5 GHz (ESP32-C5)</b>.</p>
+      <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Seven</b> is the sweet spot — it wraps a proper sensing "cloud" all the way around a person (front, back and sides) with enough overlap that furniture and bodies don't create blind spots, <em>plus</em> a spare node or two so one dropout doesn't ruin your coverage. They're cheap, and that headroom is what keeps setup from being frustrating. (Ruv's rule of thumb is <b>7</b> — a prime number, and the count where it just works.) The June 2026 split: <b>4× ESP32-C6</b> (WiFi-6 high-fidelity, 242-tone CSI) + <b>3× ESP32-S3</b> (cheap workhorses) — all on your 2.4 GHz network.</p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:30px;">
@@ -848,7 +854,7 @@
     <div class="buy-grid" style="margin-bottom:34px;">
       <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>Waveshare ESP32-C5 (CSI node)</h4><span class="price">~$18 each</span></div><span class="sub">Dual-band WiFi 6 · USB-C · <b>buy 7 for a full array</b></span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0G34V45VF" target="_blank" rel="noopener">B0G34V45VF</a><a class="search" href="https://www.amazon.com/s?k=ESP32-S3-DevKitC" target="_blank" rel="noopener">or ESP32-S3 (2.4 GHz)</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32-C6 3-pack (CSI node — the pick)</h4><span class="price">~$24 / 3</span></div><span class="sub">WiFi 6 · 242-tone HE-LTF CSI · <b>buy 7 nodes for a full array</b> (mix with S3s)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX</a><a class="verified" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">or LONELY BINARY S3 3-pack</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>M5StickS3 (motion / IMU)</h4><span class="price">~$41</span></div><span class="sub">ESP32-S3 + 6-axis IMU · attach to an object · in-stock M5StickC successor</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GZK27GN4" target="_blank" rel="noopener">B0GZK27GN4</a><a class="search" href="https://www.amazon.com/dp/B0GWHN8HK3" target="_blank" rel="noopener">or M5Stack official (~$22)</a></div></div>
     </div>
 
@@ -927,7 +933,7 @@
       <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD2450 USB kit</b> (~$16) — it needs no flashing, you just plug it into the Seed over USB and it reports position immediately.</dd></div>
       <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD2450 USB kit needs no flashing at all.</dd></div>
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera, nothing worn).</dd></div>
-      <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-S3 / C5</b> nodes streaming their CSI to the Seed over WiFi — the Seed's own WiFi chip can't produce CSI.</dd></div>
+      <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-C6 / S3</b> nodes streaming their CSI to the Seed over WiFi — the Seed's own WiFi chip can't produce CSI.</dd></div>
       <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (<b>7</b> is the sweet spot — Ruv's pick, a prime with headroom); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table.</dd></div>
     </dl>
   </div>
