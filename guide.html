@@ -206,7 +206,7 @@ python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
 
     <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(92,214,255,0.4);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">ESP32-C6 — the high-fidelity node (incl. the chip in your MR60 XIAO)</h3>
-      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Build from source with <b>ESP-IDF v5.5.2</b> (older IDF silently downgrades the C6 to 64-tone CSI), or grab the C6 binaries from v0.8.0-esp32:</p>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Build with current <b>ESP-IDF</b> (the v0.8.0-esp32 release notes say v5.5.2 for full HE-LTF; the in-repo README still documents v5.4 — check the release notes), or grab the C6 binaries from v0.8.0-esp32:</p>
       <pre class="code">cd firmware/esp32-csi-node
 idf.py set-target esp32c6
 idf.py build                    <span class="c"># ~1.0 MB binary</span>
@@ -251,11 +251,8 @@ python firmware/esp32-csi-node/provision.py --port COM8 --tdm-slot 1 --tdm-total
   --edge-tier 2</pre>
       <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Tier 2 makes each node compute presence, breathing, heart-rate, motion and fall flags <em>on the chip</em> (~33 KB RAM) and stream them alongside raw CSI — this is also what the Seed ingests in phase 09.</p></div></div>
 
-    <div class="step reveal"><div class="n">4</div><div class="body"><h4>Optional: authenticated mesh (shared key)</h4>
-      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM7 \
-  --ssid "YourWiFi" --password "YourPassword" --target-ip 192.168.1.20 \
-  --mesh-key "$(openssl rand -hex 32)"</pre>
-      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">All nodes in one mesh must share the same key (HMAC-SHA256 beacon auth). Store it somewhere safe; provision the identical key into every node.</p></div></div>
+    <div class="step reveal"><div class="n">4</div><div class="body"><h4>Mesh authentication — not provisionable yet</h4>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">Mesh beacon authentication (HMAC-SHA256, ADR-032) exists in the firmware but has no provisioning flag yet — skip this; it is not user-configurable today.</p></div></div>
   </div>
 </section>
 
@@ -310,7 +307,7 @@ curl http://localhost:3000/api/v1/sensing/latest</pre></div></div>
     </div>
 
     <div class="step reveal"><div class="n">1</div><div class="body"><h4>Leave the room, then run</h4>
-      <pre class="code">wifi-densepose calibrate --room living-room --duration 60s   <span class="c"># you must NOT be in the room</span></pre>
+      <pre class="code">wifi-densepose calibrate --udp-port 5005 --duration-s 60 --output baseline.bin   <span class="c"># you must NOT be in the room</span></pre>
       <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">The CLI ships in the RuView build (<span class="mono">wifi-densepose-cli</span> crate). On a V0 appliance you can instead press Calibrate on its dashboard at <span class="mono">http://cognitum-v0:9000</span>. Pets count as "not empty" — shut the cat out.</p></div></div>
 
     <div class="step reveal"><div class="n">2</div><div class="body"><h4>Know when to redo it</h4>
@@ -328,19 +325,18 @@ curl http://localhost:3000/api/v1/sensing/latest</pre></div></div>
     </div>
 
     <div class="step reveal"><div class="n">1</div><div class="body"><h4>Guided enrollment — the system coaches you through 8 anchors (~4 min)</h4>
-      <pre class="code">wifi-densepose enroll --room living-room
+      <pre class="code">wifi-densepose enroll --room-id living-room
 <span class="c">#   → "Stand still in view of the sensor…"  [✓ anchor accepted: coherence 0.91]</span>
 <span class="c">#   → "Sit down…"                            [✗ low SNR, retrying]</span>
 <span class="c">#   …walk, lie down, leave the room, etc. — 8 anchor poses total</span></pre>
       <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Each anchor has a quality gate — if your WiFi was noisy during one, it just asks again. Do this once per room.</p></div></div>
 
     <div class="step reveal"><div class="n">2</div><div class="body"><h4>Train the specialist bank</h4>
-      <pre class="code">wifi-densepose train-room --room living-room \
-    --specialists breathing,heartbeat,restlessness,posture,presence,anomaly</pre>
-      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Instead of one big model, RuView trains six small statistical specialists calibrated to <em>your</em> room. They run in microseconds, fully on-device.</p></div></div>
+      <pre class="code">wifi-densepose train-room --enrollment ./enrollment.json --output ./room-bank.json</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Instead of one big model, RuView trains six small statistical specialists calibrated to <em>your</em> room — breathing, heartbeat, restlessness, posture, presence and anomaly. All six always train (there's no flag to pick a subset). They run in microseconds, fully on-device.</p></div></div>
 
     <div class="step reveal"><div class="n">3</div><div class="body"><h4>Confirm — and learn this status command, you'll use it forever</h4>
-      <pre class="code">wifi-densepose room-status --room living-room
+      <pre class="code">wifi-densepose room-status --bank ./room-bank.json
 <span class="c">#   baseline: fresh (drift 0.04 &lt; 0.20)</span>
 <span class="c">#   breathing  ✓ trained  conf p50 0.88</span>
 <span class="c">#   heartbeat  ✓ trained  conf p50 0.71</span>
@@ -467,7 +463,7 @@ python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --compact   <span class=
           <tr><td>Presence flickers when the room is empty</td><td>You skipped calibration (phase 07), or the baseline is stale — recalibrate with the room genuinely empty.</td></tr>
           <tr><td>Vitals show 0 BPM</td><td>Subject must be fairly stationary and within range; give the MR60 ~60 s warm-up; check <span class="mono">--edge-tier 2</span> was provisioned.</td></tr>
           <tr><td>Heart rate pinned at ~45 BPM</td><td>Old firmware — that exact bug was fixed in v0.7.1-esp32. Reflash.</td></tr>
-          <tr><td>C6 CSI looks low-resolution</td><td>Firmware built with IDF older than v5.5.2, or your AP isn't doing 802.11ax on 2.4 GHz — both downgrade you to 64-tone CSI.</td></tr>
+          <tr><td>C6 CSI looks low-resolution</td><td>Firmware built with IDF older than v5.5.2 (per the v0.8.0-esp32 release notes), or your AP isn't doing 802.11ax on 2.4 GHz — both downgrade you to 64-tone CSI.</td></tr>
           <tr><td>Seed ingest fails with 401</td><td>The pairing token is shown once — re-pair over USB (30-second window) and update <span class="mono">$SEED_TOKEN</span>.</td></tr>
         </tbody>
       </table>

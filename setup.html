@@ -176,7 +176,7 @@ and stream to my Seed at 10.0.0.50 on UDP 5005."</pre>
       <p style="margin:12px 0 16px;color:var(--muted);">Claude Code (driving RuView) handles the toolchain, the config and the flash. Repeat for each node, bumping the number to 2, 3 … 7. <b style="color:var(--ink)">Prefer to do it by hand?</b> Here's exactly what's happening under the hood (Espressif's free <span class="mono">ESP-IDF</span> / <span class="mono">esptool</span>):</p>
 
       <div class="step reveal"><div class="n">1</div><div class="body"><h4>Install the toolchain (once)</h4>
-        <p style="margin:0;color:var(--muted);font-size:14.5px;">Install <b>ESP-IDF 5.5.2</b> by following Espressif's official get-started guide. It brings the build tool <span class="mono">idf.py</span> and the flasher <span class="mono">esptool</span>. <a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/" target="_blank" rel="noopener">ESP-IDF Get Started ↗</a></p></div></div>
+        <p style="margin:0;color:var(--muted);font-size:14.5px;">Install a current <b>ESP-IDF</b> by following Espressif's official get-started guide (the v0.8.0-esp32 release notes call for v5.5.2 for the C6's full HE-LTF CSI; RuView's in-repo firmware README still documents v5.4 — check the release notes). It brings the build tool <span class="mono">idf.py</span> and the flasher <span class="mono">esptool</span>. <a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/" target="_blank" rel="noopener">ESP-IDF Get Started ↗</a></p></div></div>
 
       <div class="step reveal"><div class="n">2</div><div class="body"><h4>Plug the board into your computer</h4>
         <p style="margin:0;color:var(--muted);font-size:14.5px;">Use a real <b>USB-C data cable</b>. It appears as a serial port (e.g. <span class="mono">/dev/cu.usbmodem…</span> on a Mac).</p></div></div>
@@ -185,7 +185,7 @@ and stream to my Seed at 10.0.0.50 on UDP 5005."</pre>
         <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Open <span class="mono">menuconfig</span> and set: a <b>node ID</b> (1, 2, 3… one per board), your <b>WiFi SSID + password</b>, the <b>Seed's IP</b>, and the <b>UDP port</b> (5005). Then:</p>
         <pre class="code"><span class="c"># RuView's CSI firmware builds for the C6 and S3 (there is NO C5 target)</span>
 cd RuView/firmware/esp32-csi-node
-idf.py set-target esp32c6        <span class="c"># or: esp32s3 — needs ESP-IDF 5.5.2+ for the C6</span>
+idf.py set-target esp32c6        <span class="c"># or: esp32s3 — release notes say IDF 5.5.2+ for full C6 HE-LTF CSI</span>
 idf.py build
 idf.py -p /dev/cu.usbmodemXXXX flash monitor
 <span class="c"># then provision WiFi + node ID + Seed IP (no reflash needed):</span>

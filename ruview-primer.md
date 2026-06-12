@@ -10,7 +10,7 @@
 |---|---|
 | **Generated** | June 12, 2026, ~16:00 EDT |
 | **Source** | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) — branch `main`, commit `3d7530f0`, tag **v1701**, committed **2026-06-12 09:09 EDT** (same day this primer was written). `ruvnet/wifi-densepose` is the same repository — it was renamed; the old URL redirects. |
-| **Method** | Three parallel Claude (Fable 5) research agents exhaustively swept a same-day checkout (~160 MB): one mapped every crate, REST route, WebSocket shape and UDP packet; one indexed all 163 ADRs, 90 scripts, both tutorials, the firmware tree and the docs; one graded every capability works-today / experimental / stub with code citations. The orchestrating session cross-checked them against each other and against directly-verified repo facts. |
+| **Method** | Three parallel Claude (Fable 5) research agents exhaustively swept a same-day checkout (~160 MB): one mapped every crate, REST route, WebSocket shape and UDP packet; one indexed all 160 ADR files (156 unique numbers), 90 scripts, both tutorials, the firmware tree and the docs; one graded every capability works-today / experimental / stub with code citations. The orchestrating session cross-checked them against each other and against directly-verified repo facts. |
 | **Companion docs** | `ruvector-primer.md` (the engine underneath, same site) · the [Complete Walkthrough](https://cognitum-sensor-primer.vercel.app/guide) (beginner end-to-end) |
 
 **Is this stale?** RuView ships multiple automated releases per day. Check:
@@ -39,10 +39,10 @@ RuView turns cheap ESP32 boards into through-wall human sensors: **presence, per
 
 **▶ "I just got a Cognitum One Seed and a batch of fresh ESP32-C6s — make them work."**
 1. Demo first, no hardware: `docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest` → `curl localhost:3000/health` says `"ok"`.
-2. Per board: flash C6 firmware (ESP-IDF 5.5.2: `cd firmware/esp32-csi-node && idf.py set-target esp32c6 && idf.py build && idf.py -p <PORT> flash`).
+2. Per board: flash C6 firmware (ESP-IDF 5.5.2 — 🔶 release-notes claim; the checkout's own firmware README still documents v5.4, verify before building: `cd firmware/esp32-csi-node && idf.py set-target esp32c6 && idf.py build && idf.py -p <PORT> flash`).
 3. Per board: `python provision.py --port <PORT> --ssid "<2.4GHz-SSID>" --password "<pw>" --target-ip <server-IP> --node-id N --tdm-slot N-1 --tdm-total <count> --edge-tier 2` (unique `node-id` 1…N — it's the only identity a node has).
 4. Restart server in hardware mode: `docker run --rm -e CSI_SOURCE=esp32 -p 3000:3000 -p 3001:3001 -p 5005:5005/udp ruvnet/wifi-densepose:latest`; confirm every node in `curl localhost:3000/api/v1/nodes`; Observatory badge flips DEMO→LIVE.
-5. Train the room: leave it → `wifi-densepose calibrate --room X --duration 60s` → `enroll --room X` (follow the 8 prompts) → `train-room --room X --specialists breathing,heartbeat,restlessness,posture,presence,anomaly` → `room-status` shows ✓s.
+5. Train the room: leave it → `wifi-densepose calibrate --udp-port 5005 --duration-s 60 --output baseline.bin` → `enroll --room-id X` (follow the 8 prompts) → `train-room --enrollment ./enrollment.json --output ./room-bank.json` (all six specialists — breathing, heartbeat, restlessness, posture, presence, anomaly — always train; there is no flag to pick a subset) → `room-status --bank ./room-bank.json` shows ✓s.
 6. Seed memory: pair over USB (`curl -sk -X POST https://169.254.42.1:8443/api/v1/pair/window` then `/pair` — **save the token, shown once**), re-provision nodes with `--target-port 5006 --target-ip <laptop-IP>`, run `python scripts/seed_csi_bridge.py --seed-url https://169.254.42.1:8443 --token "$SEED_TOKEN" --udp-port 5006 --batch-size 10 --validate`. Verify with `--stats`.
 
 **▶ "Add node #8 to an existing array."** Flash + provision with the next free `node-id` and `--tdm-slot 7 --tdm-total 8`; re-provision the other seven's `--tdm-total` to 8; add its position to `--node-positions`; it appears in `/api/v1/nodes` on first packet (no registration step exists). Recalibrate the room.
@@ -51,9 +51,9 @@ RuView turns cheap ESP32 boards into through-wall human sensors: **presence, per
 
 **▶ "I moved the furniture / readings got flaky."** Empty the room (pets too) → `wifi-densepose calibrate` again → if specialists degrade, re-`enroll` + `train-room`. Baselines never auto-refresh by design — the system can't verify the room is empty.
 
-**▶ "Home Assistant in 5 minutes."** Run server with `--features mqtt` build (or Docker tag with MQTT): `--mqtt <broker>:1883 --mqtt-prefix homeassistant --mqtt-privacy-mode demotion`. 21 entities per node auto-appear; the 10 semantic primitives (someone_sleeping, possible_distress, bed_exit…) are your automation triggers; 3 starter Blueprints in `docs/integrations/home-assistant.md`.
+**▶ "Home Assistant in 5 minutes."** Run server with `--features mqtt` build (or Docker tag with MQTT): `--mqtt --mqtt-host <broker> --mqtt-port 1883 --mqtt-prefix homeassistant --privacy-mode` (`--privacy-mode` is a boolean that strips biometrics before MQTT/Matter publish). 21 entities per node auto-appear; the 10 semantic primitives (someone_sleeping, possible_distress, bed_exit…) are your automation triggers; 8 HA Blueprints in `examples/ha-blueprints/` + 3 Lovelace dashboards (+3 BFLD blueprints in `cog-ha-matter`).
 
-**▶ "Prove the install is healthy."** `curl /health` → `/api/v1/nodes` (all nodes, fresh) → `/api/v1/mesh/metrics` (sync ok) → `wifi-densepose room-status` (baseline fresh, specialists ✓) → Observatory badge LIVE.
+**▶ "Prove the install is healthy."** `curl /health` → `/api/v1/nodes` (all nodes, fresh) → `/api/v1/mesh/metrics` (sync ok) → `wifi-densepose room-status --bank ./room-bank.json` (baseline fresh, specialists ✓) → Observatory badge LIVE.
 
 ## 0.2 Fault table (symptom → cause → fix)
 
@@ -67,7 +67,7 @@ RuView turns cheap ESP32 boards into through-wall human sensors: **presence, per
 | Observatory stuck DEMO | opened the file directly | open via `http://<server>:3000/ui/observatory.html` |
 | Presence flickers when empty | skipped/stale calibration | recalibrate with room truly empty |
 | HR pinned ~45 BPM | pre-v0.7.1 firmware | reflash v0.7.1-esp32+ |
-| C6 only 64-tone CSI | IDF < 5.5.2 build, or no 11ax on 2.4 GHz AP | rebuild; enable WiFi 6 on 2.4 GHz |
+| C6 only 64-tone CSI | IDF < 5.5.2 build 🔶 (release-notes claim), or no 11ax on 2.4 GHz AP | rebuild; enable WiFi 6 on 2.4 GHz |
 | Seed ingest 401 | token lost (shown once) | re-pair over USB, 30 s window |
 | `--model` errors `invalid magic` | HF JSONL bundle vs binary-RVF loader | run without `--model` (known upstream gap) |
 | Person count stuck at 1 / absurdly high | pre-v0.7.1 clamp bugs | update server (v1701+) |
@@ -124,16 +124,17 @@ The server keeps **no database** — real-time ring buffers only. RVF files hold
 
 ---
 
-## 3. The crates (v2/ workspace, ~38)
+## 3. The crates (v2/ workspace, 39 — incl. the `ruv-neural` git submodule and `homecore-plugin-example`)
 
 ### Sensing core
 | Crate | Purpose |
 |---|---|
 | `wifi-densepose-core` | CSI frame primitives, types, traits, errors |
 | `wifi-densepose-signal` | The DSP heart — 22 RuvSense modules (table below), Hampel, phase sanitizer, eigen person-count |
-| `wifi-densepose-vitals` | ADR-021 breathing (0.1–0.5 Hz) + heart rate (0.8–2.0 Hz) extractors, anomaly/apnea detection; `#![forbid(unsafe_code)]` |
+| `wifi-densepose-vitals` | ADR-021 breathing (0.1–0.5 Hz) + heart rate (0.8–2.0 Hz) extractors, anomaly/apnea detection; README-claimed `forbid(unsafe_code)` (attribute not in lib.rs) |
 | `wifi-densepose-calibration` | ADR-151 four-stage room pipeline: baseline → enroll → extract → train 6 specialists |
 | `wifi-densepose-nn` | ONNX / PyTorch / Candle inference backends |
+| `ruv-neural` | Workspace member vendored as a **git submodule** (neural primitives) |
 | `wifi-densepose-ruvector` | RuVector integration + 4 cross-viewpoint fusion modules (attention, geometry, coherence, fusion) |
 | `wifi-densepose-train` | Training: MAE pretraining (ADR-152), WiFlow-STD port, `rapid_adapt.rs` LoRA test-time training, `signal_features.rs` |
 | `wifi-densepose-bfld` | Soul Signature / BFLD privacy-gated re-ID — `EnrolledMatcher`, 364 tests (ADR-118…122, issue #1021) |
@@ -161,7 +162,7 @@ The server keeps **no database** — real-time ring buffers only. RVF files hold
 | `ruview-swarm` | Drone swarm control (ADR-148) — MARL, Raft, MAVLink/PX4 |
 
 ### HOMECORE (Rust Home-Assistant port, ADR-126…134 — mostly ⚠️ P1 scaffolds)
-`homecore` (state machine/event bus) · `homecore-api` (HA wire-compatible REST/WS) · `homecore-automation` · `homecore-assist` (voice/intent, measured 0.855 cosine match) · `homecore-hap` (Apple Home — ⚠️ stub) · `homecore-plugins` (WASM, Ed25519-signed per ADR-162) · `homecore-recorder` (SQLite) · `homecore-migrate` · `homecore-server`
+`homecore` (state machine/event bus) · `homecore-api` (HA wire-compatible REST/WS) · `homecore-automation` · `homecore-assist` (voice/intent, measured 0.855 cosine match) · `homecore-hap` (Apple Home — ⚠️ stub) · `homecore-plugins` (WASM, Ed25519-signed per ADR-162) · `homecore-plugin-example` (example WASM plugin) · `homecore-recorder` (SQLite) · `homecore-migrate` · `homecore-server`
 
 ### The 22 RuvSense DSP modules (`wifi-densepose-signal/src/ruvsense/`)
 multiband · phase_align · multistatic · coherence · coherence_gate · pose_tracker (17-kp Kalman + AETHER re-ID) · field_model (SVD eigenstructure) · tomography (ISTA L1 voxels) · longitudinal (Welford drift) · intention (200–500 ms pre-movement) · cross_room · gesture (DTW) · adversarial (spoof detection) · cir (ADR-134 CSI→CIR) · calibration (ADR-135 baseline) · array_coordinator · attractor_drift · evolution · fusion_quality · rf_slam · temporal_gesture · mod
@@ -204,13 +205,14 @@ All little-endian, magic at bytes 0–3. Defined in `wifi-densepose-hardware/src
 
 | Magic | Packet | Notes |
 |---|---|---|
-| `0xC5110001` | **Raw CSI frame** | 20-byte header (node_id, n_ant, n_sub, freq, seq, RSSI, noise, PPDU type byte 18, flags byte 19) + i8 I/Q pairs. HT20 ≈ 356 B; C6 HE-SU ≈ 1,556 B (242 tones) |
+| `0xC5110001` | **Raw CSI frame** | 20-byte header (node_id, n_ant, n_sub, freq, seq, RSSI, noise, PPDU type byte 18, flags byte 19) + i8 I/Q pairs. HT20 ≈ 356 B; C6 HE-SU ≈ 1,556 B (242 tones) 🔶 release-notes figure |
 | `0xC5110002` | Edge vitals (ADR-039) | 32 B: HR, BR, presence from Tier-2 nodes |
 | `0xC5110003` | **8-dim feature vector** (ADR-069) | 48 B @ 1 Hz — presence, motion energy, breathing/30, HR/120, phase variance, person count/4, fall flag, (RSSI+100)/100 — this is what the Seed ingests |
 | `0xC5110004` | mmWave-fused vitals (ADR-063) | Kalman blend ~80% MR60 radar / 20% CSI, on-device |
 | `0xC5110005` | Compressed CSI | bandwidth-constrained links |
 | `0xC5110006` | Feature state (ADR-081) | compact default upstream payload |
-| `0xC5110007` | Temporal classification (ADR-095) | on-device activity class |
+| `0xC5110007` | Temporal classification / WASM output — naming split | host parser: ADR-095 temporal classification; firmware headers: ADR-040 WASM output (reassigned per #928) |
+| `0xC5118100` | RV_MESH beacon | mesh beacon magic |
 | `0xC511A110` | **Sync packet** (ADR-110) | 32 B: leader epoch µs + local µs — host recovers mesh-aligned time (±~104 µs measured) |
 
 Ports: **5005** CSI ingest (one listener only!), **5006** feature stream → Seed bridge.
@@ -220,20 +222,20 @@ Ports: **5005** CSI ingest (one listener only!), **5006** feature stream → See
 ## 6. CLI reference
 
 ### sensing-server flags
-`--source auto|simulate|wifi|esp32` · `--http-port` (default **8080** from source, **3000** in Docker) · `--ws-port` (8765/3001) · `--udp-port 5005` · `--ui-path` · `--tick-ms 50` · `--model <rvf>` · `--mqtt host:port --mqtt-prefix homeassistant --mqtt-privacy-mode demotion|redacted|full --mqtt-publish-pose` · `--node-positions "x,y,z;…"` · `--calibrate` · `--benchmark` · `--train --dataset --epochs --save-rvf` · `--progressive` · `--matter` (⚠️ stub)
+`--source auto|simulate|wifi|esp32` · `--http-port` (default **8080** from source, **3000** in Docker) · `--ws-port` (8765/3001) · `--udp-port 5005` · `--ui-path` · `--tick-ms 100` (default 100) · `--model <rvf>` · `--mqtt` (boolean) with `--mqtt-host <host> --mqtt-port 1883 --mqtt-prefix homeassistant --mqtt-publish-pose` · `--privacy-mode` (boolean — strips biometrics before MQTT/Matter publish; "demotion" is the separate ADR-141 engine concept, not a CLI mode) · `--node-positions "x,y,z;…"` · `--calibrate` · `--benchmark` · `--train --dataset --epochs --save-rvf` · `--progressive` · `--matter` (⚠️ stub)
 
 ### wifi-densepose CLI (the room pipeline)
 ```bash
-wifi-densepose calibrate  --udp-port 5005 --duration-s 30 --output baseline.bin --tier ht20|ht40|he20|he40
-wifi-densepose enroll     --room living-room          # 8 guided anchors, ~4 min, quality-gated
-wifi-densepose train-room --room living-room --specialists breathing,heartbeat,restlessness,posture,presence,anomaly
-wifi-densepose room-status --room living-room          # baseline freshness + per-specialist confidence
-wifi-densepose room-watch  --bank specialists.rvf --udp-port 5005   # live mixture-of-specialists
-wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API for UIs
+wifi-densepose calibrate  --udp-port 5005 --duration-s 30 --output baseline.bin --tier ht20|ht40|he20|he40   # --duration-s default 30 (integer seconds); no --room flag
+wifi-densepose enroll     --room-id living-room        # 8 guided anchors, ~4 min, quality-gated
+wifi-densepose train-room --enrollment ./enrollment.json --output ./room-bank.json   # all six specialists always train (no --room / --specialists flags)
+wifi-densepose room-status --bank ./room-bank.json     # baseline freshness + per-specialist confidence
+wifi-densepose room-watch  --bank ./room-bank.json --udp-port 5005   # live mixture-of-specialists (JSON bank, default ./room-bank.json)
+wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API for UIs (default port 8090)
 ```
 
 ### provision.py (firmware/esp32-csi-node/) — full flag set
-`--port` (required) · `--baud 460800` · `--ssid` · `--password` · `--target-ip` · `--target-port 5005` · `--node-id 0–255` · `--tdm-slot` / `--tdm-total` · `--edge-tier 0|1|2` · `--pres-thresh` · `--fall-thresh` (rad/s²; walking ≈ 2–5, falls 20+) · `--vital-window 32–256` · `--vital-interval ms` · `--subk-count ≤32` · `--mesh-key <hex32>` (HMAC-SHA256 beacons) · `--wasm-verify/--no-wasm-verify --wasm-pubkey` · `--dry-run`. Re-runs **merge** settings (NVS additive). No discovery protocol exists — nodes push to the provisioned IP; the server tells nodes apart only by `node_id`.
+`--port` (required) · `--baud 460800` · `--ssid` · `--password` · `--target-ip` · `--target-port 5005` · `--node-id 0–255` · `--tdm-slot` / `--tdm-total` · `--edge-tier 0|1|2` · `--pres-thresh` · `--fall-thresh` (integer milli-units, default 15000 = 15.0 rad/s²; walking ≈ 2–5, falls 20+ rad/s²) · `--vital-win` (default 300) · `--vital-int` (default 1000, ms) · `--subk-count ≤32` · `--wasm-verify/--no-wasm-verify --wasm-pubkey` · plus `--chip`, `--channel`, `--filter-mac`, `--hop-channels`, `--seed-url`, `--seed-token`, `--zone`, `--reset`, `--dry-run` and more. There is **no `--mesh-key` flag** — mesh beacon authentication (HMAC-SHA256, ADR-032) exists in the firmware but has no provisioning flag yet. Re-runs **merge** settings (NVS additive). No discovery protocol exists — nodes push to the provisioned IP; the server tells nodes apart only by `node_id`.
 
 ---
 
@@ -247,33 +249,33 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 | Motion / activity | ✅ | `motion.rs`, `gesture.rs` (DTW), edge tier on-chip | |
 | Fall detection | ✅ | edge_processing.c, NVS `fall_thresh` | <200 ms, 3-frame debounce |
 | Empty-room calibration | ✅ | ADR-135, `ruvsense/calibration.rs` | 30 s Welford amplitude + von Mises phase; never automatic (can't verify emptiness); ~7 KB/link |
-| Room specialist training | ✅ | ADR-151, `wifi-densepose-calibration` | baseline → 8-anchor enroll → extract → train 6 small LoRA specialists (2–12 KB each) over a frozen backbone; runtime MixtureOfSpecialists with anomaly veto |
+| Room specialist training | ✅ | ADR-151, `wifi-densepose-calibration` | baseline → 8-anchor enroll → extract → train six statistical specialist heads (threshold/prototype/periodicity/novelty) — the frozen-backbone + LoRA design is ADR-151's documented upgrade path, not yet the implementation; runtime MixtureOfSpecialists with anomaly veto |
 | Pose — heuristic skeleton | ✅ (default) | `pose_tracker.rs` | motion-driven, labeled "Signal-Derived" in UI |
 | Pose — trained (MM-Fi) | ⚠️ | `wiflow_std/`, `cog-pose-estimation` | HF `ruvnet/wifi-densepose-mmfi-pose` 🔶 82.69% torso-PCK@20; per-room LoRA adapters (~11 KB) recover cross-room accuracy; live-server keypoint head NOT wired by default |
 | Pose — camera-supervised | ⚠️ (data collection works) | ADR-079 scripts | needs 35–40 min varied-activity session; earlier 92.9% claim **retracted** by upstream |
 | Pose — camera-free | ⚠️ experimental | ADR-071, `train-camera-free.js` | fuses up to 10 Seed signals into weak labels |
 | Soul Signature / re-ID | ⚠️ honest-experimental | `wifi-densepose-bfld` | Real `EnrolledMatcher` (364 tests) but **measured: two people NOT separable on WiFi-only cardiac+respiratory channels** (gap ~0.0005); named identity is enrollment-gated; privacy: embeddings RAM-only, per-site keyed hashes rotate daily (#787) |
 | Multistatic mesh + time sync | ✅ | ADR-110, firmware c6_* modules | C6 802.15.4 sync measured 99.56% match, 104 µs stdev (WITNESS-LOG-110); S3 ESP-NOW fallback; TDM slots; `--node-positions` required for geometric fusion |
-| Seed pipeline | ✅ | ADR-069, `scripts/seed_csi_bridge.py` | pair over USB (169.254.42.1:8443, token shown once) → bridge batches 0xC5110003 → `POST /api/v1/store/ingest` → witness chain → MCP query. Bridge runs on a host, not the Seed; compact periodically (<100K vectors) |
+| Seed pipeline | ✅ | ADR-069, `scripts/seed_csi_bridge.py` | pair over USB (169.254.42.1:8443, token shown once) → bridge batches 0xC5110003 → `POST /api/v1/store/ingest` → witness chain → MCP query. Bridge runs on a host, not the Seed; compact periodically (`--compact`) |
 | Edge tiers 0/1/2 | ✅ (tier 2 ⚠️ LoRA part) | edge_processing.c | 0 = raw stream, 1 = stats (~30 KB RAM), 2 = on-chip presence/vitals/fall (~33 KB) |
 | mmWave fusion (MR60BHA2/LD2410) | ✅ | firmware auto-detect over UART, `0xC5110004` | ~80/20 Kalman radar/CSI blend; `/api/v1/edge-vitals` |
-| C6 WiFi-6 HE-LTF (242-tone) | ✅ with conditions | v0.8.0-esp32 | needs IDF 5.5.2 build + 802.11ax on a 2.4 GHz AP; S3 is HT-only by silicon |
+| C6 WiFi-6 HE-LTF (242-tone) | ✅ with conditions | v0.8.0-esp32 | needs IDF 5.5.2 build 🔶 (release-notes claim; the checkout's firmware README still documents v5.4 — verify before building) + 802.11ax on a 2.4 GHz AP; S3 is HT-only by silicon |
 | Host-WiFi RSSI modes | ✅ (coarse) | `wifi-densepose-wifiscan` | Windows 9.74 Hz wlanapi FFI; presence/motion only, no vitals/pose |
 | MAT disaster triage | ✅ | `wifi-densepose-mat` | START protocol; safety gate: heartbeat present ⇒ never "Deceased" |
 | Point cloud (camera+CSI+radar) | ⚠️ PoC | `wifi-densepose-pointcloud`, tomography.rs | pairs naturally with the XIAO ESP32S3 **Sense** (camera-on-an-S3) |
 | Health scripts | ⚠️ | scripts/: sleep-monitor, apnea-detector, gait-analyzer, stress-monitor | present; real-world validation in progress |
-| HOMECORE + Matter/HAP | ⚠️/❌ | homecore-* crates | MQTT→Home Assistant path is the ✅ one (21 entities/node, 10 semantic primitives, 3 starter Blueprints); Matter & HAP are stubs targeted at v0.8 |
+| HOMECORE + Matter/HAP | ⚠️/❌ | homecore-* crates | MQTT→Home Assistant path is the ✅ one (21 entities/node, 10 semantic primitives, 8 HA Blueprints in `examples/ha-blueprints/` + 3 Lovelace dashboards); Matter & HAP are stubs targeted at v0.8 |
 | SENSE-BRIDGE MCP (ADR-124) | ✅ | `@ruvnet/rvagent` npm | exposes sensing + Seed memory as MCP tools for Claude/agents; 401/403 on bad token/origin |
 | OccWorld prediction (ADR-147) | ⚠️ | `wifi-densepose-worldmodel` | inference path real 🔶 (209 ms, RTX 5080); needs your own fine-tuned checkpoint |
 | RVF model loading | ⚠️ known gap | `rvf_container.rs` | binary RVF (`0x52564653`) only; the HF JSONL bundle errors — run live server without `--model`, use weights from Python |
 | QEMU no-hardware testing | ✅ | scripts/qemu-*, sdkconfig.qemu | swarm presets, chaos/fuzz/NVS-matrix tests |
 
 ### Home Assistant surface (the ✅ integration)
-21 entities per node via MQTT auto-discovery: presence, person_count, breathing_rate, heart_rate, motion_level/energy, presence_score, RSSI, optional pose — plus **10 semantic primitives**: someone_sleeping, possible_distress, room_active, elderly_inactivity_anomaly, meeting_in_progress, bathroom_occupied, fall_risk_elevated, bed_exit, no_movement, multi_room_transition. Privacy modes: demotion (default) / redacted / full.
+21 entities per node via MQTT auto-discovery: presence, person_count, breathing_rate, heart_rate, motion_level/energy, presence_score, RSSI, optional pose — plus **10 semantic primitives**: someone_sleeping, possible_distress, room_active, elderly_inactivity_anomaly, meeting_in_progress, bathroom_occupied, fall_risk_elevated, bed_exit, no_movement, multi_room_transition. Privacy: boolean `--privacy-mode` strips biometrics before MQTT/Matter publish; "demotion" is the separate ADR-141 engine concept, not a CLI mode.
 
 ---
 
-## 8. The complete ADR index (163 records)
+## 8. The complete ADR index (160 ADR files / 156 unique numbers)
 
 | # | Title | Status |
 |---|---|---|
@@ -434,7 +436,7 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 | 162 | HOMECORE Plugin Security (signatures + RunModes) | — |
 | 163 | Edge-Latency: CLAIMED → MEASURED-on-host | — |
 
-(Gaps at 87–88, 111–112, 131–132 are absent files; a few numbers are duplicated in the repo — listed as found. Statuses marked "—" don't declare one in their header.)
+(160 ADR files, 156 unique numbers: gaps at 51, 87–88, 111–112, 131–132 are absent numbers; numbers 050, 052, 147 and 149 are each used twice — listed as found. "—" means status not captured in this sweep; many of these files do declare one (e.g. 019 Accepted, 022 Partially Implemented, 104 Accepted, 163 Accepted).)
 
 ---
 
@@ -445,16 +447,19 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 - **pi5-cluster-cognitive-rf-observer.md** — advanced, 4–6 h, ~$580: 4× Pi 5 + Hailo-8 multistatic observer with rvcsi, Markov room-state prediction, Tailscale transport (the V0-class path)
 
 ### Key docs
-`docs/user-guide.md` (2,468 lines — the master document) · `build-guide.md` · `proof-of-capabilities.md` · `TROUBLESHOOTING.md` · `user-guide-apple-homepod.md` · `wifi-mat-user-guide.md` · `integrations/home-assistant.md` (+3 automation Blueprints) · `integrations/pypi-release.md` · 10 DDD bounded-context models in `docs/ddd/` · benchmark studies in `docs/benchmarks/` (mmfi study, efficiency frontier, homecore-vs-HA) · 12-category **105-module edge catalog** in `docs/edge-modules/` · QE reports in `docs/qe-reports/` · witness logs `WITNESS-LOG-028.md` (1,031 tests + deterministic proof) and `WITNESS-LOG-110.md` (C6 sync measurements)
+`docs/user-guide.md` (2,468 lines — the master document) · `build-guide.md` · `proof-of-capabilities.md` · `TROUBLESHOOTING.md` · `user-guide-apple-homepod.md` · `wifi-mat-user-guide.md` · `integrations/home-assistant.md` (the 8 HA Blueprints live in `examples/ha-blueprints/`, + 3 Lovelace dashboards in `examples/lovelace/`, +3 BFLD blueprints in `cog-ha-matter`) · `integrations/pypi-release.md` · 9 domain models in `docs/ddd/` · benchmark studies in `docs/benchmarks/` (mmfi study, efficiency frontier, homecore-vs-HA) · 12-category **105-module edge catalog** in `docs/edge-modules/` · QE reports in `docs/qe-reports/` · witness logs `WITNESS-LOG-028.md` (1,031 tests + deterministic proof) and `WITNESS-LOG-110.md` (C6 sync measurements)
 
 ### Scripts (90 in scripts/ — the most-used)
 `seed_csi_bridge.py` (Seed ingest) · `provision.py` · `record-csi-udp.py` + `collect-ground-truth.py` + `align-ground-truth.js` + `train-wiflow-supervised.js` + `eval-wiflow.js` (the camera-supervised pose chain) · `train-camera-free.js` · `calibrate-camera-room.py` · `csi-udp-relay.py` (the Windows-Docker UDP workaround) · `sleep-monitor.js` / `apnea-detector.js` / `gait-analyzer.js` / `stress-monitor.js` · `mincut-person-counter.js` · `through-wall-detector.js` · `rf-tomography.js` · `generate-witness-bundle.sh` · `qemu-*.sh` test harness · `publish-huggingface.py` · `occworld_retrain.py`
 
 ### Firmware (firmware/esp32-csi-node/)
-45 C/H files: `csi_collector` (ADR-018 encoder) · `stream_sender` · `rv_mesh` · `nvs_config` · `ota_update` (S3 only) · `edge_processing` + `wasm_runtime` (WASM3, ADR-040) · `adaptive_controller` · `c6_timesync` / `c6_sync_espnow` / `c6_twt` / `c6_lp_core` / `c6_softap_he` (ADR-110) · `mmwave_sensor` · `display_*` (AMOLED, S3 8MB only) · `mock_csi` (test-only). Config overlays: `sdkconfig.defaults` (S3 8MB), `.4mb`, `.s3-fair`, **`.esp32c6`**, `.qemu`, `.coverage`, `.template` — **no C5 target exists**.
+52 C/H files (+ `lp_core/`): `csi_collector` (ADR-018 encoder) · `stream_sender` · `rv_mesh` · `nvs_config` · `ota_update` (S3 only) · `edge_processing` + `wasm_runtime` (WASM3, ADR-040) · `adaptive_controller` + `adaptive_controller_decide` · `power_mgmt` · `rv_feature_state` · `rv_radio_ops` · `rvf_parser` · `swarm_bridge` · `wasm_upload` · `c6_timesync` / `c6_sync_espnow` / `c6_twt` / `c6_lp_core` / `c6_softap_he` (ADR-110) · `mmwave_sensor` · `display_*` (AMOLED, S3 8MB only) · `mock_csi` (test-only). Config overlays: `sdkconfig.defaults` (S3 8MB), `.4mb`, `.s3-fair`, **`.esp32c6`**, `.qemu`, `.coverage`, `.template`, `.8mb_backup` — **no C5 target exists**.
 
 ### In-repo Claude Code plugin
 `/plugin marketplace add ruvnet/RuView` then `/plugin install ruview@ruview` — plus `.claude/` ships claude-flow v3 config, 3 commands, 30 skills, and daemon workers. The MCP server is `@ruvnet/rvagent` (ADR-124).
+
+### Also on disk (easy to miss)
+`archive/v1/` (the complete original Python implementation, incl. the deterministic proof `verify.py`) · `aether-arena/` (the benchmark harness lives in-repo) · `python/` (ADR-117 PyO3 package) · `tools/ruview-cli` + `tools/ruview-mcp` · `vendor/{midstream, ruvector, sublinear-time-solver}` submodules · `monitoring/` (Prometheus + Grafana) · `examples/ha-blueprints/` + `examples/lovelace/` · `PROOF.md` · `Makefile`
 
 ---
 
@@ -462,7 +467,7 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 
 | Device | CSI | Status | Notes |
 |---|---|---|---|
-| ESP32-C6 (XIAO C6, DevKitC, SuperMini) | 242-tone HE-LTF | ✅ **the fidelity pick** (v0.8.0) | needs IDF 5.5.2 + 11ax 2.4 GHz AP; **no OTA** (USB reflash); 2.4 GHz only |
+| ESP32-C6 (XIAO C6, DevKitC, SuperMini) | 242-tone HE-LTF | ✅ **the fidelity pick** (v0.8.0) | needs IDF 5.5.2 🔶 (release-notes claim; checkout's own docs still say IDF v5.4 — verify before building) + 11ax 2.4 GHz AP; **no OTA** (USB reflash); 2.4 GHz only |
 | ESP32-S3 8 MB | 56–114-tone HT | ✅ workhorse | OTA-capable, AMOLED option, mmWave fusion host |
 | ESP32-S3 SuperMini 4 MB | HT20 | ✅ | use `-4mb` binaries |
 | XIAO ESP32S3 **Sense** | HT (as S3) + OV2640 camera + mic | ✅ as S3 node; ⚠️ camera-as-teacher is an experiment | documented teacher flow uses a host webcam |
@@ -478,8 +483,8 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 
 ## 11. Last three firmware releases (what changed)
 
-- **v0.8.0-esp32** (2026-06-11): true HE-LTF CSI on C6 — 256 bins / **242 active HE20 tones**, "4× the spectral density"; requires IDF v5.5.2 (v5.4 silently downconverted to 64-tone HT); C6 becomes "the precision instrument of the fleet."
-- **v0.7.1-esp32** (2026-06-09): CSI self-ping fix (callback starvation → guaranteed ~50 Hz unicast floor); heart-rate autocorrelation fix (was pinned ~45 BPM); person-count clamps removed; OTA fails closed on unprovisioned nodes.
+- **v0.8.0-esp32** (2026-06-11) 🔶 release-notes-sourced (the checkout does not contain these claims, and its firmware README still documents IDF v5.4 — verify before building): true HE-LTF CSI on C6 — 256 bins / **242 active HE20 tones**, "4× the spectral density"; requires IDF v5.5.2 per the release notes (v5.4 silently downconverted to 64-tone HT); C6 becomes "the precision instrument of the fleet."
+- **v0.7.1-esp32** (2026-06-09): CSI self-ping fix (callback starvation → "guaranteed ~50 Hz unicast floor" 🔶 release-notes claim — the repo itself describes variable ~13–19 Hz after #985); heart-rate autocorrelation fix (was pinned ~45 BPM); person-count clamps removed; OTA fails closed on unprovisioned nodes.
 - **v0.7.0-esp32** (2026-05-23): ADR-110 closed — 802.15.4 mesh time-sync measured at 104 µs stdev / 99.56% cross-board match; HE-LTF wire tagging; LP-core wake-on-motion; TWT.
 
 ---
@@ -490,6 +495,7 @@ wifi-densepose calibrate-serve --http-port 8001        # HTTP calibration API fo
 - All accuracy numbers (82.3% triplet, 82.69% PCK@20, 104 µs sync, 9.74 Hz Windows scan, OccWorld 209 ms) are 🔶 repo-claimed/witness-logged, not independently reproduced.
 - A few deep specifics came from single-agent reads and may have approximate line numbers; the three agents disagreed on workspace crate count (15 vs 38 — the 38-crate enumeration matches the current tree; 15 is the stale figure in the repo's own CLAUDE.md).
 - The `aether_embedding` field layout reported by one agent conflicts with the documented 48-byte ADR-069 packet; this primer uses the documented 8-dim table (verified in `docs/user-guide.md`).
+- Mechanical verification (2026-06-12) corrected: ADR 163→160 files, invented CLI flags (`--mesh-key`, `--specialists`, `--room`, `--mqtt-privacy-mode`), firmware-file and blueprint counts, and flagged release-note-only firmware claims.
 
 ---
 

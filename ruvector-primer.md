@@ -40,14 +40,14 @@ RuVector is ruvnet's 1.58M-line Rust monorepo: a **self-learning vector database
 | a portable KB file I can ship | **RVF** — vectors+index+witness in one `.rvf` | `cargo install rvf-cli` / `npm i @ruvector/rvf` |
 | agent memory that persists | AgentDB (bundled in ruFlo) or `@ruvector/rvf` + HNSW | `ruflo memory …` / `npm i agentdb@alpha` |
 | replace pgvector | `ruvector-postgres` (230+ SQL fns) | `cargo pgrx init` then build; `docker pull ruvnet/ruvector-postgres` |
-| search in the browser, offline | `@ruvector/ruvector-wasm`, `rvlite` (SQL+SPARQL+Cypher, IndexedDB) | npm |
+| search in the browser, offline | `@ruvector/wasm`, `rvlite` (SQL+SPARQL+Cypher, IndexedDB) | npm |
 | tiny IoT / ASIC search | `micro-hnsw-wasm` (~11.8 KB) | vendored |
 | a knowledge graph + Cypher | `ruvector-graph` | `cargo add ruvector-graph` / `npm i @ruvector/graph` |
 | results that improve with use | `ruvector-gnn` + `sona` | `cargo add ruvector-gnn sona` |
 | hallucination/drift gating | `prime-radiant` + `ruvector-mincut` + `cognitum-gate-*` | cargo |
 | local LLM, no API bill | `ruvllm` (GGUF, Metal/CUDA/WebGPU, BitNet) | `npm i @ruvector/ruvllm` |
 | run on Pi 5 NPU / bare metal | `ruvector-hailo` (ADR-167) / `ruvix` kernel (ADR-087) | cargo, feature-gated |
-| an agent framework with MCP | `rvAgent` (10 crates) | `npm i @ruvector/rvagent-cli` |
+| an agent framework with MCP | `rvAgent` (10 crates) | cargo (crates/rvAgent; npm publish unverified) |
 | expose all this to Claude | `@ruvector/rvf-mcp-server`, `mcp-brain` | `npx @ruvector/rvf-mcp-server --transport stdio` |
 
 ![RuVector stack: consumers (RuView, Cognitum Seed/V0, ruFlo, AgentDB, your app) sit on one Rust engine of ~114–170 crates across search, self-learning, graph, coherence, math, LLM, attention, bio/quantum, distributed and agent domains, delivered as .rvf files, crates.io/npm packages, WASM/NAPI builds and a PostgreSQL extension](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruvector-stack.svg)
@@ -88,16 +88,15 @@ cargo add ruvector-core      # Rust
 npm install ruvector         # Node
 ```
 ```rust
-use ruvector_core::VectorStore;
-let mut store = VectorStore::new(384);
-store.insert(vec![/* 384-dim embedding */])?;
-let results = store.search(&query_vector, 10)?;
+use ruvector_core::{VectorDB, DbOptions};
+let db = VectorDB::new(DbOptions::default())?;
+// see crates/ruvector-core/README.md for insert/search
 ```
 
 ### RVF — the cognitive container format
 **What a `.rvf` file stores:** vectors + HNSW index, LoRA adapter deltas, GNN graph state, cryptographic witness chains, post-quantum signatures, COW (Git-like) branches — up to 24 segment types including a bootable Linux microkernel (claimed 125 ms boot as a microservice).
 
-**Rust:** 13 `rvf-*` crates (`rvf-types`, `rvf-wire`, `rvf-runtime`, `rvf-crypto`, `rvf-cli`, …). **npm:** `@ruvector/rvf`, `@ruvector/rvf-node`, `@ruvector/rvf-wasm`, `@ruvector/rvf-mcp-server`.
+**Rust:** 23 rvf crates (17 top-level `rvf-*` — `rvf-types`, `rvf-wire`, `rvf-runtime`, `rvf-crypto`, `rvf-cli`, … — + 6 adapters under `rvf-adapters/`: claude-flow, agentdb, ospipe, agentic-flow, rvlite, sona). **npm:** `@ruvector/rvf`, `@ruvector/rvf-node`, `@ruvector/rvf-wasm`, `@ruvector/rvf-mcp-server`.
 
 ```bash
 cargo install rvf-cli
@@ -105,10 +104,9 @@ npm install @ruvector/rvf
 npx @ruvector/rvf-mcp-server --transport stdio   # expose RVF ops to Claude/Cursor as MCP tools
 ```
 ```rust
-use rvf_runtime::Store;
-let mut store = Store::load("vectors.rvf")?;
-store.insert(vec![/* … */])?;
-store.save()?;
+use rvf_runtime::RvfStore;
+let store = RvfStore::open("vectors.rvf")?;
+// create/open/open_readonly; see crates/rvf/rvf-runtime
 ```
 
 ### GNN self-learning search
@@ -124,7 +122,7 @@ Neo4j-style Cypher (`MATCH (a)-[:SIMILAR]->(b)`), hyperedges, SPARQL 1.1, Leiden
 Two-tier LoRA (MicroLoRA <1 ms instant fixes; BaseLoRA long-term), EWC++ against catastrophic forgetting, ReasoningBank trajectory learning. Runs in browsers.
 
 ### Attention mechanisms (46 types)
-**Crate:** `ruvector-attention` · **npm:** `@ruvector/ruvector-attention`
+**Crate:** `ruvector-attention` · **npm:** `@ruvector/attention`
 Flash Attention, MLA, Mamba SSM, linear, graph, hyperbolic, optimal-transport, topology-gated, KV-cache compression, speculative decoding; 142 tests; automatic mode selection across 7 unified diagnostic theories.
 
 ### Min-cut coherence gating
@@ -133,7 +131,7 @@ Dynamic exact min-cut with claimed subpolynomial updates (n^0.12 over tested 100
 
 ### Sublinear solvers
 **Crate:** `ruvector-solver` · **npm:** `@ruvector/solver`
-8 algorithms (Neumann, CG, Forward/Backward Push, Hybrid Random Walk, TRUE, BMSSP, auto-router) for PageRank/spectral/Laplacian work; 177 tests.
+7 algorithms + an auto-router (Neumann, CG, Forward/Backward Push, Hybrid Random Walk, TRUE, BMSSP) for PageRank/spectral/Laplacian work; 177 tests.
 
 ### Local LLM inference
 **Crate:** `ruvllm` · **npm:** `@ruvector/ruvllm`, `@ruvector/ruvllm-wasm`
@@ -143,7 +141,7 @@ GGUF models on Metal/CUDA/ANE/WebGPU/CPU; TurboQuant 2–4-bit KV cache (claimed
 Local ONNX (`Xenova/all-MiniLM-L6-v2`-class, 384-dim) and `ruvector-cnn` MobileNet-V3 image embeddings (claimed <5 ms, INT8, zero deps). ADR-194/195 unify the embedder API. No cloud API needed.
 
 ### WASM / edge / Node
-35+ WASM crates (core search claimed at 5.5 KB minimal runtime; full core 58 KB), 20+ NAPI `-node` crates with prebuilt binaries for darwin-x64/arm64, linux-x64/arm64-gnu, win32-x64-msvc. Edge runtime rvLite (~2 MB) with SQL + SPARQL + Cypher.
+35+ WASM crates (core search claimed at 5.5 KB minimal runtime; full core 58 KB), ~11 NAPI `-node` crates with prebuilt binaries for darwin-x64/arm64, linux-x64/arm64-gnu, win32-x64-msvc. Edge runtime rvLite (~2 MB) with SQL + SPARQL + Cypher.
 
 ### PostgreSQL extension
 **Crate:** `ruvector-postgres` (excluded from default workspace — needs `cargo pgrx init`).
@@ -162,7 +160,7 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 
 ## 3. Complete crate inventory
 
-**Workspace:** Rust edition 2021, MSRV 1.77 (RVF subsystem 1.87), resolver 2, workspace version 2.2.3 at this commit. **~170 workspace members counted**: 139 crates in `crates/`, 22 RuVix kernel sub-crates, 10 rvAgent sub-crates (the README's own marketing count says 216 — counts differ depending on whether excluded/example crates are included).
+**Workspace:** Rust edition 2021, MSRV 1.77 (RVF subsystem 1.87), resolver 2, workspace version 2.2.3 at this commit. **181 workspace members (root Cargo.toml) + nested sub-workspaces; 138 crate dirs in `crates/`**, plus 22 RuVix kernel sub-crates and 10 rvAgent sub-crates (root workspace members array = 181 — counts differ depending on whether excluded/example crates are included).
 
 ### Core vector search & HNSW
 `ruvector-core` (HNSW + SIMD + REDB persistence) · `ruvector-acorn` (predicate-agnostic filtered HNSW, claimed 2–1000× filtered QPS) · `ruvector-rabitq` (1-bit rotation quantization) · `ruvector-filter` (metadata filtering) · `ruvector-metrics` (Prometheus) · `ruvector-hyperbolic-hnsw` (Poincaré-ball hierarchy-aware search) · `ruvector-diskann`/`-node` (SSD Vamana) · `ruvector-rairs` (RAIRS IVF, ADR-193) · WASM variants: `ruvector-wasm`, `ruvector-acorn-wasm`, `ruvector-rabitq-wasm`, `ruvector-hyperbolic-hnsw-wasm`, `micro-hnsw-wasm`
@@ -174,13 +172,13 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 `ruvector-attention`/`-node`/`-wasm`/`-unified-wasm`/`-cli` (46 mechanisms) · `ruvector-mincut`/`-node`/`-wasm` · `ruvector-mincut-gated-transformer`/`-wasm` · `ruvector-attn-mincut` (subpolynomial dynamic min-cut) · `ruvector-mincut-brain-node` · `ruvector-coherence` (coherence proxies) · `ruvector-consciousness`/`-wasm` (IIT Φ, causal emergence)
 
 ### Solvers & math
-`ruvector-solver`/`-node`/`-wasm` (8 sublinear algorithms) · `ruvector-math`/`-wasm` (optimal transport, information geometry, product manifolds)
+`ruvector-solver`/`-node`/`-wasm` (7 sublinear algorithms + an auto-router) · `ruvector-math`/`-wasm` (optimal transport, information geometry, product manifolds)
 
 ### Self-learning & LLM
 `sona` (two-tier LoRA + EWC++ + ReasoningBank) · `ruvector-nervous-system`/`-wasm` (spiking nets, BTSP) · `ruvllm`/`-cli`/`-wasm` (LLM serving; paged attention, KV cache) · `ruvllm_sparse_attention` (O(N log N) kernel, ADR-183–192: ESP32 no-std + Pi Zero 2 W hardening) · `ruvllm_retrieval_diffusion` · `prime-radiant` — **the universal coherence engine**: sheaf cohomology (H⁰/H¹, sheaf Laplacian), immutable Blake3 witness chains with multi-party approval, 256-tile WASM gate fabric, neural gating — the hallucination/contradiction firewall, *not* an LLM server (an earlier draft mislabeled it; corrected via catalog audit)
 
 ### Sparse & efficient inference
-`ruvector-sparse-inference`/`-wasm` (PowerInfer-style) · `ruvector-sparsifier`/`-wasm` (spectral sparsification, 49 tests)
+`ruvector-sparse-inference`/`-wasm` (PowerInfer-style) · `ruvector-sparsifier`/`-wasm` (spectral sparsification, 48 tests)
 
 ### Hardware acceleration
 `hailort-sys` + `ruvector-hailo` + `ruvector-hailo-cluster` (Hailo-8 NPU on Pi 5, ADR-167/178) · `ruvector-fpga-transformer`/`-wasm` · `ruvector-tiny-dancer-core`/`-node`/`-wasm` (ultra-low-latency routing) · **`ruvector-mmwave`** (parser for Seeed MR60BHA2 + HLK-LD2410 radar UART — directly relevant to the Cognitum sensor array)
@@ -189,7 +187,7 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 `ruvector-collections` · `ruvector-cluster` · `ruvector-raft` · `ruvector-replication` · `ruvector-router-core`/`-cli`/`-ffi`/`-wasm` (FastGRNN agent routing) · `ruvector-rulake` (federation over heterogeneous backends, ADR-155) · delta family: `ruvector-delta-core`/`-index`/`-wasm`/`-graph`/`-consensus` (CRDT behavioral change tracking)
 
 ### Verification & storage
-`ruvector-verified`/`-wasm` (proof-carrying ops via lean-agentic dependent types) · `ruvector-snapshot` · `ruvector-postgres` (excluded; pgrx) · `rvf` family (13 crates, separate sub-workspace) · `rvlite` (standalone SQL/SPARQL/Cypher vector DB) · `rvm` (coherence-native microhypervisor)
+`ruvector-verified`/`-wasm` (proof-carrying ops via lean-agentic dependent types) · `ruvector-snapshot` · `ruvector-postgres` (excluded; pgrx) · `rvf` family (23 crates: 17 top-level `rvf-*` + 6 adapters under `rvf-adapters/` — claude-flow, agentdb, ospipe, agentic-flow, rvlite, sona — separate sub-workspace) · `rvlite` (standalone SQL/SPARQL/Cypher vector DB) · `rvm` (coherence-native microhypervisor)
 
 ### RuVix cognition kernel (22 crates, ADR-087)
 Bare-metal AArch64 microkernel: `ruvix-types/-region/-physmem/-queue/-cap/-sched/-proof/-hal/-aarch64/-boot/-rpi-boot/-drivers/-dma/-dtb/-smp/-bcm2711/-fs/-net/-nucleus/-vecgraph/-shell/-cli` — seL4-inspired capabilities, coherence-aware scheduler, Pi 4/5 SoC drivers.
@@ -201,14 +199,14 @@ Bare-metal AArch64 microkernel: `ruvix-types/-region/-physmem/-queue/-cap/-sched
 Quantum: `ruqu-core/-algorithms/-wasm/-exotic`, `ruQu` (VQE, Grover, QAOA, surface codes) · Trading: `neural-trader-core/-coherence/-replay/-strategies/-wasm`, `ruvector-kalshi` · Robotics: `ruvector-robotics`, `agentic-robotics-*` (6 crates) · `ruvector-crv` (Coordinate Remote Viewing protocol mapping) · `ruvector-dither` · `ruvector-temporal-tensor`/`-wasm` · `ruvector-domain-expansion`/`-wasm` · `ruvector-decompiler`/`-wasm` (JS bundle decompiler via min-cut) · `thermorust` (thermodynamic neural motifs) · `ruvector-perception` (delta→boundary→coherence→proof→action substrate, ADR-198) · `ruvector-exotic-wasm` · `ruvector-economy-wasm` · `ruvector-learning-wasm` · `ruvector-cnn` (image embeddings) · `mcp-brain`/`mcp-brain-server` (shared brain at pi.ruv.io) · `cognitum-gate-kernel`/`-tilezero`/`mcp-gate` (256-tile anytime-valid coherence gate) · `ruvector-bench`/`-profiler` · `ruvector-cli`/`-server`
 
 ### npm (55+ packages under `@ruvector/*`)
-Core: `ruvector`, `@ruvector/gnn`, `@ruvector/graph`, `@ruvector/attention`, `@ruvector/mincut`, `@ruvector/solver`, `@ruvector/sona`, `@ruvector/ruvllm`, `@ruvector/rvf*`, `@ruvector/router`, `@ruvector/tiny-dancer`, `@ruvector/cnn`, `@ruvector/consciousness`, `@ruvector/pi-brain`, `@ruvector/rvagent-*`, `@ruvector/rvdna`, `@ruvector/ruqu-wasm` + platform-specific prebuilt binaries for all major OS/arch combos.
+Core: `ruvector`, `@ruvector/gnn`, `@ruvector/graph`, `@ruvector/attention`, `@ruvector/mincut`, `@ruvector/solver`, `@ruvector/sona`, `@ruvector/ruvllm`, `@ruvector/rvf*`, `@ruvector/router`, `@ruvector/tiny-dancer`, `@ruvector/cnn`, `@ruvector/consciousness`, `@ruvector/pi-brain`, `@ruvector/rvagent-*`, `@ruvector/rvdna`, `@ruvector/ruqu-wasm` + platform-specific prebuilt binaries for all major OS/arch combos. (verified on-disk names; some packages named in older docs — @ruvector/graph, @ruvector/mincut, @ruvector/consciousness, @ruvector/sona-wasm, @ruvector/rvagent-* — have no package.json in this checkout; verify on npmjs.com before installing)
 
 ### UI
-`ruvocal` — SvelteKit chat UI (v2.20.0) with MCP bridge and model management.
+`ruvocal` — SvelteKit chat UI (v0.20.0, package name chat-ui) with MCP bridge and model management.
 
 ---
 
-## 4. ADR index — the complete table (198 main + 53 sub-series)
+## 4. ADR index — the complete table (208 main-series files = 199 numbered entries + 9 duplicate-numbered, + 53 sub-series)
 
 Decision records live in `docs/adr/`. Every record found in the sweep:
 
@@ -299,13 +297,18 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 88 | CNN Contrastive Learning Integration for RuVector | Proposed |
 | 89 | CNN Browser Demo for GitHub Pages | Proposed |
 | 90 | Ultra-Low-Bit QAT & Pi-Quantization — DDD Architecture | Accepted |
-| 91 | INT8 CNN Quantization — DDD Architecture | Accepted |
+| 90b | Ultra-Low-Bit QAT & Pi-Quantization — Implementation Checklist | Ready for Implementation (Staged) |
+| 91 | INT8 CNN Quantization — DDD Architecture | Ready for Implementation |
+| 91b | INT8 CNN Quantization — Implementation Checklist | Ready for Implementation |
 | 92 | MoE Memory-Aware Routing — DDD Architecture | Accepted |
 | 93 | Daily Discovery & Brain Training Program | Accepted |
 | 93b | DeepAgents Complete Rust Conversion — Overview | Proposed |
 | 94 | π.ruv.io Shared Web Memory on RuVector | Accepted |
+| 94b | DeepAgents Backend Protocol & Trait System | Accepted |
 | 95 | π.ruv.io API v2 — Full Capability Surface | Accepted |
+| 95b | DeepAgents Middleware Pipeline Architecture | Accepted |
 | 96 | Cloud-Native Data Pipeline, Real-Time Injection & Automated Optimization | Accepted |
+| 96b | DeepAgents Tool System — Filesystem, Execute, Grep, Glob | Accepted |
 | 97 | SubAgent & Task Orchestration | Proposed |
 | 98 | Memory, Skills & Summarization Middleware | Proposed |
 | 99 | CLI & ACP Server Conversion | Proposed |
@@ -324,9 +327,9 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 112 | rvAgent MCP Server with SSE and stdio Transports | Proposed |
 | 113 | RVF App Gallery and Ruvix-Powered Applications | Proposed |
 | 114 | Ruvector-Core Hash Placeholder Embeddings | Accepted |
-| 115 | Common Crawl Integration with Semantic Compression | Proposed |
+| 115 | Common Crawl Integration with Semantic Compression | Phase 1 Implemented |
 | 116 | Spectral Graph Sparsifier Integration with pi.ruv.io | Accepted |
-| 117 | Pseudo-Deterministic Canonical Minimum Cut | Accepted |
+| 117 | Pseudo-Deterministic Canonical Minimum Cut | Shipped (all 3 tiers) |
 | 117b | DrAgnes Dermatology Intelligence Platform | Proposed |
 | 118 | Cost-Effective Common Crawl Strategy with Sparsifier-Aware Guardrails | Proposed |
 | 119 | Historical Common Crawl Evolutionary Comparison | Accepted |
@@ -343,12 +346,15 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 130 | MCP SSE Decoupling via Midstream Queue Architecture | Proposed |
 | 131 | Consciousness Metrics Crate — IIT 4.0 Φ, CES, ΦID, PID, Streaming, Bounds | Accepted |
 | 132 | RVM Hypervisor Core — Standalone Coherence-Native Microhypervisor | Proposed |
+| 132b | E2E Browser Testing with @claude-flow/browser | Proposed |
 | 133 | Partition Object Model | Proposed |
+| 133b | Claude Code CLI Source Code Analysis | Deployed (2026-04-02) |
 | 134 | RuVector Deep Integration with Claude Code CLI | Proposed |
 | 134b | Witness Schema and Log Format | Proposed |
 | 135 | MinCut Decompiler with RVF Witness Chains | Proposed |
 | 135b | Proof Verifier Design — Three-Layer Verification for Capability-Gated Mutation | Proposed |
 | 136 | Memory Hierarchy and Reconstruction — Four-Tier Coherence-Driven Memory Model | Proposed |
+| 136b | GPU-Trained Deobfuscation Model | Deployed (2026-04-03) |
 | 137 | Bare-Metal Boot Sequence | Proposed |
 | 137b | npm Decompiler CLI and MCP Tools | Proposed |
 | 138 | LLM Model Weight Decompiler | Proposed |
@@ -362,6 +368,7 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 143b | Implement Missing Capabilities in ruvector | Proposed |
 | 144 | DiskANN/Vamana Implementation | Proposed |
 | 144b | Monorepo Quality Analysis Strategy and Test Plan | Accepted |
+| 144c | Candle-Whisper Integration with Musica for Pure-Rust Transcription | Accepted |
 | 145 | WASM/NAPI Training Pipeline Fixes | Accepted |
 | 146 | DiskANN/Vamana Implementation | Proposed |
 | 147 | Stacked KV Cache Compression: TriAttention + TurboQuant Pipeline | Proposed |
@@ -371,7 +378,7 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 151 | Miller-Rabin–Driven Prime Optimizations (PIAL) | Proposed |
 | 153 | Kalshi Integration via RuVector Neural Trader | Proposed |
 | 154 | RaBitQ — Rotation-Based 1-Bit Quantization for ANNS | Proposed |
-| 155 | ruLake — Vector-Native Federation Intermediary on RVF | Proposed |
+| 155 | ruLake — Vector-Native Federation Intermediary on RVF | Accepted (M1) |
 | 156 | ruLake as Memory Substrate for Agent Brain Systems | Proposed |
 | 157 | Optional Accelerator Plane — `VectorKernel` Trait + Dispatch | Proposed |
 | 158 | Optional Rotation Kind (Haar vs Randomized Hadamard) and QVCache Positioning | Proposed |
@@ -397,24 +404,24 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 | 180 | RuvLLM Serving Engine Continuous Batching | Proposed |
 | 181 | RuvLLM Pi Quant BitNet Integration | Proposed |
 | 182 | Hailo-10 Cluster Migration | Proposed |
-| 183 | Sparse Attention Rand Dev Dependency | Proposed |
-| 184 | Sparse Attention Online Softmax | Proposed |
-| 185 | Sparse Attention Noncausal Landmark Fix | Proposed |
-| 186 | Sparse Attention Edge Case Tests | Proposed |
-| 187 | Tensor Zeros Overflow Check | Proposed |
-| 188 | Sparse Attention Stamp Scheme Comment | Proposed |
-| 189 | Sparse Attention KV Cache Incremental Decode | Proposed |
-| 190 | Sparse Attention GQA/MQA Support | Proposed |
+| 183 | Sparse Attention Rand Dev Dependency | Accepted |
+| 184 | Sparse Attention Online Softmax | Accepted |
+| 185 | Sparse Attention Noncausal Landmark Fix | Accepted |
+| 186 | Sparse Attention Edge Case Tests | Accepted |
+| 187 | Tensor Zeros Overflow Check | Accepted |
+| 188 | Sparse Attention Stamp Scheme Comment | Accepted |
+| 189 | Sparse Attention KV Cache Incremental Decode | Accepted |
+| 190 | Sparse Attention GQA/MQA Support | Accepted |
 | 191 | Sparse Attention Pi Zero 2W Production Hardening | Proposed |
-| 192 | Sparse Attention No-Std ESP32 Support | Proposed |
-| 193 | RAIRS IVF | Proposed |
-| 194 | RuVector ONNX Embedder API and Throughput | Proposed |
+| 192 | Sparse Attention No-Std ESP32 Support | Accepted |
+| 193 | RAIRS IVF | Accepted |
+| 194 | RuVector ONNX Embedder API and Throughput | Accepted |
 | 195 | RuVector Embedder Unification Plan | Proposed |
-| 196 | Structure-Preserving Graph Condensation | Proposed |
-| 197 | Differentiable Min-Cut Condensation Loss | Proposed |
-| 198 | Physical Perception Substrate | Proposed |
+| 196 | Structure-Preserving Graph Condensation | Accepted |
+| 197 | Differentiable Min-Cut Condensation Loss | Accepted |
+| 198 | Physical Perception Substrate | Accepted |
 
-(Numbers 18–23 belong to the Temporal-Tensor Store sub-series below; 41, 152, 163–164 were not present as files in this checkout. Suffixed entries — e.g. 93b, 117b — are duplicate numbers in the repo, listed as found.)
+(Numbers 18–23 belong to the Temporal-Tensor Store sub-series below; 41, 152, 163–164 were not present as files in this checkout. Suffixed entries like 93b are this primer's disambiguation of files sharing a bare number; on disk only 040a/040b carry suffixes.)
 
 **Sub-series:**
 - **Coherence Engine, ADR-CE-001…022** (all Proposed): Sheaf Laplacian Coherence · Incremental Computation · Hybrid Storage · Signed Event Log · Governance Objects · Compute Ladder · Threshold Autotuning · Multi-Tenant Isolation · Single Coherence Object · Domain-Agnostic Substrate · Residual Contradiction Energy · Gate Refusal Witness · NOT Prediction · Reflex Lane Default · Adapt Without Losing Control · RuvLLM Coherence Validator · Unified Audit Trail · Pattern Restriction Bridge · Memory as Nodes · Confidence from Energy · Shared SONA · Failure Learning
@@ -435,7 +442,7 @@ Decision records live in `docs/adr/`. Every record found in the sweep:
 - `publishing/` (npm/crates.io guides + checklists)
 
 ### Examples (20+ runnable, in `examples/`)
-Edge AI (`edge/`, `edge-full/`, `edge-net/` — Pi cluster + dashboard), genomics (`dna/`), dermatology (`dragnes/`), market prediction (`neural-trader/`), self-contained RVF bot (`rvbot/`), personal AI memory (`OSpipe/`), agent swarms (`a2a-swarm/`, `agentic-jujutsu/`), **`esp32-mmwave-sensor/`** (radar on ESP32 — directly relevant to this sensor array), scientific discovery series (climate/CMB/earthquake/gene/FRB “consciousness” boundary-discovery demos), `google-cloud/`, `decompiler-dashboard/`. Pattern: `cd examples/<name> && npm install && npm start` (each has its own README).
+Edge AI (`edge/`, `edge-full/`, `edge-net/` — Pi cluster + dashboard), genomics (`dna/`), dermatology (`dragnes/`), market prediction (`neural-trader/`), ruvbot (`npm/packages/ruvbot` — self-learning AI assistant), personal AI memory (`OSpipe/`), agent swarms (`a2a-swarm/`, `agentic-jujutsu/`), **`esp32-mmwave-sensor/`** (radar on ESP32 — directly relevant to this sensor array), scientific discovery series (climate/CMB/earthquake/gene/FRB “consciousness” boundary-discovery demos), `google-cloud/`, `decompiler-dashboard/`. Pattern: `cd examples/<name> && npm install && npm start` (each has its own README).
 
 ### Claude Code integration shipped in-repo (`.claude/`)
 60+ agent types (coder, reviewer, security-architect, memory-specialist, hierarchical/mesh/adaptive coordinators, pr-manager…), 20+ skills (agentdb-* family, flow-nexus-*, github-* automation, hive-mind-advanced, hooks-automation, performance-analysis), claude-flow v3 config (hierarchical-mesh, 15 max agents, hybrid memory + HNSW, pi.ruv.io brain integration, nightly LoRA auto-training), full hooks system (pre/post tool use, session persistence, daemon workers: audit/optimize/consolidate/testgaps/ultralearn/deepdive).
@@ -495,7 +502,7 @@ Caveats: measured on specific hardware (Apple M4 Pro / M2 / i7); min-cut subpoly
 ## 8. Maturity & gotchas
 
 - **License** MIT · **MSRV** 1.77 (RVF: 1.87) · **edition** 2021 · workspace v2.2.3.
-- Latest tagged release at sweep time: **2.0.5** (2026-02-26); the repo iterates daily on `main` far ahead of tags (commit cadence is multiple/day).
+- Tags through **v2.2.0**; latest GitHub Release object **rvagent-wasm-v0.2.0** (2026-05-28); `main` iterates daily far ahead of tags (commit cadence is multiple/day).
 - Test counts as stated: solver 177, attention 142, sparsifier 49, RVF 1,156 — no aggregate workspace count published.
 - `ruvector-postgres` is **excluded from the default workspace** — needs `cargo install cargo-pgrx --version 0.12.9 && cargo pgrx init`, then `cargo build -p ruvector-postgres`.
 - Hailo NPU support is opt-in (`--features hailo`, requires Hailo toolchain on Pi 5); `ruos-thermal` is standalone/WIP.
@@ -506,9 +513,10 @@ Caveats: measured on specific hardware (Apple M4 Pro / M2 / i7); min-cut subpoly
 
 ## 8.5 Subtrees easy to miss (added after catalog audit)
 
-- **Research library** — `research/` holds **25 directories / 213 documents** (latent-space 34, sublinear-time-solver 34, gnn-v2 46 incl. consciousness research, rvf 19, quantization-edge 9, Cognitum thesis…). A whole knowledge layer beyond docs/.
-- **44 runnable examples** (not "20+"): incl. `OSpipe` (ScreenPipe desktop-memory integration: PII SafetyGate, frame dedup, QAOA quantum search), `refrag-pipeline` (claimed 30× RAG speedup), `meta-cognition-spiking-neural-network`, `verified-applications` (10 apps), `prime-radiant` HoTT demos.
+- **Research library** — `docs/research/` holds **34 directories, 1,070 files (278 markdown)** (latent-space 34, sublinear-time-solver 34, gnn-v2 46 incl. consciousness research, rvf 19, quantization-edge 11…). A whole knowledge layer beyond the rest of docs/.
+- **71 example directories** (not "20+"): incl. `OSpipe` (ScreenPipe desktop-memory integration: PII SafetyGate, frame dedup, QAOA quantum search), `refrag-pipeline` (claimed 30× RAG speedup), `meta-cognition-spiking-neural-network`, `verified-applications` (10 apps), `prime-radiant` HoTT demos.
 - **~97 named algorithms with production Rust implementations** — from FlashAttention-3, Mamba S5 and Sinkhorn to Gomory-Hu trees, Kuramoto oscillators, BTSP one-shot plasticity, Surface-Code QEC, Kyber/Dilithium PQC and tropical Floyd-Warshall. If a textbook algorithm is relevant to your task, grep before reimplementing.
+- Also unmentioned in most summaries: crates/ruvector-cognitive-container (verifiable WASM cognitive container with witness chains), the boundary-discovery/consciousness example series (~16 dirs incl. real-eeg-analysis and seizure-prediction work), top-level scripts/ (49 scripts), tests/ (incl. sandbox_security_tests), three separate benchmark trees, and docs/ subtrees: hailo/ (Cognitum V0-relevant), dag/, sdk/, implementation/, analysis/.
 - **Scope boundary (what RuVector does NOT do):** content generation, end-user app frameworks, general web dev, DB admin GUIs, cloud hosting, and it is not a PyTorch replacement — it's the intelligent substrate those things sit on.
 
 ## 8.6 Mechanical completeness check (run at every regeneration)
@@ -518,10 +526,10 @@ A summary of 1.58M lines *will* drop things. Guard against silent subtree loss m
 ```bash
 # counts must match or the primer is stale/incomplete:
 ls ruvector/crates | wc -l                          # top-level crates (≈139)
-ls ruvector/docs/adr | wc -l                        # ADR files (≈198+)
-ls ruvector/examples | wc -l                        # examples (≈44)
-ls ruvector/research 2>/dev/null | wc -l            # research dirs (≈25)
-grep -c '"name"' ruvector/npm/*/package.json 2>/dev/null | wc -l   # npm packages
+ls ruvector/docs/adr | wc -l                        # 212 entries (208 .md + 4 sub-series dirs)
+ls ruvector/examples | wc -l                        # ≈74
+ls ruvector/docs/research | wc -l                   # ≈35
+ls ruvector/npm/packages | wc -l                    # ≈59
 ```
 
 Diff these against the numbers in this primer; any growth = regenerate the affected section. Per-domain confidence: capabilities/install commands HIGH (read from code) · ADR statuses MEDIUM (headers only) · performance numbers CLAIMED-ONLY · research-library contents LOW (enumerated, not read).
@@ -531,7 +539,8 @@ Diff these against the numbers in this primer; any growth = regenerate the affec
 - No benchmark was re-run; all numbers are repo-claimed.
 - crates.io/npm publish state of every package was not individually confirmed (the repo's publishing docs and binaries were taken at face value).
 - The bootable-kernel RVF demo, quantum sims, and brain-server cloud endpoints were not executed.
-- Crate-count ambiguity (139 / ~170 / 216) reflects different counting boundaries, all documented above.
+- Crate-count ambiguity (138 crate dirs / 181 root workspace members / nested sub-workspaces) reflects different counting boundaries, all documented above.
+- A mechanical verification pass (2026-06-12) corrected: ADR count 198→208 files, rvf 13→23 crates, examples 44→71, research counts, two fabricated API snippets, npm package names, 16 ADR statuses — treat any unverified remainder with the same suspicion.
 
 ---
 
