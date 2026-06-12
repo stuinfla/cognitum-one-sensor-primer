@@ -970,6 +970,17 @@
       <p style="margin:0;"><a class="hero-cta" style="--accent:var(--cyan);" href="/ruview-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruview-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
     </div>
 
+    <div class="callout reveal" style="border-color:rgba(199,146,234,0.5);margin-top:24px;">
+      <h3 style="margin:0 0 10px;font-size:19px;color:#c792ea;">🧠 The RVF Knowledge Bases — when a summary isn't enough <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-kb.rvf · ruview-kb.rvf</span></h3>
+      <p style="margin:0 0 10px;color:var(--muted);">The primers above are curated summaries — readable, but summaries drop things. These are the <b>uncurated, mechanically-complete</b> versions: every ADR, every doc, every crate manifest, every research paper and script embedded into a semantic vector database — a single <span class="mono">.rvf</span> file each, built with RuVector's own format. <b>ruvector-kb.rvf</b>: 5,759 vectors over 1,408 files (including 277 ADRs and 278 research docs the summaries undercounted). <b>ruview-kb.rvf</b>: 2,353 vectors over 527 files. Both generated <b>June 12, 2026</b> from same-day checkouts, with manifests, verification-query results, and one-command rebuild scripts.</p>
+      <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">How to use them:</b> drop the <span class="mono">.rvf</span> (plus its <span class="mono">.json</span> sidecars) into your project, then point an AI at it. For Claude Code, one entry in <span class="mono">.mcp.json</span>: <span class="mono">npx @ruvector/rvf-mcp-server --transport stdio</span> aimed at the file — and add one line to your project's CLAUDE.md saying the KB exists. Your assistant then <em>semantically queries the entire tree</em> ("which crate does dynamic min-cut?" → <span class="mono">ruvector-mincut</span> in milliseconds) instead of grep-sampling 1.5M lines and missing subdirectories. From Node: <span class="mono">@ruvector/rvf</span>'s <span class="mono">RvfDatabase.open()</span> + <span class="mono">query()</span>.</p>
+      <p style="margin:0;">
+        <a class="hero-cta" style="--accent:#c792ea;" href="/Docs/KB/ruvector-kb.rvf" download>ruvector-kb.rvf (9 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" href="/Docs/KB/ruview-kb.rvf" download>ruview-kb.rvf (3.9 MB) ↓</a> &nbsp;
+        <a href="/Docs/KB/ruvector-kb.MANIFEST.md" style="font-family:'IBM Plex Mono';font-size:13px;">manifests →</a>
+      </p>
+    </div>
+
     <div class="callout reveal" style="margin-top:24px;">
       <h3 style="margin:0 0 12px;font-size:19px;color:var(--cyan);">🔗 The whole stack, one link each</h3>
       <div class="table-scroll">
