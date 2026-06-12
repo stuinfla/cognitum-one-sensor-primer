@@ -12,8 +12,8 @@ These two files are **complete semantic indexes of ruvnet's repositories**, buil
 
 | File | Covers | Size | Inside |
 |---|---|---|---|
-| `ruvector-kb.rvf` | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector) (the 1.7M-line Rust engine) | ~9 MB | **5,759 vectors** from **1,408 files**: all 277 ADR files, 278 research docs across 80 dirs, 216 crate manifests + 200 crate READMEs, 99 example READMEs, 85 npm packages, 37 skills, all guides |
-| `ruview-kb.rvf` | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) (the WiFi sensing platform) | ~3.9 MB | **2,353 vectors** from **527 files**: all 160+ ADR files, the 2,468-line user guide, 86 scripts, 39 crate manifests, 41 firmware headers, both tutorials |
+| `ruvector-kb.rvf` | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector) (the 1.7M-line Rust engine) | ~24 MB | **13,691 vectors** from **6,572 entries** (v2): all 277 ADR files, 278 research docs across 80 dirs, 216 crate manifests + 200 crate READMEs, 99 example READMEs, 85 npm packages, 37 skills — **plus crate source knowledge**: every crate's lib.rs/main.rs doc header + first 100 lines and module inventory (299 crates incl. nested ruvix/rvAgent/rvf workspaces), the leading `//!` doc comment of 3,600 .rs files, and 966 more markdown files swept from everywhere else (.claude agents/skills, example docs, crate-internal ADRs, npm docs) |
+| `ruview-kb.rvf` | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) (the WiFi sensing platform) | ~7.2 MB | **4,184 vectors** from **1,613 files** (v2): all 160+ ADR files, the 2,468-line user guide, 106 scripts (first 40 lines each), 39 crate manifests, 41 firmware headers, both tutorials — **plus**: 40 crates' lib.rs/main.rs headers + module lists, 643 .rs doc comments, 343 more markdown/manifest files (plugins, archive/v1, .claude, plans, aether-arena), and full text of the 4 UI pages |
 
 **Why they exist:** the markdown primers on the same site are curated summaries — readable, but summaries drop things (we proved this: our own first drafts undercounted ADRs, examples, and whole research directories). The KBs are the **uncurated backstop**: if it's in the repo's knowledge layer, it's in here. Generated **June 12, 2026** from same-day checkouts (`ruvector` @ `4dedde8`, `RuView` @ `3d7530f0`/v1701). Embeddings: `Xenova/all-MiniLM-L6-v2`, 384-dim, computed locally — no cloud touched your queries or these builds.
 
@@ -68,12 +68,12 @@ let store = RvfStore::open_readonly("ruvector-kb.rvf")?;
 
 ## 4. Is it stale? How do I rebuild it?
 
-Check the source repo's HEAD against the commit above (`git ls-remote <repo> HEAD`). To rebuild from a fresh checkout, the exact builder scripts are in this folder: `build-ruview-kb.mjs` and `.build-ruvector-kb/build.mjs` (Node 18+, ~5 minutes, fully local). Each manifest lists the verification queries a rebuild should pass.
+Check the source repo's HEAD against the commit above (`git ls-remote <repo> HEAD`). To rebuild from a fresh checkout, the exact builder scripts are in this folder: `build-ruview-kb.mjs` and `.build-ruvector-kb/build.mjs` (Node 18+, ~3 and ~10 minutes respectively, fully local). Each manifest lists the verification queries a rebuild should pass. The previous (docs-only) v1 stores are kept alongside as `*.v1.rvf`.
 
 ## 5. Honest limits
 
 - Query quality is bounded by MiniLM-L6 (384-dim) — excellent for "where is X / which thing does Y," not a reasoning engine.
-- The KBs index the repos' **knowledge layer** (docs, manifests, READMEs, headers, scripts) — not every line of source code.
+- The KBs index the repos' **knowledge layer plus the source's self-description** (docs, manifests, READMEs, headers, scripts, every `//!` doc comment, each crate's lead file + module inventory) — still not every line of every function body. Ask "where is the kalman tracker implemented" and it answers; it won't recite line 400 of a 2,000-line file.
 - Search returns `{id, distance}` only; without the `.json` sidecars you get numbers, not paths. Keep the files together.
 - Built 2026-06-12; both upstream repos ship daily. The manifests carry the exact provenance.
 

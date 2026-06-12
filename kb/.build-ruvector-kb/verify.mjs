@@ -10,8 +10,8 @@ T.env.localModelPath = '/Users/stuartkerr/Code/PowerPlatePulse/scripts/models-ca
 T.env.allowRemoteModels = false;
 const embed = await T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
 
-const idmap = JSON.parse(fs.readFileSync(`${ROOT}/Docs/KB/ruvector-kb.ids.json`, 'utf8')).entries;
-const db = await RvfDatabase.openReadonly(`${ROOT}/Docs/KB/ruvector-kb.rvf`);
+const idmap = JSON.parse(fs.readFileSync(`${ROOT}/kb/ruvector-kb.ids.json`, 'utf8')).entries;
+const db = await RvfDatabase.openReadonly(`${ROOT}/kb/ruvector-kb.rvf`);
 console.log('dimension:', await db.dimension(), '| status:', JSON.stringify(await db.status()));
 
 const queries = [
