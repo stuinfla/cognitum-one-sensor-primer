@@ -1,0 +1,34 @@
+name: Update RuView submodule
+
+on:
+  schedule:
+    - cron: '17 6 * * *'   # daily at 06:17 UTC (odd minute avoids GitHub's top-of-hour congestion)
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Update RuView to latest upstream main
+        run: git submodule update --remote RuView
+
+      - name: Commit and push if RuView moved
+        run: |
+          if git diff --quiet RuView; then
+            echo "RuView already up to date."
+            exit 0
+          fi
+          NEW_SHA=$(git -C RuView rev-parse --short HEAD)
+          NEW_DESC=$(git -C RuView describe --tags --always)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RuView
+          git commit -m "Bump RuView submodule to ${NEW_DESC} (${NEW_SHA})"
+          git push
