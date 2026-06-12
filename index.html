@@ -77,6 +77,7 @@
     <div class="nav-links">
       <a href="#start">Start</a>
       <a href="#connect">How it senses</a>
+      <a href="#why-csi">Why this hardware?</a>
       <a href="#quickstart">Quick start</a>
       <a href="#sensors">Sensors</a>
       <a href="#choose">Which one?</a>
@@ -272,6 +273,53 @@
     </div>
 
     <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config names here come from one reference build. Always confirm against your own device's config and firmware.</p>
+  </div>
+</section>
+
+<!-- ============ WHY SEPARATE HARDWARE ============ -->
+<section id="why-csi">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">02.5 — WHY SEPARATE HARDWARE?</span>
+      <h2>Your Mac has WiFi. Why do I need these little boards at all?</h2>
+      <p>The question everyone is too polite to ask — and the single most useful thing to understand before you buy anything. Your laptop's WiFi card is bigger, faster and more expensive than a $5 ESP32. So why can't <em>it</em> do the sensing?</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:24px;">
+      <h3 style="margin:0 0 12px;font-size:20px;color:var(--phosphor);">Networking sees signal strength. Sensing needs the wave itself.</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">Everything you've ever done with WiFi — the bars on your phone, "connected, good signal" — runs on <b style="color:var(--ink)">RSSI</b>: a single number that answers <em>is there a signal, and how strong is it</em>. RSSI can tell you a router exists. It cannot tell you that a person just walked between you and it.</p>
+      <p style="margin:0;color:var(--muted);">Sensing needs <b style="color:var(--ink)">CSI — Channel State Information</b>: the per-frequency amplitude <em>and phase</em> of how the radio wave bent, bounced and stretched around bodies on its way to the antenna. That's where the "seeing" lives — dozens to hundreds of measurements per packet instead of one number — and it lives <strong>inside the radio chip</strong>.</p>
+    </div>
+
+    <div class="callout warn reveal" style="margin-bottom:24px;">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--amber);">⚠ Your Mac computes CSI right now — and will never give it to you</h3>
+      <p style="margin:0;color:var(--muted);">Here's the maddening part. Every WiFi chip <strong>must</strong> compute CSI constantly just to decode WiFi at all — it's how the receiver undoes what the room did to the signal. Your Mac, your PC, your phone: all of them calculate exactly the data this hobby needs, thousands of times a second, and then throw it away inside the chip. The OS and drivers simply never hand it to you — Apple's especially. <b style="color:var(--ink)">The door is locked in software, not missing in silicon.</b> That's why buying a "beefier" WiFi card changes nothing: you'd be buying a fancier chip with the same locked door.</p>
+    </div>
+
+    <div class="when" style="grid-template-columns:1fr 1fr; margin-bottom:24px;">
+      <div class="block reveal">
+        <h4>The ESP32 is the magic exception</h4>
+        <p style="color:var(--muted); font-size:14.5px; margin:0;">A $5 chip whose maker, <b style="color:var(--ink)">Espressif</b>, ships an official API that hands you the raw CSI. That is the <em>entire</em> reason this hardware exists. An ESP32 is not a better radio than your Mac's — it's a far worse one, by every networking measure. It's an <b style="color:var(--phosphor)">open</b> one. You're not buying performance; you're buying the key to the door every other chip keeps locked.</p>
+      </div>
+      <div class="block cyan reveal">
+        <h4>And the Seed? Nothing magical there either</h4>
+        <p style="color:var(--muted); font-size:14.5px; margin:0;">The Seed's own WiFi is just as locked as your Mac's — <b style="color:var(--ink)">its radio never senses anything</b>. The Seed is the memory / witness / MCP appliance. If you have ESP32 nodes and any laptop, you can run the full sensing experience — dashboards, vitals, pose — with <b style="color:var(--cyan)">no Seed at all</b> (that's network-only mode). The Seed adds permanent queryable memory, not sensing ability.</p>
+      </div>
+    </div>
+
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>Radio</th><th>Networking</th><th>Sensing (CSI)</th><th>Role in this stack</th></tr></thead>
+        <tbody>
+          <tr><td>Your Mac / PC / phone WiFi</td><td><span class="pill green">excellent</span></td><td>RSSI only — CSI is computed but <b style="color:var(--amber)">locked by the OS</b></td><td>The brain: runs the dashboards &amp; sensing server. Never the antenna.</td></tr>
+          <tr><td>ESP32-C6 / S3 <span class="pill green">the sensor</span></td><td>basic (doesn't matter)</td><td><b style="color:var(--phosphor)">full raw CSI exposed</b> via Espressif's API</td><td>The only affordable open radio — ~$5 each, the whole point</td></tr>
+          <tr><td>Cognitum Seed</td><td>ordinary</td><td><b style="color:var(--amber)">no sensing role</b> — its radio never senses</td><td>Memory + witness chain + MCP — the part that <em>remembers</em></td></tr>
+          <tr><td>Intel AX210 on Linux</td><td>excellent</td><td>CSI via research tools (PicoScenes / FeitCSI) — x86 Linux only</td><td>A research door, <b>not used by RuView</b> — stays in the drawer</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="reveal" style="margin-top:24px;color:var(--muted);max-width:80ch;">So when you see Ruv's demos: <b style="color:var(--ink)">the WiFi doing the seeing is always ESP32s. Your computer is the brain reading them, never the antenna.</b></p>
   </div>
 </section>
 
@@ -1062,6 +1110,10 @@
       <div style="color:var(--phosphor); font-weight:600; margin-bottom:6px;">COGNITUM ONE · SENSOR PRIMER</div>
       <div>A beginner's field guide to passive contactless sensing.</div>
       <div style="margin-top:10px;"><a href="/setup">Setup &amp; flashing →</a> · <a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a> · <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a></div>
+      <div id="counter-strip" style="display:none; margin-top:14px; font-family:'IBM Plex Mono'; font-size:12px; letter-spacing:0.04em; color:var(--faint);">
+        <span style="color:var(--phosphor);">◉</span> <span id="cnt-visits">–</span> visitors &nbsp;·&nbsp; <span style="color:var(--amber);">❤</span> <span id="cnt-helped">–</span> found this helpful &nbsp;—&nbsp;
+        <button id="helped-btn" type="button" style="font-family:'IBM Plex Mono'; font-size:11.5px; letter-spacing:0.04em; background:transparent; border:1px solid var(--phosphor); border-radius:6px; color:var(--phosphor); padding:3px 10px; cursor:pointer;">This helped me</button>
+      </div>
     </div>
     <div style="text-align:right;">
       <div>Passive · radar · mmWave · WiFi CSI</div>
@@ -1071,5 +1123,60 @@
 </footer>
 
 <script src="/assets/js/main.js?v=3" defer></script>
+<script>
+/* Visitor + "this helped" counters — counterapi.dev v1 (verified 2026-06-12).
+   Graceful degradation: the strip stays display:none unless the API answers. */
+(function(){
+  var API = 'https://api.counterapi.dev/v1/cognitum-sensor-primer/';
+  var strip = document.getElementById('counter-strip');
+  var vEl = document.getElementById('cnt-visits');
+  var hEl = document.getElementById('cnt-helped');
+  var btn = document.getElementById('helped-btn');
+  if (!strip || !vEl || !hEl || !btn || typeof fetch !== 'function') return;
+
+  function counter(name, bump){
+    return fetch(API + name + (bump ? '/up' : '/'), { cache: 'no-store' })
+      .then(function(r){ if (!r.ok) throw new Error('bad status'); return r.json(); })
+      .then(function(j){ if (typeof j.count !== 'number') throw new Error('bad body'); return j.count; });
+  }
+
+  try {
+    var seen = false, helped = false;
+    try { seen = sessionStorage.getItem('cgp_visited') === '1'; } catch(e){}
+    try { helped = localStorage.getItem('cgp_helped') === '1'; } catch(e){}
+
+    function thanks(){
+      btn.textContent = 'Thanks! ❤';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'default';
+    }
+    if (helped) thanks();
+
+    btn.addEventListener('click', function(){
+      if (btn.disabled) return;
+      thanks();
+      try { localStorage.setItem('cgp_helped', '1'); } catch(e){}
+      counter('helped', true)
+        .then(function(m){ hEl.textContent = m.toLocaleString(); })
+        .catch(function(){ /* keep the optimistic UI; count just won't refresh */ });
+    });
+
+    counter('visits', !seen)
+      .then(function(n){
+        try { sessionStorage.setItem('cgp_visited', '1'); } catch(e){}
+        vEl.textContent = n.toLocaleString();
+        return counter('helped', false).catch(function(){ return 0; });
+      })
+      .then(function(m){
+        hEl.textContent = m.toLocaleString();
+        strip.style.display = '';
+      })
+      .catch(function(){ strip.style.display = 'none'; });
+  } catch(e) {
+    strip.style.display = 'none';
+  }
+})();
+</script>
 </body>
 </html>
