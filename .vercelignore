@@ -1,4 +1,4 @@
 # Reference submodules, not part of the deployed static site
+# (docs/amazon-* exports are gitignored, so they never reach Vercel anyway)
 RuView
 ruvector
-docs
