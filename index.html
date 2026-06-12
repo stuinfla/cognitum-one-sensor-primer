@@ -467,6 +467,22 @@
         <a class="buybtn" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">Buy XIAO ESP32-C6 3-pack (buy 7 nodes total) ↗</a>
       </div>
 
+      <div class="scard reveal" style="--accent: var(--amber);">
+        <img class="shot" src="/assets/img/amz-c5.jpg" alt="Seeed XIAO ESP32S3 Sense with detachable OV2640 camera module" loading="lazy" />
+        <span class="tag">CSI node + camera · the pose teacher</span>
+        <h3>XIAO ESP32S3 Sense</h3>
+        <div class="model-line">ESP32-S3 + detachable OV2640 camera + mic</div>
+        <p class="what">The intriguing one: a thumb-sized S3 CSI node <strong>with a camera on board</strong>. Why that matters: RuView's highest-accuracy pose comes from <em>camera-supervised training</em> — a camera acts as a temporary teacher for ~40 minutes, then goes away forever and the model runs on WiFi alone. This board is both halves of that story in one $27 part: teacher during training, ordinary S3 CSI node after.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd>1 (only during pose training)</dd>
+          <dt>SENSES</dt><dd>WiFi CSI (as S3 node) + 1600×1200 camera + PDM mic</dd>
+          <dt>SETUP</dt><dd>Flash as a normal S3 node; camera workflow on the <a href="/guide#pose">pose ladder</a></dd>
+          <dt>CONNECTS</dt><dd>WiFi → UDP <span class="mono">5005</span>; camera frames to your training host</dd>
+        </dl>
+        <div class="gotcha"><b>Honest note →</b> RuView's documented teacher workflow uses a <em>host webcam</em> (MediaPipe). Using the Sense's own camera as the teacher means streaming its video to the host first — a fun experiment, not a documented path. Worst case: it's still a perfectly good S3 array node.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">Buy XIAO ESP32S3 Sense ↗</a>
+      </div>
+
       <div class="scard reveal" style="--accent: var(--cyan);">
         <img class="shot" src="/assets/img/amz-sticks3.jpg" alt="M5StickS3 ESP32-S3 mini IoT dev kit with screen and built-in IMU" loading="lazy" />
         <span class="tag">IMU · motion &amp; vibration</span>
@@ -855,6 +871,7 @@
       <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32-C6 3-pack (CSI node — the pick)</h4><span class="price">~$24 / 3</span></div><span class="sub">WiFi 6 · 242-tone HE-LTF CSI · <b>buy 7 nodes for a full array</b> (mix with S3s)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX</a><a class="verified" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">or LONELY BINARY S3 3-pack</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32S3 Sense (camera S3 — pose teacher)</h4><span class="price">~$27</span></div><span class="sub">S3 CSI node + OV2640 camera + mic · the camera-supervised pose-training teacher</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">B0DRNW6KMG</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>M5StickS3 (motion / IMU)</h4><span class="price">~$41</span></div><span class="sub">ESP32-S3 + 6-axis IMU · attach to an object · in-stock M5StickC successor</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GZK27GN4" target="_blank" rel="noopener">B0GZK27GN4</a><a class="search" href="https://www.amazon.com/dp/B0GWHN8HK3" target="_blank" rel="noopener">or M5Stack official (~$22)</a></div></div>
     </div>
 

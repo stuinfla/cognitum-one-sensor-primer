@@ -372,7 +372,7 @@ node scripts/train-camera-free.js \
 
     <div class="callout reveal" style="margin-bottom:18px;">
       <h3 style="margin:0 0 8px;font-size:18px;color:var(--ink);">Rung 3 — camera-supervised training (highest accuracy; camera is a temporary teacher)</h3>
-      <p style="margin:0 0 10px;color:var(--muted);">A webcam + MediaPipe records real poses paired with CSI for <b>35–40 minutes</b> while you move through varied activities; then the camera goes away forever and the model runs on WiFi alone:</p>
+      <p style="margin:0 0 10px;color:var(--muted);">A webcam + MediaPipe records real poses paired with CSI for <b>35–40 minutes</b> while you move through varied activities; then the camera goes away forever and the model runs on WiFi alone. (Intriguing hardware option: the <a href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">XIAO ESP32S3 Sense ↗</a> is an S3 CSI node <em>with a camera on board</em> — teacher and student in one $27 part, though RuView's documented flow uses a host webcam.)</p>
       <pre class="code">pip install mediapipe opencv-python
 python scripts/calibrate-camera-room.py            <span class="c"># 5 min, two checkerboards — makes the model survive relocation</span>
 
