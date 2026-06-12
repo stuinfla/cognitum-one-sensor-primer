@@ -870,6 +870,49 @@
   </div>
 </section>
 
+<!-- ============ DROP-IN PRIMER DOCS ============ -->
+<section id="dropin">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">10.5 — DROP-IN AI PRIMER DOCS</span>
+      <h2>Skip the research: drag these into your own project</h2>
+      <p>When you build with Claude Code (or any AI assistant), it burns time and tokens re-discovering Ruv's stack from scratch. These pre-digested reference documents are the output of an exhaustive AI deep-dive — drag one into your repo or paste it into a chat and your assistant starts already knowing everything.</p>
+    </div>
+    <div class="callout reveal" style="border-color:var(--phosphor-dim);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">📄 The RuVector Primer <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-primer.md</span></h3>
+      <p style="margin:0 0 10px;color:var(--muted);">The complete map of <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector ↗</a> — every crate (~170 workspace members), the capabilities and how to actually call them, every npm package, the RVF file format, ADRs, tutorials, integration commands, and an honest performance-claims table. Generated <b>June 12, 2026</b> by Claude (Fable 5) sweeping a same-day checkout (main @ <span class="mono">4dedde8</span>); the document explains exactly how it was made and how to regenerate it when it ages.</p>
+      <p style="margin:0;"><a class="hero-cta" href="/ruvector-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruvector-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
+    </div>
+
+    <div class="callout reveal" style="margin-top:24px;">
+      <h3 style="margin:0 0 12px;font-size:19px;color:var(--cyan);">🔗 The whole stack, one link each</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>What</th><th>Link</th><th>Why you'd go there</th></tr></thead>
+          <tbody>
+            <tr><td><b>Cognitum One Seed</b></td><td><a href="https://cognitum.one/seed" target="_blank" rel="noopener">cognitum.one/seed ↗</a></td><td>The brain itself — specs, founding-member pricing</td></tr>
+            <tr><td><b>Cognitum V0 appliance</b></td><td><a href="https://cognitum.one/appliance" target="_blank" rel="noopener">cognitum.one/appliance ↗</a></td><td>The Pi 5 + Hailo-8 LAN core (RuVector + RuView + RuFlo in one box)</td></tr>
+            <tr><td><b>RuView</b> <span class="mono" style="color:var(--faint);font-size:11px;">(= WiFi&nbsp;DensePose — same repo, renamed)</span></td><td><a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">github.com/ruvnet/RuView ↗</a></td><td>The sensing software; <span class="mono">ruvnet/wifi-densepose</span> redirects here</td></tr>
+            <tr><td><b>RuVector</b></td><td><a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">github.com/ruvnet/ruvector ↗</a></td><td>The Rust vector/AI engine underneath everything (see the primer above)</td></tr>
+            <tr><td>RuView live demo</td><td><a href="https://ruvnet.github.io/RuView/" target="_blank" rel="noopener">ruvnet.github.io/RuView ↗</a></td><td>Try the visualizations in your browser, no hardware</td></tr>
+            <tr><td>Firmware releases</td><td><a href="https://github.com/ruvnet/RuView/releases" target="_blank" rel="noopener">RuView/releases ↗</a></td><td>Prebuilt ESP32 binaries (use v0.7.1-esp32+; v0.8.0 for C6)</td></tr>
+            <tr><td>Pretrained models</td><td><a href="https://huggingface.co/ruvnet/wifi-densepose-pretrained" target="_blank" rel="noopener">HF: wifi-densepose-pretrained ↗</a> · <a href="https://huggingface.co/ruvnet/wifi-densepose-mmfi-pose" target="_blank" rel="noopener">mmfi-pose ↗</a></td><td>CSI encoder + presence head; SOTA MM-Fi pose model</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4 style="margin:18px 0 8px;font-size:15px;color:var(--ink);">Tutorials buried deep in the repos (worth the dig)</h4>
+      <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;font-size:14.5px;">
+        <li><a href="https://github.com/ruvnet/RuView/blob/main/docs/user-guide.md" target="_blank" rel="noopener">RuView User Guide ↗</a> — the 2,400-line master document our <a href="/guide">walkthrough</a> distills</li>
+        <li><a href="https://github.com/ruvnet/RuView/blob/main/docs/tutorials/cognitum-seed-pretraining.md" target="_blank" rel="noopener">Cognitum Seed pretraining tutorial ↗</a> — camera-free pose training with the Seed's 10 fused signals</li>
+        <li><a href="https://github.com/ruvnet/RuView/blob/main/docs/tutorials/pi5-cluster-cognitive-rf-observer.md" target="_blank" rel="noopener">Pi 5 cluster: cognitive RF observer ↗</a> — multi-Pi RuView deployment (the V0 path)</li>
+        <li><a href="https://github.com/ruvnet/RuView/blob/main/docs/integrations/home-assistant.md" target="_blank" rel="noopener">Home Assistant integration ↗</a> — MQTT auto-discovery + automation blueprints for alerts</li>
+        <li><a href="https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-069-cognitum-seed-csi-pipeline.md" target="_blank" rel="noopener">ADR-069: the Seed CSI pipeline ↗</a> — the design doc behind our "Seed memory" phase</li>
+        <li><a href="https://github.com/ruvnet/ruvector/blob/main/docs/guides/GETTING_STARTED.md" target="_blank" rel="noopener">RuVector: Getting Started ↗</a> · <a href="https://github.com/ruvnet/ruvector/blob/main/docs/guides/BASIC_TUTORIAL.md" target="_blank" rel="noopener">Basic Tutorial ↗</a> · <a href="https://github.com/ruvnet/ruvector/blob/main/docs/guides/AGENTICDB_QUICKSTART.md" target="_blank" rel="noopener">AgenticDB Quickstart ↗</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- ============ FAQ ============ -->
 <section id="faq">
   <div class="wrap">
