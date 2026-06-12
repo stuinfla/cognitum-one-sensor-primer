@@ -73,6 +73,7 @@
       <a href="#array">Build array</a>
       <a href="#batteries">Batteries</a>
       <a href="/setup">Setup &amp; flashing</a>
+      <a href="/guide" style="color:var(--phosphor);">Full walkthrough</a>
       <a href="#soul">Soul signature</a>
       <a href="#buy">Buy it</a>
     </div>
@@ -80,20 +81,29 @@
 </nav>
 
 <header class="hero">
+  <style>
+    @keyframes fresh-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(67,245,155,0.45); } 50% { box-shadow:0 0 0 9px rgba(67,245,155,0); } }
+    @keyframes fresh-dot { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+    .fresh-badge { display:inline-flex; align-items:center; gap:9px; margin:0 0 14px; padding:7px 14px; border:1px solid var(--phosphor); border-radius:999px; background:rgba(67,245,155,0.07); font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:0.06em; color:var(--phosphor); animation:fresh-pulse 2.2s ease-in-out infinite; }
+    .fresh-badge .fd { width:8px; height:8px; border-radius:50%; background:var(--phosphor); animation:fresh-dot 1.1s ease-in-out infinite; }
+  </style>
   <img class="hero-bg" src="/assets/img/hero-rf.jpg" alt="Oscilloscope radar waves" loading="eager" />
   <div class="wrap hero-grid">
     <div>
+      <span class="fresh-badge"><span class="fd"></span> UPDATED JUNE 12, 2026 · SYNCED TO RUV'S RUVIEW v1701 (TODAY'S BUILD)</span>
+      <br/>
       <span class="eyebrow">Field guide · passive contactless sensing</span>
       <h1>You got a Seed.<br/>Now give it <span class="glow">senses.</span></h1>
-      <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We cover the sensors you can buy today and hook up — three that sense a room contactlessly, plus one you attach for motion.</p>
+      <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We cover the sensors you can buy today — and a new <b>complete walkthrough</b> that takes you from the unopened box to live presence, breathing, heart-rate and pose on your own dashboard.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <a class="hero-cta" href="#start">Start the tour ↓</a>
+        <a class="hero-cta" href="/guide">NEW · Full walkthrough →</a>
+        <a class="hero-cta" style="--accent:var(--cyan);background:transparent;color:var(--cyan);border:1px solid var(--cyan);box-shadow:none;" href="#start">Start the tour ↓</a>
         <a class="hero-cta" style="--accent:var(--cyan);background:transparent;color:var(--cyan);border:1px solid var(--cyan);box-shadow:none;" href="/setup">Setup &amp; flashing →</a>
       </div>
       <div class="meta-row">
-        <span>READ TIME · <b>~18 min</b></span>
+        <span>UPDATED · <b>June 12, 2026</b></span>
         <span>LEVEL · <b>Absolute beginner</b></span>
-        <span>COVERS · <b>4 sensors · setup guide</b></span>
+        <span>COVERS · <b>4 sensors · setup · full walkthrough</b></span>
       </div>
     </div>
     <div>
@@ -242,6 +252,12 @@
     <div class="callout warn reveal" style="margin-top:26px;">
       <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ The honest truth about WiFi CSI &amp; the Seed</h3>
       <p style="margin:0;color:var(--muted);">A Seed's own built-in WiFi chip <strong>cannot produce CSI</strong> — that's why WiFi-sensing needs separate <b>ESP32-S3 / C5</b> nodes (which can) that stream their CSI to the Seed over WiFi. Plan for <b>7 nodes</b> — not two; one or two can't locate anything (here's <a href="#array">how to build the array</a>). The full step-by-step is on the <a href="/setup">Setup &amp; flashing page →</a></p>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:18px;">
+      <h3 style="margin:0 0 10px;font-size:18px;color:var(--amber);">⚠ Seed vs. V0 — you can't HAT your way to WiFi 6E / WiFi 7 sensing</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">The base <b>Seed is a Raspberry Pi Zero 2&nbsp;W</b>. It has GPIO pins (so simple wired sensors are fine), but <strong>no PCIe bus</strong> — which means <strong>no HAT exists</strong> that can attach an Intel <b>AX210 (WiFi&nbsp;6E)</b> or <b>BE200 (WiFi&nbsp;7)</b> M.2 radio to it. Those cards need the PCIe-to-M.2 E-Key adapter HATs, and those HATs plug into the PCIe ribbon connector found <em>only on the Pi&nbsp;5</em>.</p>
+      <p style="margin:0;color:var(--muted);">So the rule of thumb: <b style="color:var(--ink)">5&nbsp;GHz CSI from ESP32-C5 nodes works with any Seed</b> (the nodes stream over your network — the Seed never touches 5&nbsp;GHz itself). Mounting an Intel card in the brain at all <b style="color:var(--ink)">requires the V0 appliance</b> (the Pi&nbsp;5 + Hailo-8 unit), where the M.2 card rides a PCIe HAT — and even then, treat it as an experiment: the public CSI tools for the AX210 (PicoScenes, FeitCSI) are built for x86 Linux and are <strong>unproven on the Pi&nbsp;5's ARM</strong>, and <strong>no public tool extracts CSI from the BE200 (WiFi&nbsp;7) yet</strong> — on any machine. If you only have a Seed, stick to the ESP32 node path; if you have a V0, the Intel cards are a frontier to explore, not a supported feature.</p>
     </div>
 
     <p class="reveal mono" style="color:var(--faint);font-size:12px;margin-top:18px;">Your mileage may vary: the exact pins, ports and config names here come from one reference build. Always confirm against your own device's config and firmware.</p>

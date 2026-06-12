@@ -16,19 +16,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Update RuView to latest upstream main
-        run: git submodule update --remote RuView
+      - name: Update RuView and ruvector to latest upstream main
+        run: git submodule update --remote RuView ruvector
 
-      - name: Commit and push if RuView moved
+      - name: Commit and push if either submodule moved
         run: |
-          if git diff --quiet RuView; then
-            echo "RuView already up to date."
+          if git diff --quiet RuView ruvector; then
+            echo "Submodules already up to date."
             exit 0
           fi
-          NEW_SHA=$(git -C RuView rev-parse --short HEAD)
-          NEW_DESC=$(git -C RuView describe --tags --always)
+          RV_DESC=$(git -C RuView describe --tags --always)
+          RVEC_SHA=$(git -C ruvector rev-parse --short HEAD)
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add RuView
-          git commit -m "Bump RuView submodule to ${NEW_DESC} (${NEW_SHA})"
+          git add RuView ruvector
+          git commit -m "Bump submodules: RuView ${RV_DESC}, ruvector ${RVEC_SHA}"
           git push

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Complete Walkthrough — Cognitum One Sensor Primer</title>
+<meta name="description" content="The exhaustive end-to-end walkthrough: from 'I just bought a Cognitum One Seed or V0' to live presence, breathing rate, heart rate, motion and skeletal pose from your own sensor array — every command, verbatim, verified against today's RuView." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/guide" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="The Complete Walkthrough — Cognitum One Sensor Primer" />
+<meta property="og:description" content="Unbox → network → RuView → flash → provision → verify → calibrate → train → see people, heartbeats, breathing and pose. Every step, nothing skipped." />
+<meta property="og:url" content="https://cognitum-sensor-primer.vercel.app/guide" />
+<meta property="og:image" content="https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://cognitum-sensor-primer.vercel.app/assets/img/og-cover.jpg" />
+<meta name="theme-color" content="#070b10" />
+<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/css/styles.css?v=3" />
+<style>
+  .step { display:flex; gap:18px; margin-bottom:18px; }
+  .step .n { flex:0 0 auto; width:38px; height:38px; border-radius:50%; border:1px solid var(--phosphor-dim); color:var(--phosphor); font-family:"Chakra Petch"; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step .body { flex:1; }
+  .step h4 { margin:6px 0 6px; font-size:17px; }
+  pre.code { background:#070d14; border:1px solid var(--line-strong); border-left:3px solid var(--phosphor-dim); border-radius:10px; padding:14px 16px; overflow-x:auto; font-family:"IBM Plex Mono"; font-size:13px; color:#cfe; line-height:1.7; }
+  pre.code .c { color:var(--faint); }
+  .stamp { display:inline-block; border:1px solid var(--phosphor-dim); border-radius:8px; padding:8px 14px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--phosphor); background:rgba(67,245,155,0.05); }
+  .phase { font-family:"Chakra Petch"; font-size:13px; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="dot"></span> COGNITUM&nbsp;ONE&nbsp;·&nbsp;SENSOR&nbsp;PRIMER</a>
+    <div class="nav-links">
+      <a href="/">← Primer home</a>
+      <a href="#software">RuView first</a>
+      <a href="#flash">Flash</a>
+      <a href="#calibrate">Calibrate</a>
+      <a href="#train">Train</a>
+      <a href="#pose">Pose</a>
+      <a href="#seedmem">Seed memory</a>
+      <a href="#trouble">Stuck?</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" style="padding:64px 0 36px;">
+  <img class="hero-bg" src="/assets/img/hero-rf.jpg" alt="" loading="eager" />
+  <div class="wrap" style="position:relative;z-index:2;">
+    <span class="eyebrow">The complete walkthrough · nothing skipped</span>
+    <h1 style="font-size:clamp(34px,5vw,58px);margin:16px 0 0;">"I just bought a Seed."<br/>Here's every step to a sensing home.</h1>
+    <p class="lede" style="max-width:62ch;">This page takes you from an unopened box to a live dashboard showing <b>who's in the room, their breathing rate, heart beat, motion</b> — and how far you can honestly push <b>skeletal pose</b>. Every command below is quoted verbatim from RuView's own docs and code, not paraphrased.</p>
+    <p style="margin-top:14px;"><span class="stamp">✓ Verified against RuView <b>main @ 3d7530f0 (v1701)</b> · committed 2026-06-12 09:09 EDT · this page written 2026-06-12</span></p>
+  </div>
+</header>
+
+<!-- 00 JOURNEY -->
+<section id="journey">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">00 — THE JOURNEY</span>
+      <h2>Nine phases, in order</h2>
+      <p>Don't jump ahead. Each phase has a "you'll know it worked when…" check. If a check fails, stop and fix it — the later phases can't compensate.</p>
+    </div>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>#</th><th>Phase</th><th>Time</th><th>You'll know it worked when…</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><a href="#unbox">Know your brain: Seed vs V0</a></td><td>5 min</td><td>You know which box you have and what runs where</td></tr>
+          <tr><td>2</td><td><a href="#network">Prepare the network</a></td><td>10 min</td><td>Reserved IPs; you know your 2.4 GHz network name</td></tr>
+          <tr><td>3</td><td><a href="#software">Run RuView on simulated data</a></td><td>2 min</td><td><span class="mono">curl /health</span> returns <span class="mono">"status":"ok"</span></td></tr>
+          <tr><td>4</td><td><a href="#flash">Flash the ESP32 nodes</a></td><td>15 min/node first time</td><td>Serial monitor shows the node booting</td></tr>
+          <tr><td>5</td><td><a href="#provision">Provision each node</a></td><td>2 min/node</td><td><span class="mono">tcpdump</span> shows ~10+ pkts/sec on UDP 5005</td></tr>
+          <tr><td>6</td><td><a href="#verify">Point RuView at real CSI</a></td><td>5 min</td><td>Observatory badge flips <b>DEMO → LIVE</b></td></tr>
+          <tr><td>7</td><td><a href="#calibrate">Calibrate the empty room</a></td><td>1–2 min</td><td><span class="mono">room-status</span> says <span class="mono">baseline: fresh</span></td></tr>
+          <tr><td>8</td><td><a href="#train">Enroll &amp; train your room</a></td><td>~10 min</td><td>Six specialists report <span class="mono">✓ trained</span></td></tr>
+          <tr><td>9</td><td><a href="#seedmem">Give the Seed a memory</a></td><td>15 min</td><td>Bridge <span class="mono">--stats</span> shows vectors accumulating</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 01 UNBOX -->
+<section id="unbox">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">01 — DAY ZERO</span>
+      <h2>Know your brain: Seed vs V0 (and your laptop's role)</h2>
+      <p>The single biggest beginner confusion. Three machines can be involved, and each has a different job.</p>
+    </div>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>Machine</th><th>What it is</th><th>Its job in this walkthrough</th></tr></thead>
+        <tbody>
+          <tr><td><b>Cognitum One Seed</b></td><td>Pi Zero 2 W appliance</td><td>The <b>memory</b>: persistent vector store, kNN search, witness chain, MCP tools for AI assistants. It does <em>not</em> run the heavy CSI processing.</td></tr>
+          <tr><td><b>Cognitum V0 appliance</b></td><td>Pi 5 + Hailo-8</td><td>The always-on <b>LAN core</b>: can run the RuView sensing server itself, plus its calibration dashboard on port <span class="mono">9000</span>.</td></tr>
+          <tr><td><b>Your Mac/PC</b></td><td>Whatever you have</td><td>Flashing the nodes (always), and running the sensing server + Seed bridge (if you don't have a V0). 4 GB RAM minimum, 8 GB recommended; ~2–5 GB disk.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout reveal" style="margin-top:18px;">
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">Mental model:</b> ESP32 nodes are the <b>senses</b> (they capture WiFi-CSI), the sensing server — on your laptop or the V0 — is the <b>perception</b> (it turns CSI into people, breathing, pose), and the Seed is the <b>memory</b> (it stores what was perceived, tamper-evidently, and lets AI agents query it). You can complete phases 1–8 with no Seed at all, then add it in phase 9.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 NETWORK -->
+<section id="network">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">02 — NETWORK PREP</span>
+      <h2>Ten minutes in your router's admin page</h2>
+    </div>
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Find your 2.4 GHz network name</h4>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">ESP32-S3 and C6 nodes only see <b>2.4 GHz</b>; the C5 is the dual-band exception. If your router broadcasts one combined name, that's fine — but if 2.4 and 5 GHz have separate names, note the 2.4 GHz one. <b>Bonus for C6 nodes:</b> if your router supports <b>WiFi 6 (802.11ax) on 2.4 GHz</b>, enable it — the C6 then captures 242-tone high-fidelity CSI instead of 64-tone (4× the spectral detail).</p></div></div>
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Reserve IP addresses</h4>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">In your router's DHCP settings, reserve a fixed IP for <b>the machine that will run the sensing server</b> (your laptop or the V0). The nodes are provisioned with this exact IP — if it changes, every node goes silent and you'll think the hardware died. Reserve the Seed's IP too while you're there.</p></div></div>
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Open the firewall port</h4>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">The nodes stream to <b>UDP 5005</b> on the sensing-server machine. macOS will prompt to allow it; on Linux check <span class="mono">ufw</span>; on Windows allow the app through Defender Firewall.</p></div></div>
+  </div>
+</section>
+
+<!-- 03 SOFTWARE FIRST -->
+<section id="software">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">03 — SOFTWARE FIRST</span>
+      <h2>Run RuView before you touch a soldering-free sensor</h2>
+      <p>Counter-intuitive but right: get the software working on <b>simulated data</b> first. Then when real hardware misbehaves, you know the problem is the hardware side, not the software side.</p>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>The 30-second demo (Docker — recommended)</h4>
+      <pre class="code">docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest
+<span class="c"># then open  http://localhost:3000  in your browser</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">You'll see a Three.js view with a 3D body skeleton, signal heatmap, phase plot and a vitals panel — all from <em>synthetic</em> CSI. The image is multi-arch (Intel/AMD + Apple Silicon).</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Verify with the API — your first "it works" moment</h4>
+      <pre class="code">curl http://localhost:3000/health
+<span class="c"># Expected: {"status":"ok","source":"simulated","clients":0}</span>
+curl http://localhost:3000/api/v1/sensing/latest   <span class="c"># latest frame</span>
+curl http://localhost:3000/api/v1/vital-signs      <span class="c"># breathing + heart rate</span>
+curl http://localhost:3000/api/v1/pose/current     <span class="c"># 17 COCO keypoints</span></pre></div></div>
+
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Building from source instead? (V0, or you want the latest)</h4>
+      <pre class="code">git clone https://github.com/ruvnet/RuView.git
+cd RuView/v2
+cargo build --release                              <span class="c"># Rust 1.85+ recommended</span>
+cargo test --workspace --no-default-features       <span class="c"># optional: runs 1,400+ tests</span>
+<span class="c"># binary lands at  target/release/sensing-server</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;"><b style="color:var(--amber)">Port gotcha that bites everyone:</b> Docker publishes <span class="mono">3000/3001</span>, but the source binary defaults to <span class="mono">8080/8765</span>. Running from source, pass the ports and UI path explicitly: <span class="mono">--http-port 3000 --ws-port 3001 --ui-path ../ui</span>.</p></div></div>
+  </div>
+</section>
+
+<!-- 04 FLASH -->
+<section id="flash">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">04 — FLASH THE NODES</span>
+      <h2>Firmware onto every ESP32 — exact commands</h2>
+      <p>Download the prebuilt binaries from <a href="https://github.com/ruvnet/RuView/releases" target="_blank" rel="noopener">RuView Releases ↗</a>. As of today, use <b>v0.7.1-esp32 or newer</b> (fixes a CSI-starvation bug and a heart-rate bug stuck near 45 BPM); <b>v0.8.0-esp32</b> adds the C6's 242-tone WiFi-6 CSI. The easiest path is still <b>asking Claude Code with the RuView plugin</b> to do this — below is what happens under the hood.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">ESP32-S3 — most boards (8 MB flash)</h3>
+      <pre class="code"><span class="c"># your serial port: /dev/cu.usbmodem… on macOS, COM7-style on Windows</span>
+python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
+  write-flash --flash-mode dio --flash-size 8MB --flash-freq 80m \
+  0x0 bootloader.bin 0x8000 partition-table.bin \
+  0xf000 ota_data_initial.bin 0x20000 esp32-csi-node.bin</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14px;"><b>4 MB boards</b> (S3 SuperMini): use the <span class="mono">-4mb</span> binaries from the release and <span class="mono">--flash-size 4MB</span>, with <span class="mono">partition-table-4mb.bin</span> at <span class="mono">0x8000</span> and <span class="mono">esp32-csi-node-4mb.bin</span> at <span class="mono">0x20000</span>.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(92,214,255,0.4);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">ESP32-C6 — the high-fidelity node (incl. the chip in your MR60 XIAO)</h3>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Build from source with <b>ESP-IDF v5.5.2</b> (older IDF silently downgrades the C6 to 64-tone CSI), or grab the C6 binaries from v0.8.0-esp32:</p>
+      <pre class="code">cd firmware/esp32-csi-node
+idf.py set-target esp32c6
+idf.py build                    <span class="c"># ~1.0 MB binary</span>
+idf.py -p COM6 flash</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14px;">Then watch it boot with <span class="mono">idf.py -p COM6 monitor</span> — you want to see lines like:</p>
+      <pre class="code">I (353) main: ESP32-C6 CSI Node (ADR-018 / ADR-110) — Node ID: 1
+I (413) c6_ts: init done: channel=15 EUI=… leader=yes(candidate)
+I (463) wifi: mac_version:HAL_MAC_ESP32AX_761   <span class="c">← the 802.11ax MAC is loaded</span></pre>
+      <p style="margin:10px 0 0;color:var(--ink);font-size:14px;"><b>Know before you buy/flash:</b> the C6 has <b>no OTA</b> (single partition) — every reflash is over USB. And the C6 build has no mmWave fusion or display support; it's the precision CSI instrument, the S3 is the workhorse.</p>
+    </div>
+
+    <div class="callout warn reveal">
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">If nothing happens when you flash:</b> 95% of the time it's a charge-only USB-C cable. The other 5%: hold the board's BOOT button while plugging in to force download mode. (MR60 XIAO: you must open the case and use the <b>inner</b> USB-C port — the edge port is power-only.)</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 PROVISION -->
+<section id="provision">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">05 — PROVISION</span>
+      <h2>Tell each node who it is and where to stream</h2>
+      <p>Provisioning writes settings into the node's flash (NVS) — no reflash needed to change them later. One script handles S3 and C6 alike: <span class="mono">firmware/esp32-csi-node/provision.py</span>.</p>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>The basic provision — one command per node</h4>
+      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM7 \
+  --ssid "YourWiFi" --password "YourPassword" \
+  --target-ip 192.168.1.20 --node-id 1</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;"><span class="mono">--target-ip</span> is the reserved IP of the sensing-server machine from phase 02. <span class="mono">--node-id</span> must be <b>unique per node</b> (1, 2, 3…7) — it's the only way the server tells your nodes apart; there is no discovery handshake. Re-running the script merges new settings, it doesn't wipe old ones.</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Multi-node array: give each node a TDM slot</h4>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">So nodes take turns transmitting instead of jamming each other:</p>
+      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM7 --tdm-slot 0 --tdm-total 7
+python firmware/esp32-csi-node/provision.py --port COM8 --tdm-slot 1 --tdm-total 7
+<span class="c"># …and so on through slot 6 for a 7-node array</span></pre></div></div>
+
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Optional but recommended: on-device vitals (Tier 2)</h4>
+      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM7 \
+  --ssid "YourWiFi" --password "YourPassword" --target-ip 192.168.1.20 \
+  --edge-tier 2</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Tier 2 makes each node compute presence, breathing, heart-rate, motion and fall flags <em>on the chip</em> (~33 KB RAM) and stream them alongside raw CSI — this is also what the Seed ingests in phase 09.</p></div></div>
+
+    <div class="step reveal"><div class="n">4</div><div class="body"><h4>Optional: authenticated mesh (shared key)</h4>
+      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM7 \
+  --ssid "YourWiFi" --password "YourPassword" --target-ip 192.168.1.20 \
+  --mesh-key "$(openssl rand -hex 32)"</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">All nodes in one mesh must share the same key (HMAC-SHA256 beacon auth). Store it somewhere safe; provision the identical key into every node.</p></div></div>
+  </div>
+</section>
+
+<!-- 06 VERIFY -->
+<section id="verify">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">06 — GO LIVE</span>
+      <h2>Point RuView at the real hardware</h2>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Confirm packets are arriving at all</h4>
+      <pre class="code">sudo tcpdump -ni any udp port 5005   <span class="c"># expect a steady packet stream from each node's IP</span></pre></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Restart the server in ESP32 mode</h4>
+      <pre class="code"><span class="c"># Docker:</span>
+docker run --rm -e CSI_SOURCE=esp32 \
+  -p 3000:3000 -p 3001:3001 -p 5005:5005/udp \
+  ruvnet/wifi-densepose:latest
+
+<span class="c"># From source (e.g. on the V0):</span>
+./target/release/sensing-server --source esp32 --udp-port 5005 \
+  --http-port 3000 --ws-port 3001 --ui-path ../ui</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;"><b style="color:var(--amber)">Only one process can own UDP 5005.</b> If you ran a standalone aggregator for testing, stop it first — the sensing server <em>is</em> the aggregator behind the dashboard, API and WebSocket.</p></div></div>
+
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Check every node showed up</h4>
+      <pre class="code">curl http://localhost:3000/health            <span class="c"># "source" should no longer say simulated</span>
+curl http://localhost:3000/api/v1/nodes      <span class="c"># every node-id you provisioned, with RSSI + freshness</span>
+curl http://localhost:3000/api/v1/sensing/latest</pre></div></div>
+
+    <div class="step reveal"><div class="n">4</div><div class="body"><h4>Open the two dashboards</h4>
+      <div class="table-scroll" style="margin:6px 0 10px;">
+        <table>
+          <thead><tr><th>View</th><th>URL</th><th>What it's for</th></tr></thead>
+          <tbody>
+            <tr><td>Dashboard</td><td class="mono">http://localhost:3000/ui/index.html</td><td>Signal field, vitals, live skeleton</td></tr>
+            <tr><td>Observatory</td><td class="mono">http://localhost:3000/ui/observatory.html</td><td>Cinematic room view + per-node status — <b>your array health screen</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">The Observatory auto-detects the live server: its HUD badge flips from <b>DEMO</b> to <b style="color:var(--phosphor)">LIVE</b>. That badge is your single source of truth — if it says DEMO, you're looking at canned data, not your home.</p></div></div>
+  </div>
+</section>
+
+<!-- 07 CALIBRATE -->
+<section id="calibrate">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">07 — CALIBRATE</span>
+      <h2>Teach it what "empty" looks like (60 seconds)</h2>
+      <p>Out of the box the system has never seen your room. Calibration records the empty-room RF fingerprint that everything else is measured against. <b>This is the step almost everyone skips, and it's why their presence detection flickers.</b></p>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Leave the room, then run</h4>
+      <pre class="code">wifi-densepose calibrate --room living-room --duration 60s   <span class="c"># you must NOT be in the room</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">The CLI ships in the RuView build (<span class="mono">wifi-densepose-cli</span> crate). On a V0 appliance you can instead press Calibrate on its dashboard at <span class="mono">http://cognitum-v0:9000</span>. Pets count as "not empty" — shut the cat out.</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Know when to redo it</h4>
+      <p style="margin:0;color:var(--muted);font-size:14.5px;">Recalibrate after: moving furniture, moving/adding any node, or when <span class="mono">room-status</span> reports baseline drift. It's deliberate that this never happens automatically — the system can't verify the room is empty by itself, and a baseline captured with someone in the room silently poisons everything downstream.</p></div></div>
+  </div>
+</section>
+
+<!-- 08 TRAIN -->
+<section id="train">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">08 — TRAIN</span>
+      <h2>Ten minutes of guided enrollment → six trained specialists</h2>
+      <p>This is the out-of-box training process you've been looking for. No camera, no dataset downloads — you are the training data. (ADR-151's four-stage flow.)</p>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Guided enrollment — the system coaches you through 8 anchors (~4 min)</h4>
+      <pre class="code">wifi-densepose enroll --room living-room
+<span class="c">#   → "Stand still in view of the sensor…"  [✓ anchor accepted: coherence 0.91]</span>
+<span class="c">#   → "Sit down…"                            [✗ low SNR, retrying]</span>
+<span class="c">#   …walk, lie down, leave the room, etc. — 8 anchor poses total</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Each anchor has a quality gate — if your WiFi was noisy during one, it just asks again. Do this once per room.</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Train the specialist bank</h4>
+      <pre class="code">wifi-densepose train-room --room living-room \
+    --specialists breathing,heartbeat,restlessness,posture,presence,anomaly</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Instead of one big model, RuView trains six small statistical specialists calibrated to <em>your</em> room. They run in microseconds, fully on-device.</p></div></div>
+
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Confirm — and learn this status command, you'll use it forever</h4>
+      <pre class="code">wifi-densepose room-status --room living-room
+<span class="c">#   baseline: fresh (drift 0.04 &lt; 0.20)</span>
+<span class="c">#   breathing  ✓ trained  conf p50 0.88</span>
+<span class="c">#   heartbeat  ✓ trained  conf p50 0.71</span>
+<span class="c">#   posture    ✓ 3 prototypes (stand/sit/lie)</span>
+<span class="c">#   anomaly ✓ · presence ✓ · restlessness ✓</span></pre></div></div>
+
+    <div class="callout reveal" style="margin-top:8px;">
+      <h3 style="margin:0 0 10px;font-size:18px;color:var(--phosphor);">What you now have — honestly stated</h3>
+      <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.8;">
+        <li><b style="color:var(--ink)">Presence &amp; person count</b> — solid. The flagship capability.</li>
+        <li><b style="color:var(--ink)">Breathing rate</b> — solid (6–30 BPM band, needs a fairly stationary subject). No per-person training required.</li>
+        <li><b style="color:var(--ink)">Heart rate</b> — works, lower confidence than breathing; treat as experimental. (Validated against an Apple Watch in Ruv's own tests; a Polar H10 strap is a great ground-truth check.)</li>
+        <li><b style="color:var(--ink)">Motion / activity / fall flags</b> — solid, runs on the nodes themselves at Tier 2.</li>
+        <li><b style="color:var(--ink)">Anonymous re-identification</b> — "same body as yesterday, probably." Named identity from WiFi alone is <em>not</em> a shipped capability — Ruv's own measurements say two people aren't yet separable on cardiac/respiratory channels alone.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 09 POSE -->
+<section id="pose">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">09 — SKELETAL POSE</span>
+      <h2>The honest pose ladder: three rungs</h2>
+      <p>The dashboard's skeleton works out of the box — but know what you're looking at, and what it takes to make it real.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:18px;">
+      <h3 style="margin:0 0 8px;font-size:18px;color:var(--ink);">Rung 1 — what you get free: a heuristic skeleton</h3>
+      <p style="margin:0;color:var(--muted);">The default 17-keypoint figure is <b>signal-derived</b> — limbs animated from motion energy, not learned keypoint inference. Great for "is something moving and roughly where," not for "is their left arm raised." The dashboard labels this honestly ("Signal-Derived vs Model Inference").</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:18px;">
+      <h3 style="margin:0 0 8px;font-size:18px;color:var(--ink);">Rung 2 — camera-free training (works with your Seed, no camera ever)</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">RuView can train a pose model by fusing up to 10 weak signals — PIR, temperature, humidity, cross-node RSSI triangulation, vibration footsteps, door reed switch, kNN clusters from the Seed's vector store and more:</p>
+      <pre class="code"><span class="c"># with a Cognitum Seed connected (all 10 signals):</span>
+node scripts/train-camera-free.js \
+  --data data/recordings/pretrain-*.csi.jsonl \
+  --seed-url https://169.254.42.1:8443 --seed-token "$SEED_TOKEN"
+
+<span class="c"># without a Seed (CSI-only, 3 signals — still works):</span>
+node scripts/train-camera-free.js \
+  --data data/recordings/pretrain-*.csi.jsonl --no-seed</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14px;">Output: an 82.8 KB model (8 KB quantized) with full-skeleton predictions and per-node adapters. Expect coarse-but-plausible poses, not precision.</p>
+    </div>
+
+    <div class="callout reveal" style="margin-bottom:18px;">
+      <h3 style="margin:0 0 8px;font-size:18px;color:var(--ink);">Rung 3 — camera-supervised training (highest accuracy; camera is a temporary teacher)</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">A webcam + MediaPipe records real poses paired with CSI for <b>35–40 minutes</b> while you move through varied activities; then the camera goes away forever and the model runs on WiFi alone:</p>
+      <pre class="code">pip install mediapipe opencv-python
+python scripts/calibrate-camera-room.py            <span class="c"># 5 min, two checkerboards — makes the model survive relocation</span>
+
+<span class="c"># Terminal 1 + Terminal 2, simultaneously, 40 minutes:</span>
+python scripts/record-csi-udp.py --duration 2400
+python scripts/collect-ground-truth.py --duration 2400 --preview \
+  --calibration data/calibration/camera-room.json
+
+node scripts/align-ground-truth.js --gt data/ground-truth/*.jsonl --csi data/recordings/csi-*.csi.jsonl
+node scripts/train-wiflow-supervised.js --data data/paired/*.jsonl --scale small --epochs 50
+node scripts/eval-wiflow.js --model models/wiflow-supervised/wiflow-v1.json --data data/paired/*.jsonl</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14px;"><b style="color:var(--amber)">Reality check, from Ruv's own changelog:</b> a previously cited 92.9% accuracy figure was <em>retracted</em> (it came from a flawed protocol). Change activity every 1–2 minutes during capture — 40 minutes of sitting trains a model that only knows sitting. A 5-minute session is not enough, period.</p>
+    </div>
+
+    <div class="callout warn reveal">
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--amber)">About the pretrained models on Hugging Face:</b> <span class="mono">ruvnet/wifi-densepose-pretrained</span> is real (a CSI encoder + presence head, 82.3% held-out triplet accuracy) and <span class="mono">ruvnet/wifi-densepose-mmfi-pose</span> reports 82.69% torso-PCK@20 on the MM-Fi benchmark. But the live sensing server's <span class="mono">--model</span> flag can't read the published JSONL format yet (a tracked gap) — so for the live dashboard, run <em>without</em> <span class="mono">--model</span> and use the weights from the Python/training side. Don't burn an evening on this; it's upstream's gap, not your mistake.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 SEED MEMORY -->
+<section id="seedmem">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">10 — SEED MEMORY</span>
+      <h2>Give it a memory: wire the array into your Seed</h2>
+      <p>Everything so far is real-time and forgotten. The Seed adds the persistent part: every second, an 8-number summary of the room (presence, motion, breathing, heart rate, phase variance, person count, fall flag, signal strength) is stored with a tamper-evident witness chain — and becomes queryable by AI assistants over MCP.</p>
+    </div>
+
+    <div class="step reveal"><div class="n">1</div><div class="body"><h4>Pair with the Seed over USB (once)</h4>
+      <pre class="code"><span class="c"># Plug the Seed into your laptop via USB — it appears as a network device at 169.254.42.1</span>
+curl -sk -X POST https://169.254.42.1:8443/api/v1/pair/window     <span class="c"># opens a 30-second pairing window</span>
+curl -sk -X POST https://169.254.42.1:8443/api/v1/pair \
+  -H 'Content-Type: application/json' -d '{"client_name":"my-laptop"}'
+<span class="c"># SAVE THE RETURNED TOKEN — it is shown exactly once</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">Pairing is USB-only by design — nobody on your WiFi can pair with your Seed.</p></div></div>
+
+    <div class="step reveal"><div class="n">2</div><div class="body"><h4>Provision the nodes' feature stream (UDP 5006 — separate from the CSI stream)</h4>
+      <pre class="code">python firmware/esp32-csi-node/provision.py --port COM9 \
+  --ssid "YourWiFi" --password "secret" \
+  --target-ip 192.168.1.20 --target-port 5006 --node-id 1</pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;"><span class="mono">--target-ip</span> here is <b>your laptop</b> (where the bridge runs) — not the Seed. The bridge is the middleman; current limitation is that it runs on a host machine, not on the Seed itself. Nodes need <span class="mono">--edge-tier 2</span> (phase 05) to produce the feature packets.</p></div></div>
+
+    <div class="step reveal"><div class="n">3</div><div class="body"><h4>Run the bridge</h4>
+      <pre class="code">export SEED_TOKEN="your-pairing-token"
+python scripts/seed_csi_bridge.py \
+  --seed-url https://169.254.42.1:8443 --token "$SEED_TOKEN" \
+  --udp-port 5006 --batch-size 10 --validate</pre></div></div>
+
+    <div class="step reveal"><div class="n">4</div><div class="body"><h4>Watch the memory grow — and maintain it</h4>
+      <pre class="code">python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --stats     <span class="c"># vector counts, ingest rate</span>
+python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --compact   <span class="c"># run periodically — Seed works best under ~100K vectors</span></pre>
+      <p style="margin:10px 0 0;color:var(--muted);font-size:14.5px;">From here, AI assistants (Claude, etc.) can query your home's sensing history through the Seed's MCP proxy — "was anyone in the living room at 3am?" becomes an answerable question, with a cryptographic audit trail behind the answer.</p></div></div>
+  </div>
+</section>
+
+<!-- TROUBLESHOOT -->
+<section id="trouble">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="num">11 — WHEN IT WON'T WORK</span>
+      <h2>The end-to-end troubleshooting ladder</h2>
+      <p>Work top-down — each row assumes the rows above it pass.</p>
+    </div>
+    <div class="table-scroll reveal">
+      <table>
+        <thead><tr><th>Symptom</th><th>Cause &amp; fix</th></tr></thead>
+        <tbody>
+          <tr><td>Flashing fails / no serial port</td><td>Charge-only USB-C cable (swap it), or wrong port on the MR60 (use the inner one), or hold BOOT while plugging in.</td></tr>
+          <tr><td>Node won't join WiFi</td><td>Wrong band — S3/C6 can't see 5 GHz networks. Re-provision with the 2.4 GHz SSID.</td></tr>
+          <tr><td><span class="mono">tcpdump</span> shows nothing on 5005</td><td>Wrong <span class="mono">--target-ip</span> (must be the sensing-server machine, and reserved in the router), or the firewall is eating UDP 5005.</td></tr>
+          <tr><td>Packets arrive but <span class="mono">/api/v1/nodes</span> is empty</td><td>Another process owns UDP 5005 (stop the standalone aggregator), or Docker is missing <span class="mono">-p 5005:5005/udp</span> and <span class="mono">-e CSI_SOURCE=esp32</span>.</td></tr>
+          <tr><td>Observatory stuck on DEMO</td><td>You opened the file directly — open it <em>through the server</em>: <span class="mono">http://localhost:3000/ui/observatory.html</span>.</td></tr>
+          <tr><td>Presence flickers when the room is empty</td><td>You skipped calibration (phase 07), or the baseline is stale — recalibrate with the room genuinely empty.</td></tr>
+          <tr><td>Vitals show 0 BPM</td><td>Subject must be fairly stationary and within range; give the MR60 ~60 s warm-up; check <span class="mono">--edge-tier 2</span> was provisioned.</td></tr>
+          <tr><td>Heart rate pinned at ~45 BPM</td><td>Old firmware — that exact bug was fixed in v0.7.1-esp32. Reflash.</td></tr>
+          <tr><td>C6 CSI looks low-resolution</td><td>Firmware built with IDF older than v5.5.2, or your AP isn't doing 802.11ax on 2.4 GHz — both downgrade you to 64-tone CSI.</td></tr>
+          <tr><td>Seed ingest fails with 401</td><td>The pairing token is shown once — re-pair over USB (30-second window) and update <span class="mono">$SEED_TOKEN</span>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout reveal" style="margin-top:24px;">
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">Where these commands come from:</b> RuView's <a href="https://github.com/ruvnet/RuView/blob/main/docs/user-guide.md" target="_blank" rel="noopener">user-guide.md ↗</a>, ADR-069 (Seed pipeline), ADR-135 (calibration), ADR-151 (room training) — all read from <b>main @ 3d7530f0 (v1701), committed 2026-06-12</b>. RuView moves fast (multiple releases a day); if something here drifts, the repo wins and we'll re-verify this page against it.</p>
+    </div>
+    <p class="reveal" style="margin-top:28px;"><a class="hero-cta" href="/">← Back to the sensor primer</a> &nbsp;·&nbsp; <a href="/setup" style="font-family:'IBM Plex Mono';font-size:13px;">Setup &amp; flashing basics →</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div style="color:var(--phosphor); font-weight:600; margin-bottom:6px;">COGNITUM ONE · THE COMPLETE WALKTHROUGH</div>
+      <div>Unbox → network → RuView → flash → provision → verify → calibrate → train → pose → Seed memory.</div>
+      <div style="margin-top:10px;"><a href="/">Primer home →</a> · <a href="/setup">Setup page →</a> · <a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a> · <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="color:var(--faint);">Verified against RuView main @ 3d7530f0 (v1701) · 2026-06-12.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/main.js?v=3" defer></script>
+</body>
+</html>

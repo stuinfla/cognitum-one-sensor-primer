@@ -2,3 +2,8 @@
 	path = RuView
 	url = https://github.com/ruvnet/RuView
 	branch = main
+[submodule "ruvector"]
+	path = ruvector
+	url = https://github.com/ruvnet/ruvector
+	branch = main
+	shallow = true
