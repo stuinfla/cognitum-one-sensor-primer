@@ -29,6 +29,46 @@ That prompt is how this document was produced. Using this file instead of re-run
 
 ---
 
+## 0. Executive summary + "which crate do I need?"
+
+RuVector is ruvnet's 1.58M-line Rust monorepo: a **self-learning vector database and agentic runtime** that ships as plain files and libraries — no server, no Docker (one optional Postgres image aside). It is infrastructure, not an app: search, learning, graphs, coherence/safety gates, math, local LLM inference, consensus. If your task is content generation, web frameworks, or cloud admin, RuVector is the *backend* under those, not the tool.
+
+| I need to… | Use | Install |
+|---|---|---|
+| semantic search in Rust | `ruvector-core` (HNSW, 61 µs claimed) | `cargo add ruvector-core` |
+| semantic search in Node | `ruvector` npm (NAPI, WASM fallback) | `npm i ruvector` |
+| a portable KB file I can ship | **RVF** — vectors+index+witness in one `.rvf` | `cargo install rvf-cli` / `npm i @ruvector/rvf` |
+| agent memory that persists | AgentDB (bundled in ruFlo) or `@ruvector/rvf` + HNSW | `ruflo memory …` / `npm i agentdb@alpha` |
+| replace pgvector | `ruvector-postgres` (230+ SQL fns) | `cargo pgrx init` then build; `docker pull ruvnet/ruvector-postgres` |
+| search in the browser, offline | `@ruvector/ruvector-wasm`, `rvlite` (SQL+SPARQL+Cypher, IndexedDB) | npm |
+| tiny IoT / ASIC search | `micro-hnsw-wasm` (~11.8 KB) | vendored |
+| a knowledge graph + Cypher | `ruvector-graph` | `cargo add ruvector-graph` / `npm i @ruvector/graph` |
+| results that improve with use | `ruvector-gnn` + `sona` | `cargo add ruvector-gnn sona` |
+| hallucination/drift gating | `prime-radiant` + `ruvector-mincut` + `cognitum-gate-*` | cargo |
+| local LLM, no API bill | `ruvllm` (GGUF, Metal/CUDA/WebGPU, BitNet) | `npm i @ruvector/ruvllm` |
+| run on Pi 5 NPU / bare metal | `ruvector-hailo` (ADR-167) / `ruvix` kernel (ADR-087) | cargo, feature-gated |
+| an agent framework with MCP | `rvAgent` (10 crates) | `npm i @ruvector/rvagent-cli` |
+| expose all this to Claude | `@ruvector/rvf-mcp-server`, `mcp-brain` | `npx @ruvector/rvf-mcp-server --transport stdio` |
+
+![RuVector stack: consumers (RuView, Cognitum Seed/V0, ruFlo, AgentDB, your app) sit on one Rust engine of ~114–170 crates across search, self-learning, graph, coherence, math, LLM, attention, bio/quantum, distributed and agent domains, delivered as .rvf files, crates.io/npm packages, WASM/NAPI builds and a PostgreSQL extension](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruvector-stack.svg)
+
+<details>
+<summary>ASCII Version (for AI/accessibility)</summary>
+
+```
+RuView · Cognitum Seed/V0 · ruFlo · AgentDB · your app
+        └────────────┬─────────────────────┘
+   THE ENGINE (~114–170 crates, 1.58M LOC Rust, MIT)
+   search │ self-learn │ graph │ coherence │ math/solvers
+   ruvllm │ attention(46) │ bio/quantum │ distributed │ rvAgent
+        └────────────┬─────────────────────┘
+   .rvf files · crates.io+npm · WASM/NAPI · PostgreSQL ext
+```
+
+</details>
+
+---
+
 ## 1. What RuVector is
 
 RuVector is a self-learning, self-optimizing **vector database and agentic runtime built entirely in Rust**. Unlike traditional vector databases that return identical results forever, RuVector layers a Graph Neural Network over its HNSW index so search quality improves automatically from usage. It targets three pains: vector search that stays static without retraining, AI models that require cloud APIs and per-query billing, and vector infrastructure that requires servers and ops.
@@ -137,7 +177,7 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 `ruvector-solver`/`-node`/`-wasm` (8 sublinear algorithms) · `ruvector-math`/`-wasm` (optimal transport, information geometry, product manifolds)
 
 ### Self-learning & LLM
-`sona` (two-tier LoRA + EWC++ + ReasoningBank) · `ruvector-nervous-system`/`-wasm` (spiking nets, BTSP) · `ruvllm`/`-cli`/`-wasm` (LLM serving; paged attention, KV cache) · `ruvllm_sparse_attention` (O(N log N) kernel, ADR-183–192: ESP32 no-std + Pi Zero 2 W hardening) · `ruvllm_retrieval_diffusion` · `prime-radiant` (LLM serving runtime)
+`sona` (two-tier LoRA + EWC++ + ReasoningBank) · `ruvector-nervous-system`/`-wasm` (spiking nets, BTSP) · `ruvllm`/`-cli`/`-wasm` (LLM serving; paged attention, KV cache) · `ruvllm_sparse_attention` (O(N log N) kernel, ADR-183–192: ESP32 no-std + Pi Zero 2 W hardening) · `ruvllm_retrieval_diffusion` · `prime-radiant` — **the universal coherence engine**: sheaf cohomology (H⁰/H¹, sheaf Laplacian), immutable Blake3 witness chains with multi-party approval, 256-tile WASM gate fabric, neural gating — the hallucination/contradiction firewall, *not* an LLM server (an earlier draft mislabeled it; corrected via catalog audit)
 
 ### Sparse & efficient inference
 `ruvector-sparse-inference`/`-wasm` (PowerInfer-style) · `ruvector-sparsifier`/`-wasm` (spectral sparsification, 49 tests)
@@ -463,6 +503,28 @@ Caveats: measured on specific hardware (Apple M4 Pro / M2 / i7); min-cut subpoly
 - WASM bundle grows with features — tree-shake; core ≈58 KB, minimal runtime claim 5.5 KB.
 - Pin crate versions in production: 2.x may break APIs between minors.
 - HNSW core is production-grade but **not formally verified** (the graph-transformer's proof-gated mutations are the verified part).
+
+## 8.5 Subtrees easy to miss (added after catalog audit)
+
+- **Research library** — `research/` holds **25 directories / 213 documents** (latent-space 34, sublinear-time-solver 34, gnn-v2 46 incl. consciousness research, rvf 19, quantization-edge 9, Cognitum thesis…). A whole knowledge layer beyond docs/.
+- **44 runnable examples** (not "20+"): incl. `OSpipe` (ScreenPipe desktop-memory integration: PII SafetyGate, frame dedup, QAOA quantum search), `refrag-pipeline` (claimed 30× RAG speedup), `meta-cognition-spiking-neural-network`, `verified-applications` (10 apps), `prime-radiant` HoTT demos.
+- **~97 named algorithms with production Rust implementations** — from FlashAttention-3, Mamba S5 and Sinkhorn to Gomory-Hu trees, Kuramoto oscillators, BTSP one-shot plasticity, Surface-Code QEC, Kyber/Dilithium PQC and tropical Floyd-Warshall. If a textbook algorithm is relevant to your task, grep before reimplementing.
+- **Scope boundary (what RuVector does NOT do):** content generation, end-user app frameworks, general web dev, DB admin GUIs, cloud hosting, and it is not a PyTorch replacement — it's the intelligent substrate those things sit on.
+
+## 8.6 Mechanical completeness check (run at every regeneration)
+
+A summary of 1.58M lines *will* drop things. Guard against silent subtree loss mechanically, not by trust:
+
+```bash
+# counts must match or the primer is stale/incomplete:
+ls ruvector/crates | wc -l                          # top-level crates (≈139)
+ls ruvector/docs/adr | wc -l                        # ADR files (≈198+)
+ls ruvector/examples | wc -l                        # examples (≈44)
+ls ruvector/research 2>/dev/null | wc -l            # research dirs (≈25)
+grep -c '"name"' ruvector/npm/*/package.json 2>/dev/null | wc -l   # npm packages
+```
+
+Diff these against the numbers in this primer; any growth = regenerate the affected section. Per-domain confidence: capabilities/install commands HIGH (read from code) · ADR statuses MEDIUM (headers only) · performance numbers CLAIMED-ONLY · research-library contents LOW (enumerated, not read).
 
 ## 9. What this primer did NOT verify
 

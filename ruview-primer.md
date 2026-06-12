@@ -25,6 +25,55 @@ If months have passed, regenerate: `git clone --depth 1 https://github.com/ruvne
 
 **Honesty key used throughout:** ✅ works today (verified in code/witness logs) · ⚠️ experimental or partially implemented · ❌ stub/aspirational · 🔶 claimed in docs, not independently verified.
 
+**What goes stale first** (regenerate-priority order): firmware release table → capability grades → hardware matrix → ADR statuses → crate list → wire protocol (most stable).
+
+---
+
+## 0. Executive summary (read this if you read nothing else)
+
+RuView turns cheap ESP32 boards into through-wall human sensors: **presence, person count, breathing rate, heart rate, motion, falls work today**; skeletal pose is heuristic out of the box and needs training to be real; recognizing *named* individuals from WiFi alone does **not** work yet (measured, by the project itself). The Rust `sensing-server` (your laptop or a V0 appliance) does the perception; the Cognitum Seed stores tamper-evident history that AI assistants can query over MCP. The three commands that matter most: `wifi-densepose calibrate` (empty room, 60 s), `enroll` (8 guided poses, 4 min), `train-room` (6 per-room specialists, seconds). The two mistakes everyone makes: skipping calibration, and putting two listeners on UDP 5005.
+
+## 0.1 Instant playbooks (task → exact steps)
+
+**▶ "I just got a Cognitum One Seed and a batch of fresh ESP32-C6s — make them work."**
+1. Demo first, no hardware: `docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest` → `curl localhost:3000/health` says `"ok"`.
+2. Per board: flash C6 firmware (ESP-IDF 5.5.2: `cd firmware/esp32-csi-node && idf.py set-target esp32c6 && idf.py build && idf.py -p <PORT> flash`).
+3. Per board: `python provision.py --port <PORT> --ssid "<2.4GHz-SSID>" --password "<pw>" --target-ip <server-IP> --node-id N --tdm-slot N-1 --tdm-total <count> --edge-tier 2` (unique `node-id` 1…N — it's the only identity a node has).
+4. Restart server in hardware mode: `docker run --rm -e CSI_SOURCE=esp32 -p 3000:3000 -p 3001:3001 -p 5005:5005/udp ruvnet/wifi-densepose:latest`; confirm every node in `curl localhost:3000/api/v1/nodes`; Observatory badge flips DEMO→LIVE.
+5. Train the room: leave it → `wifi-densepose calibrate --room X --duration 60s` → `enroll --room X` (follow the 8 prompts) → `train-room --room X --specialists breathing,heartbeat,restlessness,posture,presence,anomaly` → `room-status` shows ✓s.
+6. Seed memory: pair over USB (`curl -sk -X POST https://169.254.42.1:8443/api/v1/pair/window` then `/pair` — **save the token, shown once**), re-provision nodes with `--target-port 5006 --target-ip <laptop-IP>`, run `python scripts/seed_csi_bridge.py --seed-url https://169.254.42.1:8443 --token "$SEED_TOKEN" --udp-port 5006 --batch-size 10 --validate`. Verify with `--stats`.
+
+**▶ "Add node #8 to an existing array."** Flash + provision with the next free `node-id` and `--tdm-slot 7 --tdm-total 8`; re-provision the other seven's `--tdm-total` to 8; add its position to `--node-positions`; it appears in `/api/v1/nodes` on first packet (no registration step exists). Recalibrate the room.
+
+**▶ "A node went silent."** In order: (1) its DHCP lease changed — reserve MACs in the router; (2) check `sudo tcpdump -ni any udp port 5005` for its source IP; (3) wrong band — S3/C6 can't see 5 GHz SSIDs; (4) power-bank auto-off (use a current maintainer); (5) re-provision — NVS merges, nothing is lost.
+
+**▶ "I moved the furniture / readings got flaky."** Empty the room (pets too) → `wifi-densepose calibrate` again → if specialists degrade, re-`enroll` + `train-room`. Baselines never auto-refresh by design — the system can't verify the room is empty.
+
+**▶ "Home Assistant in 5 minutes."** Run server with `--features mqtt` build (or Docker tag with MQTT): `--mqtt <broker>:1883 --mqtt-prefix homeassistant --mqtt-privacy-mode demotion`. 21 entities per node auto-appear; the 10 semantic primitives (someone_sleeping, possible_distress, bed_exit…) are your automation triggers; 3 starter Blueprints in `docs/integrations/home-assistant.md`.
+
+**▶ "Prove the install is healthy."** `curl /health` → `/api/v1/nodes` (all nodes, fresh) → `/api/v1/mesh/metrics` (sync ok) → `wifi-densepose room-status` (baseline fresh, specialists ✓) → Observatory badge LIVE.
+
+## 0.2 Fault table (symptom → cause → fix)
+
+| Symptom | Likeliest cause | Fix |
+|---|---|---|
+| Flash does nothing | charge-only USB-C cable; or MR60 case-edge port | data cable; inner port; hold BOOT |
+| Won't join WiFi | 5 GHz-only SSID | use the 2.4 GHz network |
+| tcpdump silent on 5005 | wrong `--target-ip`, firewall | re-provision; open UDP 5005 |
+| Packets arrive, `/nodes` empty | second listener owns :5005; Docker missing `-p 5005:5005/udp -e CSI_SOURCE=esp32` | kill the other process; fix flags |
+| `CSI_SOURCE=auto` exits code 78 | no source found | set `CSI_SOURCE=esp32` or `simulated` explicitly |
+| Observatory stuck DEMO | opened the file directly | open via `http://<server>:3000/ui/observatory.html` |
+| Presence flickers when empty | skipped/stale calibration | recalibrate with room truly empty |
+| HR pinned ~45 BPM | pre-v0.7.1 firmware | reflash v0.7.1-esp32+ |
+| C6 only 64-tone CSI | IDF < 5.5.2 build, or no 11ax on 2.4 GHz AP | rebuild; enable WiFi 6 on 2.4 GHz |
+| Seed ingest 401 | token lost (shown once) | re-pair over USB, 30 s window |
+| `--model` errors `invalid magic` | HF JSONL bundle vs binary-RVF loader | run without `--model` (known upstream gap) |
+| Person count stuck at 1 / absurdly high | pre-v0.7.1 clamp bugs | update server (v1701+) |
+
+## 0.3 Glossary (so terms are never guessed)
+
+**CSI** — Channel State Information: per-subcarrier amplitude+phase of a WiFi link; the raw signal. **Subcarrier/tone** — one OFDM frequency bin; more tones = finer body detail (S3 HT ≈ 56–114, C6 HE ≈ 242). **HE-LTF** — the WiFi-6 training field the C6 reads for high-res CSI. **RSSI** — coarse signal strength; fallback mode, no vitals. **Node** — one ESP32 streaming CSI; identified solely by its provisioned `node_id`. **Multistatic** — several nodes sensing the same space from different angles. **TDM slot** — a node's transmit turn, so nodes don't jam each other. **Baseline / calibration** — the empty room's RF fingerprint (ADR-135). **Enrollment / anchors** — the 8 guided poses that teach the room (ADR-151). **Specialist** — one of six tiny per-room models (presence, posture, breathing, heartbeat, restlessness, anomaly). **Edge tier** — how much DSP runs on the node itself (0 raw / 1 stats / 2 vitals). **Seed** — Pi Zero 2 W appliance storing 8-dim sensing history with a witness chain. **Witness chain** — hash-linked, signed audit log (tamper-evident); *not* person identity. **Soul Signature** — experimental anonymous re-ID ("same body as yesterday"); not names. **Cog** — a small signed plug-in model/binary (Cognitum packaging). **RVF** — RuVector File: binary container for models/vectors. **MCP** — Model Context Protocol; how AI assistants query the Seed/server. **ADR** — Architecture Decision Record; numbered design documents quoted throughout.
+
 ---
 
 ## 1. What RuView is
@@ -39,6 +88,11 @@ RuView turns **Channel State Information** — the fine-grained way bodies distu
 
 ## 2. Architecture at a glance
 
+![RuView data flow: ESP32 nodes stream CSI over UDP 5005 to the Rust sensing-server, which serves dashboards/REST, WebSocket streams and MQTT; an 8-dim feature stream on UDP 5006 goes through a host bridge into the Cognitum Seed's witness-chained vector store](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruview-architecture.svg)
+
+<details>
+<summary>ASCII Version (for AI/accessibility)</summary>
+
 ```
 ESP32 node (S3 / C6)  ──UDP :5005──▶  sensing-server (Rust/Axum, v2/)
   on-device DSP + edge tiers 0/1/2     │  per-node state, multistatic fusion,
@@ -48,6 +102,21 @@ ESP32 node (S3 / C6)  ──UDP :5005──▶  sensing-server (Rust/Axum, v2/)
                                        ├── WS    :3001 Docker / :8765 source — /ws/sensing, /ws/introspection
                                        └── MQTT  :1883 (--features mqtt) — Home Assistant auto-discovery
 ```
+
+</details>
+
+![The four-stage room training pipeline: calibrate the empty room, guided 8-anchor enrollment, train six small specialists, then live mixture-of-specialists watching](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruview-room-training.svg)
+
+<details>
+<summary>ASCII Version (for AI/accessibility)</summary>
+
+```
+1·Calibrate(empty,60s) → 2·Enroll(8 anchors,~4min) → 3·Train(6 specialists) → 4·room-watch(live)
+   ADR-135 baseline        quality-gated poses         presence·posture·breathing
+   redo after furniture                                heartbeat·restlessness·anomaly(veto)
+```
+
+</details>
 
 The server keeps **no database** — real-time ring buffers only. RVF files hold model weights; the Seed holds history.
 

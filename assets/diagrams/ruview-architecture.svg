@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 380" width="980" height="380">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#2a9d68"/></marker>
+  </defs>
+  <rect width="980" height="380" fill="#0b1220"/>
+  <text x="490" y="28" text-anchor="middle" font-family="Helvetica,Arial" font-size="17" font-weight="bold" fill="#43f59b">RuView data flow — sensors to insight to memory</text>
+
+  <!-- ESP32 nodes -->
+  <rect x="20" y="70" width="170" height="110" rx="10" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+  <text x="105" y="93" text-anchor="middle" font-family="Helvetica,Arial" font-size="14" font-weight="bold" fill="#5cd6ff">ESP32 nodes (S3 / C6)</text>
+  <text x="105" y="113" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#cfe3f5">on-device DSP, edge tiers 0/1/2</text>
+  <text x="105" y="130" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#cfe3f5">packets: 0xC511_xxxx</text>
+  <text x="105" y="147" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#cfe3f5">C6 = 242-tone WiFi-6 CSI</text>
+  <text x="105" y="164" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#cfe3f5">+ MR60 mmWave fusion</text>
+
+  <!-- sensing server -->
+  <rect x="330" y="60" width="280" height="160" rx="10" fill="#0e2a1c" stroke="#43f59b" stroke-width="2"/>
+  <text x="470" y="84" text-anchor="middle" font-family="Helvetica,Arial" font-size="14" font-weight="bold" fill="#43f59b">sensing-server (Rust / Axum)</text>
+  <text x="470" y="104" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#d7ffe9">per-node state · multistatic fusion</text>
+  <text x="470" y="121" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#d7ffe9">calibration (ADR-135) · specialists (ADR-151)</text>
+  <text x="470" y="138" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#d7ffe9">vitals · pose · coherence gates</text>
+  <text x="470" y="160" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" font-style="italic" fill="#8fb8a4">no database — real-time ring buffers only</text>
+  <text x="470" y="182" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#d7ffe9">runs on your laptop or the V0 appliance</text>
+  <text x="470" y="204" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#8fb8a4">(model weights load from RVF files)</text>
+
+  <!-- outputs -->
+  <rect x="740" y="42" width="220" height="52" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+  <text x="850" y="63" text-anchor="middle" font-family="Helvetica,Arial" font-size="12" font-weight="bold" fill="#5cd6ff">Dashboards + REST</text>
+  <text x="850" y="81" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#cfe3f5">HTTP :3000 Docker / :8080 source · /ui /api/v1</text>
+
+  <rect x="740" y="108" width="220" height="52" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+  <text x="850" y="129" text-anchor="middle" font-family="Helvetica,Arial" font-size="12" font-weight="bold" fill="#5cd6ff">Live streams (WebSocket)</text>
+  <text x="850" y="147" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#cfe3f5">WS :3001 / :8765 · /ws/sensing /ws/introspection</text>
+
+  <rect x="740" y="174" width="220" height="52" rx="8" fill="#10243a" stroke="#ffb454" stroke-width="1.5"/>
+  <text x="850" y="195" text-anchor="middle" font-family="Helvetica,Arial" font-size="12" font-weight="bold" fill="#ffb454">Home Assistant (MQTT)</text>
+  <text x="850" y="213" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#cfe3f5">:1883 auto-discovery · 21 entities/node</text>
+
+  <!-- seed path -->
+  <rect x="330" y="270" width="200" height="80" rx="10" fill="#241a30" stroke="#c792ea" stroke-width="1.5"/>
+  <text x="430" y="294" text-anchor="middle" font-family="Helvetica,Arial" font-size="13" font-weight="bold" fill="#c792ea">host bridge (laptop)</text>
+  <text x="430" y="313" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#e8d8f5">seed_csi_bridge.py</text>
+  <text x="430" y="330" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#e8d8f5">batches 10 vectors, validates</text>
+
+  <rect x="660" y="270" width="300" height="80" rx="10" fill="#241a30" stroke="#c792ea" stroke-width="2"/>
+  <text x="810" y="294" text-anchor="middle" font-family="Helvetica,Arial" font-size="13" font-weight="bold" fill="#c792ea">Cognitum Seed (Pi Zero 2 W)</text>
+  <text x="810" y="313" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#e8d8f5">RVF vector store · kNN · witness chain</text>
+  <text x="810" y="330" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#e8d8f5">MCP tools — AI assistants query history</text>
+
+  <!-- arrows -->
+  <line x1="190" y1="120" x2="326" y2="120" stroke="#2a9d68" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="258" y="110" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#8fb8a4">raw CSI · UDP :5005</text>
+
+  <line x1="610" y1="80" x2="736" y2="68" stroke="#2a9d68" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="610" y1="130" x2="736" y2="134" stroke="#2a9d68" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="610" y1="180" x2="736" y2="198" stroke="#2a9d68" stroke-width="2" marker-end="url(#arr)"/>
+
+  <path d="M105 180 C105 310 200 310 326 310" stroke="#c792ea" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <text x="180" y="332" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#c792ea">8-dim features @1 Hz · UDP :5006</text>
+
+  <line x1="530" y1="310" x2="656" y2="310" stroke="#c792ea" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="593" y="300" text-anchor="middle" font-family="Helvetica,Arial" font-size="10" fill="#c792ea">HTTPS :8443 + token</text>
+</svg>

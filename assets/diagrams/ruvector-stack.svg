@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 430" width="980" height="430">
+  <defs>
+    <marker id="ar3" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#2a9d68"/></marker>
+  </defs>
+  <rect width="980" height="430" fill="#0b1220"/>
+  <text x="490" y="28" text-anchor="middle" font-family="Helvetica,Arial" font-size="17" font-weight="bold" fill="#43f59b">RuVector — one Rust engine, many faces</text>
+
+  <!-- consumers row -->
+  <g font-family="Helvetica,Arial" text-anchor="middle">
+    <rect x="30" y="50" width="170" height="56" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="115" y="73" font-size="12" font-weight="bold" fill="#5cd6ff">RuView</text>
+    <text x="115" y="91" font-size="10" fill="#cfe3f5">WiFi-CSI human sensing</text>
+    <rect x="220" y="50" width="170" height="56" rx="8" fill="#241a30" stroke="#c792ea" stroke-width="1.5"/>
+    <text x="305" y="73" font-size="12" font-weight="bold" fill="#c792ea">Cognitum Seed / V0</text>
+    <text x="305" y="91" font-size="10" fill="#e8d8f5">edge appliances</text>
+    <rect x="410" y="50" width="170" height="56" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="495" y="73" font-size="12" font-weight="bold" fill="#5cd6ff">ruFlo / claude-flow</text>
+    <text x="495" y="91" font-size="10" fill="#cfe3f5">agent orchestration</text>
+    <rect x="600" y="50" width="170" height="56" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="685" y="73" font-size="12" font-weight="bold" fill="#5cd6ff">AgentDB</text>
+    <text x="685" y="91" font-size="10" fill="#cfe3f5">persistent agent memory</text>
+    <rect x="790" y="50" width="170" height="56" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="875" y="73" font-size="12" font-weight="bold" fill="#5cd6ff">your app</text>
+    <text x="875" y="91" font-size="10" fill="#cfe3f5">Rust · Node · browser · SQL</text>
+  </g>
+
+  <line x1="115" y1="106" x2="280" y2="146" stroke="#2a9d68" stroke-width="1.5" marker-end="url(#ar3)"/>
+  <line x1="305" y1="106" x2="400" y2="146" stroke="#2a9d68" stroke-width="1.5" marker-end="url(#ar3)"/>
+  <line x1="495" y1="106" x2="495" y2="146" stroke="#2a9d68" stroke-width="1.5" marker-end="url(#ar3)"/>
+  <line x1="685" y1="106" x2="590" y2="146" stroke="#2a9d68" stroke-width="1.5" marker-end="url(#ar3)"/>
+  <line x1="875" y1="106" x2="710" y2="146" stroke="#2a9d68" stroke-width="1.5" marker-end="url(#ar3)"/>
+
+  <!-- engine box -->
+  <rect x="60" y="150" width="860" height="180" rx="12" fill="#0e2a1c" stroke="#43f59b" stroke-width="2"/>
+  <text x="490" y="175" text-anchor="middle" font-family="Helvetica,Arial" font-size="14" font-weight="bold" fill="#43f59b">the engine — ~114–170 crates (count varies by boundary), 1.58M lines of Rust, MIT</text>
+
+  <g font-family="Helvetica,Arial" font-size="10.5" fill="#d7ffe9" text-anchor="middle">
+    <rect x="85" y="192" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="160" y="212" font-weight="bold">Search</text><text x="160" y="228">HNSW 61µs · DiskANN · hybrid</text>
+    <rect x="250" y="192" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="325" y="212" font-weight="bold">Self-learning</text><text x="325" y="228">GNN · SONA LoRA &lt;1ms</text>
+    <rect x="415" y="192" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="490" y="212" font-weight="bold">Graph</text><text x="490" y="228">Cypher · hyperedges · GAT</text>
+    <rect x="580" y="192" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="655" y="212" font-weight="bold">Coherence / safety</text><text x="655" y="228">min-cut gates · prime-radiant</text>
+    <rect x="745" y="192" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="820" y="212" font-weight="bold">Math &amp; solvers</text><text x="820" y="228">8 sublinear · OT · TDA</text>
+
+    <rect x="85" y="252" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="160" y="272" font-weight="bold">Local LLM (ruvllm)</text><text x="160" y="288">GGUF · BitNet · MoE</text>
+    <rect x="250" y="252" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="325" y="272" font-weight="bold">Attention (46)</text><text x="325" y="288">Flash · Mamba · sheaf…</text>
+    <rect x="415" y="252" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="490" y="272" font-weight="bold">Bio / neuro / quantum</text><text x="490" y="288">SNN · Hopfield · ruQu</text>
+    <rect x="580" y="252" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="655" y="272" font-weight="bold">Distributed</text><text x="655" y="288">Raft · CRDT · sharding</text>
+    <rect x="745" y="252" width="150" height="50" rx="7" fill="#0b1220" stroke="#2a9d68"/>
+    <text x="820" y="272" font-weight="bold">Agents (rvAgent)</text><text x="820" y="288">MCP · A2A · tools</text>
+  </g>
+
+  <!-- delivery row -->
+  <g font-family="Helvetica,Arial" font-size="11" text-anchor="middle">
+    <rect x="60" y="356" width="200" height="52" rx="8" fill="#241a30" stroke="#c792ea" stroke-width="1.5"/>
+    <text x="160" y="377" font-weight="bold" fill="#c792ea">.rvf files</text>
+    <text x="160" y="394" fill="#e8d8f5">vectors + models + witness, zero-server</text>
+    <rect x="280" y="356" width="200" height="52" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="380" y="377" font-weight="bold" fill="#5cd6ff">crates.io + npm</text>
+    <text x="380" y="394" fill="#cfe3f5">90+ crates · 55+ @ruvector/* pkgs</text>
+    <rect x="500" y="356" width="200" height="52" rx="8" fill="#10243a" stroke="#5cd6ff" stroke-width="1.5"/>
+    <text x="600" y="377" font-weight="bold" fill="#5cd6ff">WASM / NAPI</text>
+    <text x="600" y="394" fill="#cfe3f5">32+ browser builds · 11 Node bindings</text>
+    <rect x="720" y="356" width="200" height="52" rx="8" fill="#10243a" stroke="#ffb454" stroke-width="1.5"/>
+    <text x="820" y="377" font-weight="bold" fill="#ffb454">PostgreSQL ext</text>
+    <text x="820" y="394" fill="#cfe3f5">230+ SQL fns · pgvector drop-in</text>
+  </g>
+  <line x1="490" y1="330" x2="490" y2="352" stroke="#2a9d68" stroke-width="2" marker-end="url(#ar3)"/>
+</svg>
