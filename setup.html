@@ -88,7 +88,7 @@
           <line x1="170" y1="65" x2="206" y2="65"/><line x1="368" y1="65" x2="404" y2="65"/><line x1="566" y1="65" x2="602" y2="65"/><line x1="764" y1="65" x2="800" y2="65"/>
         </g>
       </svg>
-      <figcaption>The LD2450 USB kit skips steps 2–3 entirely — it just plugs into the Seed. The WiFi sensors need all five.</figcaption>
+      <figcaption>The LD6004 radar skips steps 2–3 entirely — nothing to flash, it just wires to the GPIO header. The WiFi sensors need all five.</figcaption>
     </figure>
 
     <div class="callout reveal" style="margin-top:30px;border-color:rgba(92,214,255,0.35);">
@@ -128,13 +128,7 @@
     <div class="sec-head reveal">
       <span class="num">02 — FLASHING</span>
       <h2>Getting firmware onto each sensor</h2>
-      <p>"Flashing" just means copying the sensor's program onto its chip over USB. Each of the three sensors is different — and one needs no flashing at all.</p>
-    </div>
-
-    <!-- LD2450 -->
-    <div class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
-      <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">LD2450 radar — no flashing needed ✓</h3>
-      <p style="margin:0;color:var(--muted);">The USB kit is the simplest device here. There is <b>nothing to flash</b>. Plug its USB adapter into the Cognitum One Seed (or your Mac to test). The Seed reads its position data over a serial port at <span class="mono">256000</span> baud. Done. This is why it's the recommended first sensor.</p>
+      <p>"Flashing" just means copying the sensor's program onto its chip over USB. Each sensor is different — and the radars need no flashing at all.</p>
     </div>
 
     <!-- LD6004 GPIO wiring -->
@@ -156,6 +150,12 @@
       <p style="margin:0 0 12px;color:var(--ink);font-size:14px;"><b>Rules of thumb for any radar:</b> GPIO UART beats USB; if a sensor must be USB (LD2450), plug it <em>directly</em> into the Pi or use a <em>powered</em> hub; and your AX210/BE200 card never competes for this power — it lives on the Pi 5's PCIe HAT, a separate rail. <span style="color:var(--faint);font-size:13px;">(Honest gaps: the LD6004's exact current draw and in-field Z-axis noise floor aren't formally specified — our numbers are observed-in-deployment, not datasheet.)</span></p>
       <p style="margin:0 0 12px;color:var(--muted);font-size:14.5px;"><b style="color:var(--amber)">Hate the flimsy little wires? You're right to.</b> Friction-fit Dupont jumpers work, but they wiggle loose and feel like they'll snap — we've broken them. Three sturdier upgrades, easiest first: <b>(1) a screw-terminal GPIO breakout HAT</b> (~$12–18, search "Raspberry Pi GPIO screw terminal HAT") — every wire clamps under a screw, nothing can wiggle out, labels printed next to each terminal; the single best upgrade for less-technical builders. <b>(2) JST-XH pre-crimped locking harnesses</b> (~$8 a kit) — connectors that <em>click</em> and can't pull free; needs matching headers on the radar side. <b>(3) Strain relief regardless:</b> a dab of hot glue over the seated connector plus a zip-tie anchoring the cable an inch away turns even Dupont wires into something that survives handling. <span style="color:var(--faint);font-size:13px;">(We've field-tested the bare-Dupont path; the screw-terminal HAT recommendation is standard practice, not yet our own rig.)</span></p>
       <p style="margin:0;color:var(--muted);font-size:14.5px;"><b style="color:var(--ink)">Powering the sensors that hang off the Pi:</b> everything attached to the Pi — the GPIO radar, a USB LD2450, anything on the header — draws from the <b>Pi's own power supply</b>, so the PSU is the foundation: use the <b>official 27 W USB-C supply for a Pi 5</b> (with a weaker one, the Pi caps its USB ports at 600 mA total and peripherals brown out; with the 27 W it allows 1.6 A). Sensors <em>not</em> attached to the Pi power themselves: ESP32 nodes from wall adapters or always-on batteries (see the <a href="/#batteries">battery section</a>), the MR60 from any USB-C source.</p>
+    </div>
+
+    <!-- LD2450 (legacy / only-if) -->
+    <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(130,147,166,0.35);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--muted);">Already own an LD2450? It still works — but it's not the pick</h3>
+      <p style="margin:0;color:var(--muted);">The LD2450 USB kit needs no flashing either: plug its USB adapter into the Seed and read serial at <span class="mono">256000</span> baud (the unusual rate — not 115200). For movement it's been <b>superseded by the LD6004</b> (true 3D, GPIO power, no USB-hub flakiness). Reach for an LD2450 only if you can't touch GPIO pins at all, or you specifically need <b>3 people tracked at once</b> (2D). If you're buying new, buy the LD6004.</p>
     </div>
 
     <!-- MR60 -->
@@ -221,7 +221,8 @@ python provision.py --port /dev/cu.usbmodemXXXX \
         <tbody>
           <tr><td>ESP32 CSI nodes</td><td>Stream UDP over WiFi to the Seed</td><td class="mono">UDP 5005</td></tr>
           <tr><td>MR60BHA2 vitals</td><td>The Seed connects out and pulls from it</td><td class="mono">TCP 6053</td></tr>
-          <tr><td>LD2450 radar</td><td>USB cable straight into the Seed (serial)</td><td class="mono">USB · 256000 baud</td></tr>
+          <tr><td>LD6004 radar</td><td>Four jumper wires to the GPIO header (serial)</td><td class="mono">/dev/serial0 · 115200 baud</td></tr>
+          <tr><td>LD2450 radar <span style="color:var(--faint)">(legacy)</span></td><td>USB cable straight into the Seed (serial)</td><td class="mono">USB · 256000 baud</td></tr>
         </tbody>
       </table>
     </div>

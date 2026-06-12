@@ -22,8 +22,15 @@ These two files are **complete semantic indexes of ruvnet's repositories**, buil
 ## 2. How do I use it? (three ways, easiest first)
 
 ### Way 1 — Give it to Claude Code (the spoon-fed path)
-1. Copy the `.rvf` + its `.json` sidecars into your project, e.g. a `kb/` folder.
-2. Create (or edit) `.mcp.json` in your project root:
+
+**Step 1.** Unzip the bundle and copy the whole folder into your project as `kb/`. From wherever you downloaded it:
+```bash
+cd /path/to/your-project
+unzip ~/Downloads/ruvector-kb-bundle.zip -d kb/
+ls kb/   # you should see: ruvector-kb.rvf, ruvector-kb.ids.json, ruvector-kb.idmap.json, ...
+```
+
+**Step 2.** Create (or edit) `.mcp.json` in your project root. If the file doesn't exist, paste exactly this:
 ```json
 {
   "mcpServers": {
@@ -34,9 +41,21 @@ These two files are **complete semantic indexes of ruvnet's repositories**, buil
   }
 }
 ```
-3. Add one line to your project's `CLAUDE.md`:
-   > A semantic knowledge base of the entire ruvector/RuView ecosystem is mounted as MCP server `ruvector-kb` — query it before exploring those repos manually.
-4. Restart Claude Code. Now ask things like *"which crate does dynamic min-cut?"* or *"what's the seed ingest packet format?"* — Claude searches the **whole tree's meaning** in milliseconds instead of grep-sampling 1.7M lines and missing subdirectories.
+If `.mcp.json` already exists, add only the `"ruvector-kb": { ... }` block inside your existing `"mcpServers"` object.
+
+**Step 3.** Open your project's `CLAUDE.md` (create it in the project root if it doesn't exist) and paste this exact line at the end:
+```
+A semantic knowledge base of the entire ruvector/RuView ecosystem is mounted as MCP server `ruvector-kb` — query it FIRST (before grep/manual exploration) for any question about ruvector or RuView crates, ADRs, APIs, firmware, or setup.
+```
+
+**Step 4 — confirm it's actually working** (don't skip this):
+1. Restart Claude Code in the project (`exit`, then `claude`). On first start it will ask you to approve the new `ruvector-kb` MCP server — approve it.
+2. Type `/mcp` — you should see `ruvector-kb` listed as **connected**. If it says *failed*, run `npx -y @ruvector/rvf-mcp-server --help` once in your terminal (first run downloads the package), then restart Claude Code again.
+3. Ask Claude: *"Using the ruvector-kb MCP server, which crate implements dynamic min-cut?"* A working setup answers with `ruvector-mincut` and cites real file paths in seconds. If Claude starts grepping the repo instead, the server isn't connected — go back to step 2.
+
+Once confirmed, just ask things naturally — *"what's the seed ingest packet format?"*, *"which ADR covers calibration?"* — Claude searches the **whole tree's meaning** in milliseconds instead of grep-sampling 1.7M lines and missing subdirectories.
+
+**Using the RuView KB too (or instead)?** Same pattern — add a second server block with `"ruview-kb"` as the name and `"kb/ruview-kb.rvf"` as the store, and a matching CLAUDE.md line. Both can run side by side; building your first sensor screen, you'll want both (RuView for firmware/CLI questions, ruvector for the engine underneath).
 
 *(If `@ruvector/rvf-mcp-server` flags differ in your version, run `npx @ruvector/rvf-mcp-server --help` — the package is young and moving.)*
 

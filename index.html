@@ -6,8 +6,8 @@
 
 <!-- ===================== SEO ===================== -->
 <title>Cognitum One Sensor Primer — ESP32, mmWave Radar &amp; WiFi CSI Sensing Explained</title>
-<meta name="description" content="A beginner's field guide to passive, contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, the LD2450 mmWave radar, the MR60BHA2 vital-signs radar, and WiFi CSI sensors actually do — how to power, wire, flash and battery them, where to buy the plug-and-play kits, and how to set it all up." />
-<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Cognitum One appliance" />
+<meta name="description" content="A beginner's field guide to passive, contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, the LD6004 mmWave radar, the MR60BHA2 vital-signs radar, and WiFi CSI sensors actually do — how to power, wire, flash and battery them, where to buy the plug-and-play kits, and how to set it all up." />
+<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD6004, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Cognitum One appliance" />
 <meta name="author" content="Cognitum One" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/" />
@@ -47,9 +47,9 @@
   "@type": "FAQPage",
   "mainEntity": [
     { "@type": "Question", "name": "What is a Cognitum One Seed?", "acceptedAnswer": { "@type": "Answer", "text": "A tiny, self-contained AI computer that senses the space around it and recognises patterns passively, with no cloud required. It is the brain; the sensors in this guide are its senses." } },
-    { "@type": "Question", "name": "Which sensors are passive and contactless?", "acceptedAnswer": { "@type": "Answer", "text": "The LD2450 mmWave radar (position), the MR60BHA2 mmWave radar (heart rate and breathing), and ESP32 WiFi CSI nodes (presence and rough shape). None are worn or attached to a person." } },
+    { "@type": "Question", "name": "Which sensors are passive and contactless?", "acceptedAnswer": { "@type": "Answer", "text": "The LD6004 mmWave radar (3D position), the MR60BHA2 mmWave radar (heart rate and breathing), and ESP32 WiFi CSI nodes (presence and rough shape). None are worn or attached to a person." } },
     { "@type": "Question", "name": "How many sensors do I need?", "acceptedAnswer": { "@type": "Answer", "text": "Almost nothing works with one. WiFi CSI needs at least 3 nodes (7 ideal) to locate anything; radar is 1-3 depending on room coverage; vitals is 1 per person/spot." } },
-    { "@type": "Question", "name": "Do I have to flash the sensors first?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 CSI nodes must be flashed on a Mac/PC and given WiFi credentials before they stream to your Seed. The MR60BHA2 ships pre-flashed (configure WiFi via ESPHome). The LD2450 USB kit needs no flashing — plug it into the Seed over USB." } }
+    { "@type": "Question", "name": "Do I have to flash the sensors first?", "acceptedAnswer": { "@type": "Answer", "text": "ESP32 CSI nodes must be flashed on a Mac/PC and given WiFi credentials before they stream to your Seed. The MR60BHA2 ships pre-flashed (configure WiFi via ESPHome). The LD6004 radar needs no flashing at all — four jumper wires to the host's GPIO header and it streams 3D positions." } }
   ]
 }
 </script>
@@ -85,20 +85,111 @@
       <a href="#batteries">Batteries</a>
       <a href="/setup">Setup &amp; flashing</a>
       <a href="/guide" style="color:var(--phosphor);">Full walkthrough</a>
+      <a href="#dropin" style="color:#c792ea;">🧠 Drag-in KBs</a>
       <a href="#soul">Soul signature</a>
       <a href="#buy">Buy it</a>
     </div>
   </div>
 </nav>
 
-<header class="hero">
+<header class="hero hero-v2">
   <style>
+    /* ============ HERO v2 · "sensing field" (scoped — guide/setup keep the v1 hero) ============ */
     @keyframes fresh-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(67,245,155,0.45); } 50% { box-shadow:0 0 0 9px rgba(67,245,155,0); } }
     @keyframes fresh-dot { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
-    .fresh-badge { display:inline-flex; align-items:center; gap:9px; margin:0 0 14px; padding:7px 14px; border:1px solid var(--phosphor); border-radius:999px; background:rgba(67,245,155,0.07); font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:0.06em; color:var(--phosphor); animation:fresh-pulse 2.2s ease-in-out infinite; }
-    .fresh-badge .fd { width:8px; height:8px; border-radius:50%; background:var(--phosphor); animation:fresh-dot 1.1s ease-in-out infinite; }
+    .fresh-badge { display:inline-flex; align-items:center; gap:9px; margin:0 0 18px; padding:8px 14px; font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:0.06em; color:var(--phosphor); animation:fresh-pulse 2.2s ease-in-out infinite; }
+    .fresh-badge .fd { width:8px; height:8px; border-radius:50%; background:var(--phosphor); animation:fresh-dot 1.1s ease-in-out infinite; flex:none; }
+    /* v2 badge: notched HUD chip instead of the old pill */
+    .hero-v2 .fresh-badge { border:1px solid var(--phosphor-dim); border-left:3px solid var(--phosphor); border-radius:3px 10px 3px 10px; background:linear-gradient(90deg, rgba(67,245,155,0.14), rgba(67,245,155,0.03)); }
+
+    header.hero.hero-v2 { padding:60px 0 72px; background:linear-gradient(180deg, #081120 0%, #070d14 55%, var(--bg) 100%); border-bottom:1px solid var(--line-strong); }
+
+    /* --- backdrop: aurora blobs + perspective floor grid + scanline (replaces hero-rf.jpg) --- */
+    .hv2-aur { position:absolute; width:62vw; height:62vw; max-width:880px; max-height:880px; border-radius:50%; filter:blur(70px); pointer-events:none; z-index:0; }
+    .hv2-aur.a { top:-34%; left:-14%; background:radial-gradient(closest-side, rgba(67,245,155,0.16), transparent 70%); animation:hv2-drift-a 16s ease-in-out infinite alternate; }
+    .hv2-aur.b { top:-26%; right:-16%; background:radial-gradient(closest-side, rgba(92,214,255,0.14), transparent 70%); animation:hv2-drift-b 21s ease-in-out infinite alternate; }
+    @keyframes hv2-drift-a { from { transform:translate3d(0,0,0) scale(1); opacity:.55; } to { transform:translate3d(9vw,7vh,0) scale(1.18); opacity:.85; } }
+    @keyframes hv2-drift-b { from { transform:translate3d(0,0,0) scale(1.12); opacity:.7; } to { transform:translate3d(-8vw,10vh,0) scale(.94); opacity:.45; } }
+    .hv2-floor { position:absolute; left:-15%; right:-15%; bottom:-3%; height:64%; z-index:0; pointer-events:none; opacity:.9;
+      background-image:linear-gradient(rgba(67,245,155,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(67,245,155,0.22) 1px, transparent 1px);
+      background-size:54px 54px;
+      transform:perspective(720px) rotateX(62deg); transform-origin:50% 100%;
+      mask-image:linear-gradient(180deg, transparent 4%, #000 70%); -webkit-mask-image:linear-gradient(180deg, transparent 4%, #000 70%); }
+    .hv2-scan { position:absolute; left:0; right:0; top:0; height:130px; z-index:1; pointer-events:none;
+      background:linear-gradient(180deg, transparent, rgba(67,245,155,0.05) 42%, rgba(67,245,155,0.16) 50%, rgba(67,245,155,0.05) 58%, transparent);
+      animation:hv2-scan 7.5s linear infinite; }
+    @keyframes hv2-scan { from { transform:translateY(-140px); opacity:0; } 12% { opacity:1; } 88% { opacity:1; } to { transform:translateY(740px); opacity:0; } }
+
+    /* --- version tag --- */
+    .hv2-ver { position:absolute; bottom:14px; right:20px; z-index:4; font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:0.1em; color:var(--muted); border:1px solid var(--line-strong); border-radius:5px; padding:3px 9px; background:rgba(7,11,16,0.72); }
+
+    /* --- headline: gradient ink on "senses." --- */
+    .hero-v2 h1 .glow { background:linear-gradient(100deg, var(--phosphor) 10%, #b6ffe0 35%, var(--cyan) 62%, var(--phosphor) 90%); background-size:220% 100%;
+      -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:none;
+      filter:drop-shadow(0 0 22px rgba(67,245,155,0.4)); animation:hv2-ink 6s linear infinite; }
+    @keyframes hv2-ink { from { background-position:0% 0; } to { background-position:220% 0; } }
+
+    /* --- meta row → HUD cells --- */
+    .hero-v2 .meta-row span { border:1px solid var(--line); border-radius:7px; padding:7px 12px; background:rgba(7,11,16,0.55); }
+
+    /* --- sensing-field panel (replaces the radar scope) --- */
+    .sense-field { position:relative; max-width:430px; margin:0 auto; padding:16px 16px 12px; border:1px solid var(--line-strong); border-radius:18px;
+      background:linear-gradient(168deg, rgba(14,24,36,0.94), rgba(7,12,18,0.97)); box-shadow:inset 0 0 56px rgba(67,245,155,0.045), var(--shadow); }
+    .sense-field::before, .sense-field::after { content:""; position:absolute; width:24px; height:24px; pointer-events:none; }
+    .sense-field::before { top:-1px; left:-1px; border-top:2px solid var(--phosphor); border-left:2px solid var(--phosphor); border-top-left-radius:18px; }
+    .sense-field::after { bottom:-1px; right:-1px; border-bottom:2px solid var(--phosphor); border-right:2px solid var(--phosphor); border-bottom-right-radius:18px; }
+    .sf-head { display:flex; justify-content:space-between; align-items:center; gap:10px; font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.12em; white-space:nowrap; color:var(--faint); margin:0 2px 10px; }
+    .sf-head .live { color:var(--phosphor); display:inline-flex; align-items:center; gap:7px; }
+    .sf-head .live i { width:6px; height:6px; border-radius:50%; background:var(--phosphor); box-shadow:0 0 9px var(--phosphor); animation:fresh-dot 1.1s ease-in-out infinite; }
+    .sense-field svg { display:block; width:100%; height:auto; }
+    .sf-meta { display:flex; gap:14px; flex-wrap:wrap; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.07em; color:var(--muted); margin:10px 2px 6px; border-top:1px dashed var(--line); padding-top:10px; }
+    .sf-meta b { font-weight:500; }
+
+    /* room animation: expanding sensing rings from the nodes */
+    .sf-ring { transform-box:fill-box; transform-origin:center; animation:sf-ping 3.4s cubic-bezier(0,0,.25,1) infinite; opacity:0; }
+    @keyframes sf-ping { 0% { transform:scale(0.35); opacity:0.85; } 70% { opacity:0.16; } 100% { transform:scale(6.2); opacity:0; } }
+    /* walking person: waypoint drift around the room + trace rings */
+    .sf-person { animation:sf-walk 16s ease-in-out infinite; }
+    @keyframes sf-walk {
+      0%   { transform:translate(96px,168px); }
+      28%  { transform:translate(196px,128px); }
+      52%  { transform:translate(286px,196px); }
+      78%  { transform:translate(168px,222px); }
+      100% { transform:translate(96px,168px); }
+    }
+    .sf-bob { animation:sf-bob 0.9s ease-in-out infinite alternate; }
+    @keyframes sf-bob { from { transform:translateY(0); } to { transform:translateY(-2.5px); } }
+    .sf-trace { transform-box:fill-box; transform-origin:center; animation:sf-trace 1.8s ease-out infinite; }
+    .sf-trace.t2 { animation-delay:0.9s; }
+    @keyframes sf-trace { 0% { transform:scale(0.55); opacity:0.9; } 100% { transform:scale(1.7); opacity:0; } }
+
+    /* vitals strip: monitor-style waves slide left one period (seamless, transform-only) */
+    .wave-ekg { animation:sf-slide-ekg 1.5s linear infinite; }
+    @keyframes sf-slide-ekg { to { transform:translateX(-95px); } }
+    .wave-br { animation:sf-slide-br 5.2s linear infinite; }
+    @keyframes sf-slide-br { to { transform:translateX(-120px); } }
+
+    @media (max-width:900px){
+      header.hero.hero-v2 { padding:48px 0 56px; }
+      .hv2-ver { bottom:10px; right:14px; }
+      .sense-field { margin-top:6px; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .hv2-aur, .hv2-scan, .fresh-badge, .fresh-badge .fd, .sf-head .live i,
+      .sf-ring, .sf-person, .sf-bob, .sf-trace, .wave-ekg, .wave-br, .hero-v2 h1 .glow { animation:none; }
+      .hv2-scan { display:none; }
+      .sf-ring { opacity:0.25; transform:scale(2.4); }
+      .sf-trace { opacity:0.5; }
+      .sf-person { transform:translate(196px,158px); }
+    }
   </style>
-  <img class="hero-bg" src="/assets/img/hero-rf.jpg" alt="Oscilloscope radar waves" loading="eager" />
+
+  <div class="hv2-aur a" aria-hidden="true"></div>
+  <div class="hv2-aur b" aria-hidden="true"></div>
+  <div class="hv2-floor" aria-hidden="true"></div>
+  <div class="hv2-scan" aria-hidden="true"></div>
+  <span class="hv2-ver" aria-hidden="true">v2 · June 12, 2026</span>
+
   <div class="wrap hero-grid">
     <div>
       <span class="fresh-badge"><span class="fd"></span> UPDATED JUNE 12, 2026 · SYNCED TO RUV'S RUVIEW v1701 (TODAY'S BUILD)</span>
@@ -118,14 +209,104 @@
       </div>
     </div>
     <div>
-      <div class="scope" aria-hidden="true">
-        <div class="cross"><span></span><span></span></div>
-        <div class="sweep"></div>
-        <div class="blip b1"></div><div class="blip b2"></div><div class="blip b3"></div>
+      <div class="sense-field" aria-hidden="true">
+        <div class="sf-head"><span class="live"><i></i>SENSING FIELD · LIVE</span><span>4 NODES · CSI + RADAR</span></div>
+
+        <!-- the room: 4 sensor nodes ping expanding rings around a walking figure -->
+        <svg viewBox="0 0 380 290" role="presentation" focusable="false">
+          <!-- room shell with a door gap top-left -->
+          <path d="M250 18 H338 a12 12 0 0 1 12 12 V260 a12 12 0 0 1 -12 12 H42 a12 12 0 0 1 -12 -12 V30 a12 12 0 0 1 12 -12 H210"
+                fill="rgba(67,245,155,0.025)" stroke="#2a9d68" stroke-width="1.5" />
+          <!-- door leaf + swing -->
+          <path d="M210 18 V58 M210 58 A40 40 0 0 0 250 18" fill="none" stroke="rgba(130,147,166,0.5)" stroke-width="1.2" />
+          <!-- furniture ghosts -->
+          <g fill="none" stroke="rgba(130,147,166,0.4)" stroke-width="1.2" stroke-dasharray="4 5">
+            <rect x="44" y="192" width="84" height="44" rx="8"/>
+            <circle cx="196" cy="118" r="24"/>
+            <rect x="300" y="70" width="38" height="86" rx="6"/>
+          </g>
+          <!-- faint sightlines toward the room core -->
+          <g stroke="rgba(92,214,255,0.16)" stroke-width="1" stroke-dasharray="3 7">
+            <path d="M48 36 L188 150"/><path d="M332 36 L196 150"/>
+            <path d="M48 254 L184 158"/><path d="M332 254 L200 158"/>
+          </g>
+          <!-- sensor nodes + expanding sensing rings -->
+          <g>
+            <circle class="sf-ring" cx="48" cy="36" r="7" fill="none" stroke="#43f59b" stroke-width="1.4"/>
+            <circle class="sf-ring" cx="332" cy="36" r="7" fill="none" stroke="#43f59b" stroke-width="1.4" style="animation-delay:0.85s"/>
+            <circle class="sf-ring" cx="48" cy="254" r="7" fill="none" stroke="#43f59b" stroke-width="1.4" style="animation-delay:1.7s"/>
+            <circle class="sf-ring" cx="332" cy="254" r="7" fill="none" stroke="#5cd6ff" stroke-width="1.4" style="animation-delay:2.55s"/>
+            <circle cx="48" cy="36" r="8.5" fill="rgba(67,245,155,0.22)"/><circle cx="48" cy="36" r="4" fill="#43f59b"/>
+            <circle cx="332" cy="36" r="8.5" fill="rgba(67,245,155,0.22)"/><circle cx="332" cy="36" r="4" fill="#43f59b"/>
+            <circle cx="48" cy="254" r="8.5" fill="rgba(67,245,155,0.22)"/><circle cx="48" cy="254" r="4" fill="#43f59b"/>
+            <circle cx="332" cy="254" r="8.5" fill="rgba(92,214,255,0.22)"/><circle cx="332" cy="254" r="4" fill="#5cd6ff"/>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#4a5a6c">
+            <text x="60" y="32">N1</text><text x="306" y="32">N2</text>
+            <text x="60" y="266">N3</text><text x="306" y="266">N4</text>
+          </g>
+          <!-- the person: silhouette drifting between waypoints, traced by phosphor rings -->
+          <g class="sf-person">
+            <circle class="sf-trace" cx="0" cy="-12" r="20" fill="none" stroke="#43f59b" stroke-width="1.4"/>
+            <circle class="sf-trace t2" cx="0" cy="-12" r="20" fill="none" stroke="#43f59b" stroke-width="1.1"/>
+            <ellipse cx="0" cy="15" rx="14" ry="4" fill="rgba(67,245,155,0.14)"/>
+            <g class="sf-bob" stroke="#eaf6ff" stroke-width="4.5" stroke-linecap="round" fill="none">
+              <circle cx="0" cy="-33" r="6.5" fill="#eaf6ff" stroke="none"/>
+              <path d="M0 -25 V-6"/>
+              <path d="M0 -21 L-9 -11 M0 -21 L10 -13"/>
+              <path d="M0 -6 L-8 12 M0 -6 L9 12"/>
+            </g>
+          </g>
+        </svg>
+
+        <div class="sf-meta">
+          <span style="color:var(--phosphor);">● PRESENCE</span>
+          <span style="color:var(--amber);">♥ <b>72</b> BPM</span>
+          <span style="color:var(--cyan);">◌ <b>16</b> RPM</span>
+          <span>CSI <b>10</b> pkt/s</span>
+        </div>
+
+        <!-- vitals strip: heartbeat + breathing, sliding like a live monitor -->
+        <svg viewBox="0 0 380 62" role="presentation" focusable="false">
+          <defs>
+            <path id="seg-ekg" d="M0 22 h12 l4 -5 l4 9 l5 -22 l5 28 l5 -15 l4 5 h56" fill="none"/>
+            <path id="seg-br" d="M0 48 q30 -16 60 0 q30 16 60 0" fill="none"/>
+          </defs>
+          <g class="wave-ekg" stroke="#ffb454" stroke-width="1.8" opacity="0.95">
+            <use href="#seg-ekg" x="0"/><use href="#seg-ekg" x="95"/><use href="#seg-ekg" x="190"/>
+            <use href="#seg-ekg" x="285"/><use href="#seg-ekg" x="380"/><use href="#seg-ekg" x="475"/>
+          </g>
+          <g class="wave-br" stroke="#5cd6ff" stroke-width="1.8" opacity="0.9">
+            <use href="#seg-br" x="0"/><use href="#seg-br" x="120"/><use href="#seg-br" x="240"/>
+            <use href="#seg-br" x="360"/><use href="#seg-br" x="480"/>
+          </g>
+        </svg>
       </div>
     </div>
   </div>
 </header>
+
+<!-- ============ KB BANNER (top pointer to #dropin) ============ -->
+<section id="kb-banner" style="padding:0;">
+  <div class="wrap" style="padding-top:26px;padding-bottom:26px;">
+    <a href="#dropin" class="reveal" style="display:block;text-decoration:none;border:1px solid rgba(199,146,234,0.55);border-radius:14px;background:linear-gradient(135deg, rgba(199,146,234,0.10), rgba(92,214,255,0.05) 55%, rgba(67,245,155,0.07));padding:20px 24px;position:relative;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;">
+        <div style="flex:0 0 auto;font-size:34px;line-height:1;">🧠</div>
+        <div style="flex:1 1 320px;min-width:260px;">
+          <div style="font-family:'Chakra Petch';font-size:18px;color:#c792ea;margin-bottom:4px;"><b>Make your AI an instant expert — drag-in knowledge bases &amp; primers</b></div>
+          <div style="color:var(--muted);font-size:14.5px;line-height:1.6;">Building <em>anything</em> with this stack — even your first sensor screen? Don't make your AI re-learn 1.7M lines of Ruv's code. Two primer docs + two <span class="mono">.rvf</span> vector knowledge bases, ready to drop into your project. Exact paste-this-text setup included.</div>
+        </div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:11px;">
+          <span style="border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink);background:rgba(14,24,36,0.8);">📄 .md ×2</span>
+          <span style="border:1px solid rgba(199,146,234,0.5);border-radius:6px;padding:5px 8px;color:#c792ea;background:rgba(14,24,36,0.8);">🧠 .rvf ×2</span>
+          <span style="color:#c792ea;font-size:16px;">→</span>
+          <span style="border:1px dashed var(--phosphor-dim);border-radius:6px;padding:5px 8px;color:var(--phosphor);background:rgba(14,24,36,0.8);">📁 your-project/</span>
+        </div>
+        <div style="flex:0 0 auto;font-family:'IBM Plex Mono';font-size:12.5px;color:#c792ea;white-space:nowrap;">How do I use all this? →</div>
+      </div>
+    </a>
+  </div>
+</section>
 
 <!-- ============ START ============ -->
 <section id="start">
@@ -180,7 +361,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <h3>📡 The sensors = the senses</h3>
         <p style="color:var(--muted); margin:0;">Each one perceives a different slice of physical reality — all contactless.</p>
         <ul>
-          <li><b>Radar (LD2450)</b> — where a body is, how it moves (no camera, works in the dark)</li>
+          <li><b>Radar (LD6004)</b> — where a body is in true 3D, how it moves (no camera, works in the dark)</li>
           <li><b>mmWave vitals (MR60)</b> — heart rate &amp; breathing, through clothing, across a room</li>
           <li><b>WiFi CSI (ESP32)</b> — a body's rough shape &amp; presence, even through walls</li>
         </ul>
@@ -275,7 +456,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <h4>Path B — connect it to the Seed over USB / WiFi</h4>
         <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The three sensors in this guide — radar, vital-signs radar, WiFi CSI — produce far more data than the Seed's GPIO pins can take. Instead they connect to your <b>Cognitum One Seed</b> over USB or WiFi, and it does the heavier sensing.</p>
         <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;">
-          <li>The LD2450 radar plugs into the Seed over <b>USB</b></li>
+          <li>The LD6004 radar wires to the host's <b>GPIO header</b> (four jumper wires, plain serial)</li>
           <li>The MR60 &amp; ESP32 CSI nodes stream to the Seed over <b>WiFi</b></li>
           <li>The Seed fuses everything into its memory</li>
         </ul>
@@ -355,13 +536,14 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     </div>
     <div class="when" style="grid-template-columns:1fr 1fr;">
       <div class="block reveal">
-        <h4>Easiest first win · the LD2450 USB kit</h4>
+        <h4>Easiest first win · the LD6004 radar</h4>
         <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
-          <li>Buy the LD2450 <b>USB kit</b> (radar + cable + USB adapter — no soldering).</li>
-          <li>Plug the USB adapter into your Seed (or Mac to test). No flashing needed.</li>
-          <li>It streams position data over a serial port right away.</li>
-          <li><b style="color:var(--phosphor)">Win:</b> walk around — the radar reports your X/Y position moving.</li>
+          <li>Buy the <b>LD6004</b> (60 GHz, true 3D — <a href="/setup#wiring-radar">exact pinout on the Setup page</a>).</li>
+          <li>Push four jumper wires onto the host's GPIO header. No flashing, no soldering.</li>
+          <li>It streams X/Y/Z floats on <span class="mono">/dev/serial0</span> at 115200, ~10× a second.</li>
+          <li><b style="color:var(--phosphor)">Win:</b> walk around — the radar reports your position moving <em>in 3D</em>.</li>
         </ol>
+        <p style="margin:10px 0 0;color:var(--faint);font-size:13px;">(Can't touch GPIO pins at all? The legacy LD2450 USB kit plugs in over USB — but it's 2D and superseded. Buy it only for that constraint or for 3-person tracking.)</p>
       </div>
       <div class="block cyan reveal">
         <h4>The WiFi sensors · a bit more setup</h4>
@@ -406,7 +588,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <table>
         <thead><tr><th>If it looks like…</th><th>It's…</th><th>It does…</th></tr></thead>
         <tbody>
-          <tr><td>A small radar board with a 4-pin cable + a USB adapter dongle</td><td>LD2450 USB kit</td><td>Position tracking</td></tr>
+          <tr><td>A small radar board with a 4-pin cable (jumper wires)</td><td>LD6004</td><td>3D position &amp; movement tracking</td></tr>
           <tr><td>A small black module behind a textured cover, USB-C</td><td>MR60BHA2 (Seeed XIAO)</td><td>Heart &amp; breathing</td></tr>
           <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C6 / S3 CSI node</td><td>WiFi sensing</td></tr>
           <tr><td>A small grey stick with a screen, a button &amp; USB-C</td><td>M5StickS3</td><td>Motion / vibration</td></tr>
@@ -479,7 +661,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
           <thead><tr><th>Sensor</th><th>Bare minimum</th><th>Recommended</th><th>Why one won't do</th></tr></thead>
           <tbody>
             <tr><td>ESP32 WiFi CSI</td><td><b style="color:var(--amber)">3 nodes</b></td><td><b>7</b> (3 on 2.4 GHz + 4 on 5 GHz)</td><td>One node only senses "something changed." Position &amp; shape need several sightlines to triangulate; 7 wraps the room with a spare.</td></tr>
-            <tr><td>LD2450 radar</td><td>1</td><td><b>2–3</b> per room</td><td>One covers a cone; corners, blind spots and left/right asymmetry need a second and third.</td></tr>
+            <tr><td>LD6004 radar</td><td>1</td><td><b>1</b> per room</td><td>One corner-mounted unit covers the activity cone in 3D. A second only helps mounted <em>across the room</em> on its own host (occlusion cover) — phase-2, not starter.</td></tr>
             <tr><td>MR60BHA2 vitals</td><td>1</td><td><b>1 per seat/spot</b></td><td>It reads one subject facing it — it can't follow someone moving around the room.</td></tr>
             <tr><td>M5StickS3 (IMU)</td><td>1</td><td><b>1–2</b></td><td>One reads an object's motion; two let you compare two points (e.g. how vibration travels from a source to a body).</td></tr>
           </tbody>
@@ -494,7 +676,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="LD2450 24 GHz mmWave radar USB kit — radar board with cable and USB adapter" loading="lazy" />
         <span class="tag">24 GHz mmWave radar · position</span>
         <h3>LD2450</h3>
-        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit</div>
+        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit · <span style="color:var(--faint)">legacy — superseded by the LD6004</span></div>
         <p class="what">Tells you <strong>where a person is</strong> on a 2D floor plan — their X/Y position and how fast they're moving — by bouncing 24 GHz radio off them. No camera, works in total darkness, sees through clothing.</p>
         <dl class="specs">
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 works · 2–3 for full room</dd>
@@ -633,12 +815,13 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     <div class="when">
       <div class="block reveal">
-        <h4>Reach for the LD2450 RADAR when…</h4>
+        <h4>Reach for the LD6004 RADAR when…</h4>
         <ul>
-          <li class="yes">you need to know <em>where</em> a body is, precisely</li>
-          <li class="yes">you want speed / direction of movement</li>
+          <li class="yes">you need to know <em>where</em> a body is, precisely — in 3D</li>
+          <li class="yes">you want speed / direction / vertical movement (falls, squats, sway)</li>
           <li class="yes">lighting is bad or privacy rules out cameras</li>
-          <li class="no">you need heart rate (radar position can't do that)</li>
+          <li class="no">you need heart rate (that's the MR60's job)</li>
+          <li class="no">you must track 3 people in one zone (the legacy LD2450's one remaining niche)</li>
         </ul>
       </div>
       <div class="block cyan reveal">
@@ -791,7 +974,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <g font-family="IBM Plex Mono" font-size="12">
           <rect x="14" y="34" width="210" height="102" rx="10" fill="#0e1824" stroke="#2a9d68"/>
           <text x="119" y="58" text-anchor="middle" font-family="Chakra Petch" font-size="13" font-weight="600" fill="#dbe6f0">Your sensors</text>
-          <text x="119" y="82" text-anchor="middle" fill="#8293a6">LD2450 · MR60</text>
+          <text x="119" y="82" text-anchor="middle" fill="#8293a6">LD6004 · MR60</text>
           <text x="119" y="102" text-anchor="middle" fill="#8293a6">7× ESP32 CSI</text>
           <text x="119" y="122" text-anchor="middle" fill="#43f59b">all streaming →</text>
         </g>
@@ -830,7 +1013,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         </g>
         <g font-family="IBM Plex Mono" font-size="11">
           <!-- row 1: the different sensor TYPES -->
-          <g><rect x="20" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="64" r="7" fill="#43f59b"/><text x="40" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">LD2450 · radar</text><text x="40" y="94" fill="#8293a6">position · LIVE</text><text x="40" y="116" fill="#43f59b">x 0.32 m · y 1.10 m</text><text x="40" y="136" fill="#8293a6">1 target · age 30 ms</text></g>
+          <g><rect x="20" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="64" r="7" fill="#43f59b"/><text x="40" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">LD6004 · radar</text><text x="40" y="94" fill="#8293a6">3D position · LIVE</text><text x="40" y="116" fill="#43f59b">x 0.32 · y 1.10 · z 1.42 m</text><text x="40" y="136" fill="#8293a6">1 target · age 30 ms</text></g>
           <g><rect x="350" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="630" cy="64" r="7" fill="#43f59b"/><text x="370" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">MR60BHA2 · vitals</text><text x="370" y="94" fill="#8293a6">LIVE</text><text x="370" y="116" fill="#43f59b">72 bpm · 16 rpm</text><text x="370" y="136" fill="#8293a6">present: yes</text></g>
           <g><rect x="680" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="960" cy="64" r="7" fill="#43f59b"/><text x="700" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #1 · CSI</text><text x="700" y="94" fill="#8293a6">2.4 GHz · LIVE</text><text x="700" y="116" fill="#43f59b">subcarriers 192</text><text x="700" y="136" fill="#8293a6">rssi −44 dBm · age 18 ms</text></g>
           <!-- row 2 -->
@@ -995,7 +1178,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">The three sensors</h3>
     <div class="buy-grid" style="margin-bottom:34px;">
-      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit</h4><span class="price">~$16</span></div><span class="sub">Radar + cable + USB adapter · plug-and-play, no solder · tracks 3 people (2D)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit <span style="color:var(--faint);font-weight:400;">(legacy)</span></h4><span class="price">~$16</span></div><span class="sub">Only if you need 3-person 2D tracking or can't touch GPIO — otherwise buy the LD6004 above</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>LD6004 radar — true 3D movement</h4><span class="price">~$19–38</span></div><span class="sub">60 GHz · X/Y/Z position · wires to Pi GPIO (4 Dupont jumpers) · the movement-tracking pick</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">B0GKNCY7G7</a><a class="verified" href="https://www.amazon.com/dp/B0GKNYXWCK" target="_blank" rel="noopener">alt: B0GKNYXWCK</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32-C6 3-pack (CSI node — the pick)</h4><span class="price">~$24 / 3</span></div><span class="sub">WiFi 6 · 242-tone HE-LTF CSI · <b>buy 7 nodes for a full array</b> (mix with S3s)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX</a><a class="verified" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">or LONELY BINARY S3 3-pack</a></div></div>
@@ -1043,8 +1226,15 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     <div class="callout reveal" style="border-color:rgba(199,146,234,0.5);margin-top:24px;">
       <h3 style="margin:0 0 10px;font-size:19px;color:#c792ea;">🧠 The RVF Knowledge Bases — when a summary isn't enough <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-kb.rvf · ruview-kb.rvf</span></h3>
-      <p style="margin:0 0 10px;color:var(--muted);">The primers above are curated summaries — readable, but summaries drop things. These are the <b>uncurated, mechanically-complete</b> versions: every ADR, every doc, every crate manifest, every research paper and script embedded into a semantic vector database — a single <span class="mono">.rvf</span> file each, built with RuVector's own format. <b>ruvector-kb.rvf</b>: 5,759 vectors over 1,408 files (including 277 ADRs and 278 research docs the summaries undercounted). <b>ruview-kb.rvf</b>: 2,353 vectors over 527 files. Both generated <b>June 12, 2026</b> from same-day checkouts, with manifests, verification-query results, and one-command rebuild scripts.</p>
-      <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">How to use them:</b> drop the <span class="mono">.rvf</span> (plus its <span class="mono">.json</span> sidecars) into your project, then point an AI at it. For Claude Code, one entry in <span class="mono">.mcp.json</span>: <span class="mono">npx @ruvector/rvf-mcp-server --transport stdio</span> aimed at the file — and add one line to your project's CLAUDE.md saying the KB exists. Your assistant then <em>semantically queries the entire tree</em> ("which crate does dynamic min-cut?" → <span class="mono">ruvector-mincut</span> in milliseconds) instead of grep-sampling 1.5M lines and missing subdirectories. From Node: <span class="mono">@ruvector/rvf</span>'s <span class="mono">RvfDatabase.open()</span> + <span class="mono">query()</span>.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">The primers above are curated summaries — readable, but summaries drop things. These are the <b>uncurated, mechanically-complete</b> versions: every ADR, every doc, every crate manifest, every research paper and script embedded into a semantic vector database — a single <span class="mono">.rvf</span> file each, built with RuVector's own format. <b>ruvector-kb.rvf</b>: 13,691 vectors over 6,572 entries — all 277 ADRs, 278 research docs, 299 crates' source headers and module inventories, 3,600 Rust doc comments. <b>ruview-kb.rvf</b>: 4,184 vectors over 1,613 files — all 160+ ADRs, the firmware tree, every script. Both generated <b>June 12, 2026</b> from same-day checkouts, with manifests, verification-query results, and one-command rebuild scripts.</p>
+      <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">How to use them — three exact steps</b> (the README in the zip walks each one with paste-this-exact-text detail):</p>
+      <ol style="margin:0 0 10px;padding-left:22px;color:var(--muted);font-size:14.5px;line-height:1.8;">
+        <li>Unzip into your project as <span class="mono">kb/</span>.</li>
+        <li>Create <span class="mono">.mcp.json</span> in your project root with exactly:<br/><span class="mono" style="display:block;background:rgba(14,24,36,0.8);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12px;overflow-x:auto;white-space:pre;">{"mcpServers": {"ruvector-kb": {"command": "npx",
+  "args": ["-y","@ruvector/rvf-mcp-server","--transport","stdio","--store","kb/ruvector-kb.rvf"]}}}</span></li>
+        <li>Paste this line at the end of your project's <span class="mono">CLAUDE.md</span>:<br/><span class="mono" style="display:block;background:rgba(14,24,36,0.8);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12px;overflow-x:auto;">A semantic KB of the ruvector/RuView ecosystem is mounted as MCP server `ruvector-kb` — query it FIRST for any ruvector/RuView question.</span></li>
+      </ol>
+      <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">Confirm it works:</b> restart Claude Code, type <span class="mono">/mcp</span> (you should see <span class="mono">ruvector-kb · connected</span>), then ask <em>"which crate implements dynamic min-cut?"</em> — a working setup answers <span class="mono">ruvector-mincut</span> with real file paths in seconds instead of grep-sampling 1.7M lines. From Node instead: <span class="mono">@ruvector/rvf</span>'s <span class="mono">RvfDatabase.open()</span> + <span class="mono">query()</span>.</p>
       <p style="margin:0 0 10px;color:var(--muted);">Each bundle is self-contained: the <span class="mono">.rvf</span> database, its required <span class="mono">.json</span> sidecars, the manifest, and the README that walks you through using it.</p>
       <p style="margin:0;">
         <a class="hero-cta" style="--accent:#c792ea;" href="https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/ruvector-kb-bundle.zip" download>ruvector KB bundle (zip: .rvf + sidecars + README · 21 MB) ↓</a> &nbsp;
@@ -1092,9 +1282,9 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <p>The things a brand-new owner usually asks next.</p>
     </div>
     <dl class="gloss reveal">
-      <div><dt>Do the sensors plug into the Seed directly?</dt><dd>Simple sensors (motion, vibration, an analog sensor via an ADS1115) wire to the Seed's own GPIO pins. The three sensors in this guide connect to the same Seed over USB (the LD2450) or WiFi (the MR60 and ESP32 CSI nodes) — same device, just a different connection.</dd></div>
-      <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD2450 USB kit</b> (~$16) — it needs no flashing, you just plug it into the Seed over USB and it reports position immediately.</dd></div>
-      <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD2450 USB kit needs no flashing at all.</dd></div>
+      <div><dt>Do the sensors plug into the Seed directly?</dt><dd>Simple sensors (motion, vibration, an analog sensor via an ADS1115) wire to the Seed's own GPIO pins. The three sensors in this guide connect to the same Seed over GPIO serial (the LD6004) or WiFi (the MR60 and ESP32 CSI nodes) — same device, just a different connection.</dd></div>
+      <div><dt>What's the cheapest way to begin?</dt><dd>The <b>LD6004</b> — no flashing, four jumper wires to the GPIO header, and it reports true 3D position immediately. (The legacy LD2450 USB kit is a few dollars cheaper and plugs in over USB, but it's 2D and superseded — buy it only if GPIO is off the table.)</dd></div>
+      <div><dt>Do I have to flash the sensors?</dt><dd>The ESP32 CSI nodes, yes — on a Mac/PC first (see the Setup page). The MR60 ships ready (set WiFi via ESPHome). The LD6004 needs no flashing at all — it's wiring, not software.</dd></div>
       <div><dt>Does it send my data to the cloud?</dt><dd>The Seed runs its intelligence <b>on-device</b> — no cloud required — and these sensors are contactless (no camera, nothing worn).</dd></div>
       <div><dt>Can the Seed "see through walls" by itself?</dt><dd>No. WiFi sensing (CSI) needs separate <b>ESP32-C6 / S3</b> nodes streaming their CSI to the Seed over WiFi — the Seed's own WiFi chip can't produce CSI.</dd></div>
       <div><dt>How many sensors do I need?</dt><dd><b>Almost nothing works with just one.</b> WiFi-CSI needs <b>at least 3</b> nodes (<b>7</b> is the sweet spot — Ruv's pick, a prime with headroom); radar is <b>1–3</b>; vitals is <b>1 per person/spot</b>. See the "one sensor is almost never enough" table.</dd></div>
@@ -1118,8 +1308,8 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <div><dt>HT40</dt><dd>A "wide" 40 MHz WiFi channel. Wider channel = more subcarriers = richer CSI.</dd></div>
       <div><dt>IMU</dt><dd>Inertial Measurement Unit — an accelerometer (+ gyro) chip that senses motion, tilt and vibration of whatever it's attached to. The M5StickS3 has one.</dd></div>
       <div><dt>Flashing</dt><dd>Loading firmware onto a chip over USB from a computer — the one-time step before an ESP32 sensor can do its job.</dd></div>
-      <div><dt>UART / serial</dt><dd>A simple two-wire way (transmit + receive) for a sensor to talk to a computer. The LD2450 USB kit does this over its USB adapter.</dd></div>
-      <div><dt>Baud rate</dt><dd>The speed of a serial connection. Both ends must agree exactly, or you get garbage/zeros. The LD2450 wants 256000.</dd></div>
+      <div><dt>UART / serial</dt><dd>A simple two-wire way (transmit + receive) for a sensor to talk to a computer. The LD6004 talks UART straight to the GPIO header.</dd></div>
+      <div><dt>Baud rate</dt><dd>The speed of a serial connection. Both ends must agree exactly, or you get garbage/zeros. The LD6004 wants 115200; the legacy LD2450 wants the unusual 256000.</dd></div>
       <div><dt>LiPo / 18650</dt><dd>Rechargeable lithium batteries. LiPo is a flat light pouch; 18650 is a AA-sized cylinder with more capacity.</dd></div>
       <div><dt>HNSW</dt><dd>The fast "nearest-neighbour" search the Seed uses to recognise a fingerprint instantly among thousands.</dd></div>
       <div><dt>Soul Signature / AETHER</dt><dd>An anonymous WiFi "fingerprint" of a body (RuView's 128-dim re-ID embedding) — recognises the same person again, without naming them.</dd></div>

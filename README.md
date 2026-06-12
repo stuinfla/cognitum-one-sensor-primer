@@ -1,8 +1,8 @@
 # Cognitum One Sensor Primer
 
 A beginner-friendly, visual web primer for anyone who just received a **Cognitum One Seed**
-and wants to understand contactless sensing — what ESP32 chips, mmWave radar (LD2450 /
-LD6004), vital-signs radar (MR60BHA2), WiFi CSI nodes, and IMUs actually *do*, how to
+and wants to understand contactless sensing — what ESP32 chips, mmWave radar (LD6004,
+with the legacy LD2450 covered), vital-signs radar (MR60BHA2), WiFi CSI nodes, and IMUs actually *do*, how to
 **power, wire and battery** them, and **where to buy** every part.
 
 🌐 **Live site:** https://cognitum-sensor-primer.vercel.app
@@ -12,7 +12,7 @@ LD6004), vital-signs radar (MR60BHA2), WiFi CSI nodes, and IMUs actually *do*, h
 
 1. **Orientation** — what a Cognitum One Seed is (the brain) vs. sensors (the senses)
 2. **ESP32 family** — a full chip-by-chip comparison (extends the espboards.dev SoC guide)
-3. **The six sensor classes** — LD2450, LD6004, MR60BHA2, ESP32 WiFi CSI, M5StickC IMU, Polar H10
+3. **The six sensor classes** — LD6004, MR60BHA2, ESP32 WiFi CSI, M5StickC IMU, Polar H10, and the legacy LD2450
 4. **Decision guide** — radar vs. CSI vs. vitals vs. IMU: which to use when
 5. **Power & wiring** — connection styles, GPIO pinout, power budget, the five common gotchas
 6. **Batteries** — how to power ESP32s scattered around a room (LiPo, 18650, power banks, TP4056)
