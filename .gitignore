@@ -2,3 +2,9 @@
 .vercel
 node_modules/
 *.log
+
+# ruflo/AgentDB local runtime (per-machine memory, not source)
+.swarm/
+.claude-flow/
+ruvector.db
+.claude/memory.db
