@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 360" width="980" height="360">
+  <defs>
+    <g id="lock">
+      <path d="M3.5 4 V2 a3.5 3.5 0 0 1 7 0 V4" fill="none" stroke="#ffb454" stroke-width="2"/>
+      <rect x="0" y="4" width="14" height="10" rx="2" fill="#ffb454"/>
+    </g>
+    <g id="opendoor">
+      <path d="M0 0 V18" stroke="#43f59b" stroke-width="2"/>
+      <polygon points="0,0 12,-5 12,13 0,18" fill="#43f59b" fill-opacity="0.25" stroke="#43f59b" stroke-width="1.5"/>
+    </g>
+  </defs>
+  <rect width="980" height="360" fill="#0b1220"/>
+  <text x="490" y="28" text-anchor="middle" font-family="Helvetica,Arial" font-size="17" font-weight="bold" fill="#5cd6ff">Same software. Two very different machines.</text>
+
+  <!-- LEFT: Mac/PC — powerful, but sealed -->
+  <rect x="20" y="46" width="460" height="242" rx="10" fill="#10243a" stroke="#ffb454" stroke-width="2"/>
+  <text x="250" y="74" text-anchor="middle" font-family="Helvetica,Arial" font-size="15" font-weight="bold" fill="#ffb454">YOUR MAC / PC — powerful, but sealed</text>
+  <text x="250" y="93" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#8fb8a4">fast CPU · big RAM · gorgeous radio · every door locked</text>
+
+  <rect x="44" y="106" width="412" height="36" rx="7" fill="#0e1824" stroke="#ffb454" stroke-width="1" stroke-dasharray="5 4"/>
+  <use href="#lock" x="58" y="115"/>
+  <text x="84" y="129" font-family="Helvetica,Arial" font-size="12.5" fill="#cfe3f5">CSI — computed inside the chip, <tspan fill="#ffb454">locked by the OS</tspan></text>
+
+  <rect x="44" y="150" width="412" height="36" rx="7" fill="#0e1824" stroke="#ffb454" stroke-width="1" stroke-dasharray="5 4"/>
+  <use href="#lock" x="58" y="159"/>
+  <text x="84" y="173" font-family="Helvetica,Arial" font-size="12.5" fill="#cfe3f5">GPIO pins — <tspan fill="#ffb454">none</tspan>; nothing to wire a sensor into</text>
+
+  <rect x="44" y="194" width="412" height="36" rx="7" fill="#0e1824" stroke="#ffb454" stroke-width="1" stroke-dasharray="5 4"/>
+  <use href="#lock" x="58" y="203"/>
+  <text x="84" y="217" font-family="Helvetica,Arial" font-size="12.5" fill="#cfe3f5">sleeps when the lid closes · <tspan fill="#ffb454">moves around with you</tspan></text>
+
+  <rect x="44" y="238" width="412" height="36" rx="7" fill="#0e1824" stroke="#ffb454" stroke-width="1" stroke-dasharray="5 4"/>
+  <use href="#lock" x="58" y="247"/>
+  <text x="84" y="261" font-family="Helvetica,Arial" font-size="12.5" fill="#cfe3f5">radio you <tspan fill="#ffb454">can't touch</tspan> — drivers will never hand it over</text>
+
+  <!-- RIGHT: Seed / V0 — humble, but OPEN -->
+  <rect x="500" y="46" width="460" height="242" rx="10" fill="#0e2a1c" stroke="#43f59b" stroke-width="2"/>
+  <text x="730" y="74" text-anchor="middle" font-family="Helvetica,Arial" font-size="15" font-weight="bold" fill="#43f59b">COGNITUM SEED / V0 — humble, but OPEN</text>
+  <text x="730" y="93" text-anchor="middle" font-family="Helvetica,Arial" font-size="11" fill="#8fb8a4">a fraction of the speed · every door open</text>
+
+  <rect x="524" y="104" width="412" height="30" rx="7" fill="#0e1824" stroke="#43f59b" stroke-width="1"/>
+  <use href="#opendoor" x="538" y="110"/>
+  <text x="562" y="123" font-family="Helvetica,Arial" font-size="12.5" fill="#d7ffe9">GPIO pins → <tspan fill="#43f59b">wire sensors directly</tspan></text>
+
+  <rect x="524" y="140" width="412" height="30" rx="7" fill="#0e1824" stroke="#43f59b" stroke-width="1"/>
+  <use href="#opendoor" x="538" y="146"/>
+  <text x="562" y="159" font-family="Helvetica,Arial" font-size="12.5" fill="#d7ffe9">pairs with <tspan fill="#43f59b">open ESP32 radios</tspan> that expose raw CSI</text>
+
+  <rect x="524" y="176" width="412" height="30" rx="7" fill="#0e1824" stroke="#43f59b" stroke-width="1"/>
+  <use href="#opendoor" x="538" y="182"/>
+  <text x="562" y="195" font-family="Helvetica,Arial" font-size="12.5" fill="#d7ffe9">always-on in the room, <tspan fill="#43f59b">sips ~2 W</tspan></text>
+
+  <rect x="524" y="212" width="412" height="30" rx="7" fill="#0e1824" stroke="#43f59b" stroke-width="1"/>
+  <use href="#opendoor" x="538" y="218"/>
+  <text x="562" y="231" font-family="Helvetica,Arial" font-size="12.5" fill="#d7ffe9">permanent <tspan fill="#43f59b">witnessed memory</tspan> of what it senses</text>
+
+  <rect x="524" y="248" width="412" height="30" rx="7" fill="#0e1824" stroke="#43f59b" stroke-width="1"/>
+  <use href="#opendoor" x="538" y="254"/>
+  <text x="562" y="267" font-family="Helvetica,Arial" font-size="12.5" fill="#d7ffe9"><tspan fill="#43f59b">yours to control</tspan> — root, firmware, radios, all of it</text>
+
+  <!-- punchline banner -->
+  <rect x="20" y="304" width="940" height="44" rx="10" fill="#0e1824" stroke="#43f59b" stroke-width="2"/>
+  <text x="490" y="332" text-anchor="middle" font-family="Helvetica,Arial" font-size="16"><tspan fill="#8fb8a4">Power here ≠ gigahertz.&#160;&#160;</tspan><tspan fill="#43f59b" font-weight="bold">Power = control over the hardware the software can touch.</tspan></text>
+</svg>

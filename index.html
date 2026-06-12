@@ -142,6 +142,28 @@
       <p style="margin:18px 0 0;"><a href="https://cognitum.one" target="_blank" rel="noopener" class="mono" style="font-size:13.5px; letter-spacing:0.04em;">▸ Learn more about the Cognitum One Seed at cognitum.one</a></p>
     </div>
 
+    <div class="callout reveal" style="margin-bottom:34px;">
+      <h3 style="margin:0 0 12px;font-size:20px;color:var(--phosphor);">Wait — why run this on a tiny computer instead of my Mac?</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">Fair question, and worth answering before anything else: the software is the same everywhere — nothing the Seed runs <em>couldn't</em> run on your Mac, and your Mac is enormously faster. But for this job, power isn't gigahertz. Your Mac is powerful and <b style="color:var(--amber)">sealed</b>: the OS locks away its WiFi chip's sensing data, there are no GPIO pins to wire a sensor into, the radio is untouchable, and the whole machine sleeps when you close the lid and leaves the room in your bag. <b style="color:var(--ink)">Why use a less powerful computer to run the same software? Because you want more control over the hardware.</b> A humble computer you fully control beats a powerful one you don't.</p>
+      <p style="margin:0;color:var(--muted);">So use both, each for what it's for. Your Mac stays the <b style="color:var(--ink)">brain whenever you want it</b> — dashboards, training, heavy lifting. The Seed is the <b style="color:var(--phosphor)">body that never sleeps</b>: pins exposed, paired with open ESP32 radios, sipping ~2&nbsp;W in the corner, building a permanent witnessed memory around the clock. That trade — compute you can get anywhere, for hardware control you can't — is the power of the Cognitum One Seed.</p>
+      <figure class="figure" style="margin:18px 0 0;">
+        <img src="https://cognitum-sensor-primer.vercel.app/assets/diagrams/power-is-control.svg" alt="Two computers side by side: your Mac/PC is powerful but sealed (CSI locked by the OS, no GPIO pins, sleeps and moves around, untouchable radio) while the Cognitum Seed/V0 is humble but open (GPIO pins to wire sensors directly, pairs with open ESP32 radios, always-on at about 2 watts, permanent witnessed memory, yours to control). Punchline: power here is not gigahertz — power is control over the hardware the software can touch." loading="lazy" style="width:100%;height:auto;"/>
+        <figcaption>Power here ≠ gigahertz. Power = control over the hardware the software can touch.</figcaption>
+      </figure>
+      <details style="margin-top:10px;">
+        <summary class="mono" style="cursor:pointer;color:var(--faint);font-size:12px;">ASCII version (for AI/accessibility)</summary>
+        <pre class="mono" style="font-size:12px;color:var(--muted);overflow-x:auto;">
+YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but OPEN
+  [LOCKED] CSI — locked by the OS            [OPEN] GPIO pins → wire sensors directly
+  [LOCKED] GPIO pins — none                  [OPEN] pairs with open ESP32 radios
+  [LOCKED] sleeps / moves around             [OPEN] always-on, sips ~2 W
+  [LOCKED] radio you can't touch             [OPEN] permanent witnessed memory
+                                             [OPEN] yours to control
+  Power here ≠ gigahertz. Power = control over the hardware the software can touch.</pre>
+      </details>
+      <p class="mono" style="margin:14px 0 0;font-size:13px;">Full explanation: <a href="#why-csi">Why separate hardware?</a></p>
+    </div>
+
     <div class="model">
       <div class="card-brain reveal">
         <h3>🧠 The Seed = the brain</h3>
@@ -1023,9 +1045,10 @@
       <h3 style="margin:0 0 10px;font-size:19px;color:#c792ea;">🧠 The RVF Knowledge Bases — when a summary isn't enough <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-kb.rvf · ruview-kb.rvf</span></h3>
       <p style="margin:0 0 10px;color:var(--muted);">The primers above are curated summaries — readable, but summaries drop things. These are the <b>uncurated, mechanically-complete</b> versions: every ADR, every doc, every crate manifest, every research paper and script embedded into a semantic vector database — a single <span class="mono">.rvf</span> file each, built with RuVector's own format. <b>ruvector-kb.rvf</b>: 5,759 vectors over 1,408 files (including 277 ADRs and 278 research docs the summaries undercounted). <b>ruview-kb.rvf</b>: 2,353 vectors over 527 files. Both generated <b>June 12, 2026</b> from same-day checkouts, with manifests, verification-query results, and one-command rebuild scripts.</p>
       <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">How to use them:</b> drop the <span class="mono">.rvf</span> (plus its <span class="mono">.json</span> sidecars) into your project, then point an AI at it. For Claude Code, one entry in <span class="mono">.mcp.json</span>: <span class="mono">npx @ruvector/rvf-mcp-server --transport stdio</span> aimed at the file — and add one line to your project's CLAUDE.md saying the KB exists. Your assistant then <em>semantically queries the entire tree</em> ("which crate does dynamic min-cut?" → <span class="mono">ruvector-mincut</span> in milliseconds) instead of grep-sampling 1.5M lines and missing subdirectories. From Node: <span class="mono">@ruvector/rvf</span>'s <span class="mono">RvfDatabase.open()</span> + <span class="mono">query()</span>.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">Each bundle is self-contained: the <span class="mono">.rvf</span> database, its required <span class="mono">.json</span> sidecars, the manifest, and the README that walks you through using it.</p>
       <p style="margin:0;">
-        <a class="hero-cta" style="--accent:#c792ea;" href="https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/ruvector-kb.rvf" download>ruvector-kb.rvf (9 MB) ↓</a> &nbsp;
-        <a class="hero-cta" style="--accent:#c792ea;" href="https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/ruview-kb.rvf" download>ruview-kb.rvf (3.9 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" href="https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/ruvector-kb-bundle.zip" download>ruvector KB bundle (zip: .rvf + sidecars + README · 21 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" href="https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/ruview-kb-bundle.zip" download>ruview KB bundle (zip: .rvf + sidecars + README · 6.4 MB) ↓</a> &nbsp;
         <a href="https://github.com/stuinfla/cognitum-one-sensor-primer/blob/main/kb/README.md" style="font-family:'IBM Plex Mono';font-size:13px;"><b>START HERE: the KB README</b> (what it is · what's in it · 3 ways to use it) →</a>
       </p>
     </div>

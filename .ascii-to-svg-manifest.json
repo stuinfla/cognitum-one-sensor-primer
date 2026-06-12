@@ -1,9 +1,10 @@
 {
   "version": "1.0.0",
-  "lastSync": "2026-06-12T20:30:00Z",
+  "lastSync": "2026-06-12T21:30:00Z",
   "diagrams": [
     {"id": "ruview-architecture", "sourceFile": "ruview-primer.md", "svgFile": "assets/diagrams/ruview-architecture.svg", "lastConverted": "2026-06-12T20:30:00Z"},
     {"id": "ruview-room-training", "sourceFile": "ruview-primer.md", "svgFile": "assets/diagrams/ruview-room-training.svg", "lastConverted": "2026-06-12T20:30:00Z"},
-    {"id": "ruvector-stack", "sourceFile": "ruvector-primer.md", "svgFile": "assets/diagrams/ruvector-stack.svg", "lastConverted": "2026-06-12T20:30:00Z"}
+    {"id": "ruvector-stack", "sourceFile": "ruvector-primer.md", "svgFile": "assets/diagrams/ruvector-stack.svg", "lastConverted": "2026-06-12T20:30:00Z"},
+    {"id": "power-is-control", "sourceFile": "index.html", "svgFile": "assets/diagrams/power-is-control.svg", "lastConverted": "2026-06-12T21:30:00Z"}
   ]
 }
