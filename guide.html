@@ -33,6 +33,16 @@
 </head>
 <body>
 
+<style>
+  @keyframes uw-sheen { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+  .update-wire { display:block; text-decoration:none; background:#0a1f16; border-bottom:1px solid var(--phosphor-dim); padding:9px 18px; text-align:center; font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:0.04em; color:#d7ffe9; }
+  .update-wire b { color:var(--phosphor); }
+  .update-wire .uw-tag { display:inline-block; margin-right:10px; padding:2px 9px; border-radius:5px; font-weight:600; color:#06130c; background:linear-gradient(110deg, var(--phosphor) 35%, #b6ffe0 50%, var(--phosphor) 65%); background-size:200% 100%; animation:uw-sheen 2.8s linear infinite; }
+  .update-wire:hover b { text-decoration:underline; }
+  @media (max-width:720px){ .update-wire { font-size:11px; padding:8px 10px; } }
+</style>
+<a class="update-wire" href="#journey"><span class="uw-tag">NEW PAGE · JUNE 12, 2026</span> You're reading the new <b>Complete Walkthrough</b> — every command verified against Ruv's RuView v1701, today's build</a>
+
 <nav>
   <div class="nav-inner">
     <a class="brand" href="/"><span class="dot"></span> COGNITUM&nbsp;ONE&nbsp;·&nbsp;SENSOR&nbsp;PRIMER</a>
