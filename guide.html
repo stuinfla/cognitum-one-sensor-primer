@@ -117,6 +117,24 @@
     <div class="callout reveal" style="margin-top:18px;">
       <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">Mental model:</b> ESP32 nodes are the <b>senses</b> (they capture WiFi-CSI), the sensing server — on your laptop or the V0 — is the <b>perception</b> (it turns CSI into people, breathing, pose), and the Seed is the <b>memory</b> (it stores what was perceived, tamper-evidently, and lets AI agents query it). You can complete phases 1–8 with no Seed at all, then add it in phase 9.</p>
     </div>
+
+    <div class="callout reveal" style="margin-top:18px;border-color:rgba(92,214,255,0.4);">
+      <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">The architectural choice everyone stumbles on: just-on-my-network, or wired into the Seed?</h3>
+      <p style="margin:0 0 10px;color:var(--muted);">Here's the thing nobody tells you up front: <b style="color:var(--ink)">your sensors never stream their raw data to the Seed either way.</b> Raw CSI is a firehose (~50+ packets/sec/node) and the Seed is a Pi Zero — it physically can't run the perception pipeline. Raw CSI always goes to the <b>sensing server</b> on a capable machine (your laptop, or the V0). The real choice is what happens <em>after</em> perception:</p>
+      <div class="table-scroll" style="margin:0 0 12px;">
+        <table>
+          <thead><tr><th></th><th>Network-only (no Seed)</th><th>Seed-connected</th></tr></thead>
+          <tbody>
+            <tr><td><b>What you get</b></td><td>Everything live: dashboards, vitals, pose, alerts — full real-time experience</td><td>All of that, <em>plus</em> a permanent record: each second's 8-number room summary stored with a tamper-evident witness chain</td></tr>
+            <tr><td><b>What happens to history</b></td><td><b style="color:var(--amber)">Forgotten instantly.</b> The server keeps no database — close it and yesterday never happened</td><td>Queryable forever: "was anyone in the living room at 3am?" becomes answerable — by you or your AI assistant over MCP</td></tr>
+            <tr><td><b>What must stay on</b></td><td>The laptop/PC running the server</td><td>Same, plus the Seed (~2 W) — and currently a small bridge script on the host (an upstream limitation)</td></tr>
+            <tr><td><b>Extra capability</b></td><td>—</td><td>Seed's own sensors (PIR, temp/humidity) become free ground-truth signals — they make camera-free pose training meaningfully better (10 signals vs 3)</td></tr>
+            <tr><td><b>Best for</b></td><td>First week: learning, placing nodes, calibrating</td><td>Anything you actually want to <em>use</em>: elder care, sleep trends, security, training models</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">Our advice:</b> start network-only (phases 1–8) — fewer moving parts while you learn. Add the Seed (phase 10) the day you catch yourself wanting history. The one decision to get right <em>early</em>: provision nodes to a <b>reserved, stable IP</b>, because every node carries that address in its flash. Moving the server later means re-provisioning each node over USB (a 2-minute chore × 7 nodes — avoidable by choosing the stable machine, like a V0, up front). If you own a V0, skip the dilemma: it runs the perception <em>and</em> the always-on role in one box.</p>
+    </div>
   </div>
 </section>
 

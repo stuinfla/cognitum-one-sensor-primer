@@ -33,6 +33,8 @@ If months have passed, regenerate: `git clone --depth 1 https://github.com/ruvne
 
 RuView turns cheap ESP32 boards into through-wall human sensors: **presence, person count, breathing rate, heart rate, motion, falls work today**; skeletal pose is heuristic out of the box and needs training to be real; recognizing *named* individuals from WiFi alone does **not** work yet (measured, by the project itself). The Rust `sensing-server` (your laptop or a V0 appliance) does the perception; the Cognitum Seed stores tamper-evident history that AI assistants can query over MCP. The three commands that matter most: `wifi-densepose calibrate` (empty room, 60 s), `enroll` (8 guided poses, 4 min), `train-room` (6 per-room specialists, seconds). The two mistakes everyone makes: skipping calibration, and putting two listeners on UDP 5005.
 
+**The architecture choice, settled:** sensors never stream raw CSI to the Seed — it's a Pi Zero and can't run perception. Raw CSI always goes to the sensing-server on a capable machine (laptop or V0). The actual choice is downstream: **network-only** = full live experience, zero history (the server keeps no database); **Seed-connected** = same live experience *plus* a permanent witness-chained 1 Hz record the owner (and AI assistants, over MCP) can query, *plus* the Seed's PIR/temp sensors as free training ground-truth. Start network-only to learn; add the Seed when you want memory. Decide the server's **stable reserved IP** early — every node bakes it into flash, and moving it means re-provisioning each node over USB.
+
 ## 0.1 Instant playbooks (task → exact steps)
 
 **▶ "I just got a Cognitum One Seed and a batch of fresh ESP32-C6s — make them work."**
