@@ -620,6 +620,24 @@
     <div class="callout reveal" style="margin-bottom:30px;">
       <h3 style="margin:0 0 10px;font-size:20px;color:var(--phosphor);">Plan on <span style="color:var(--ink)">7 ESP32 nodes</span></h3>
       <p style="margin:0;color:var(--muted);">Three is the bare minimum to locate anything (you need sightlines from three directions to triangulate). <b style="color:var(--ink)">Seven</b> is the sweet spot — it wraps a proper sensing "cloud" all the way around a person (front, back and sides) with enough overlap that furniture and bodies don't create blind spots, <em>plus</em> a spare node or two so one dropout doesn't ruin your coverage. They're cheap, and that headroom is what keeps setup from being frustrating. (Ruv's rule of thumb is <b>7</b> — a prime number, and the count where it just works.) The June 2026 split: <b>4× ESP32-C6</b> (WiFi-6 high-fidelity, 242-tone CSI) + <b>3× ESP32-S3</b> (cheap workhorses) — all on your 2.4 GHz network.</p>
+
+    <div class="callout reveal" style="margin:18px 0;">
+      <h3 style="margin:0 0 12px;font-size:19px;color:var(--phosphor);">"But how many do <em>I</em> actually need?" — and why mix S3s in at all?</h3>
+      <div class="table-scroll" style="margin-bottom:12px;">
+        <table>
+          <thead><tr><th>Nodes</th><th>What you can honestly do</th><th>Who it's for</th></tr></thead>
+          <tbody>
+            <tr><td><b>1</b></td><td>Presence, motion, breathing at one spot. <b>No location</b> — one viewpoint can't triangulate.</td><td>"Is someone in this room?" — a fine first weekend</td></tr>
+            <tr><td><b>3</b> (one 3-pack)</td><td>The minimum to <b>locate</b> anything: three sightlines = triangulation in one room. Zero spare — one dropout and you're blind.</td><td>Single-room experiments on a budget</td></tr>
+            <tr><td><b>5</b></td><td>Solid single living-space coverage with one node's worth of slack.</td><td>A serious one-room install</td></tr>
+            <tr><td><b>6</b> (two 3-packs)</td><td>Genuinely fine! The "prime number" part of Ruv's rule is folklore — what matters is ≥3 sightlines, wrap-around angles, and spares. Six works.</td><td>The pragmatic two-3-pack build</td></tr>
+            <tr><td><b>7</b> ★</td><td>Wraps a sensing cloud around a person from all sides <em>plus</em> dropout headroom — the count where multistatic fusion stops feeling fragile.</td><td>Ruv's recommendation; whole-floor ambitions</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:0;color:var(--muted);"><b style="color:var(--ink)">Why not just seven C6s?</b> You can — it's a valid build, maximum fidelity everywhere. The 4+3 mix buys three practical things: <b>(1) OTA updates.</b> The C6 has no over-the-air update — every firmware release means walking around with a USB cable, seven times. S3s update over the air. <b>(2) Failure-domain diversity.</b> If a router quirk ever breaks WiFi-6 HE capture (it's the newest code path), the S3s' battle-tested HT path keeps your array alive — the same heterogeneity logic that saved our radar rig when USB adapters froze but GPIO kept running. <b>(3) Extras.</b> Only the S3 line offers the display option and the mmWave-fusion host role. If none of those move you, buy seven C6s with our blessing — just budget the USB-reflash ritual.</p>
+    </div>
+    <p class="reveal" style="display:none;"></p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:30px;">
@@ -802,7 +820,7 @@
           <dt>CONNECTS</dt><dd>USB-C / micro-USB cable</dd>
           <dt>RUNTIME</dt><dd>days (but see gotcha)</dd>
         </dl>
-        <div class="gotcha"><b>The trap →</b> Many power banks <strong>auto-shut-off</strong> when current drops below ~50–100 mA. An idle ESP32 sips too little, so the bank powers down. Use one with an "always-on / low-current" mode.</div>
+        <div class="gotcha"><b>The trap →</b> Many power banks <strong>auto-shut-off</strong> when current drops below ~50–100 mA for ~35–60 s. An ESP32 node sips 30–80 mA — squarely in the dead zone — so the bank powers down and your node "mysteriously" dies an hour in. <b>Worse:</b> the famous fix, Anker-style "trickle mode," <strong>auto-exits after 2 hours</strong> — fine for earbuds, useless for a 24/7 sensor. See the solutions below.</div>
       </div>
       <div class="scard reveal" style="--accent: var(--cyan);">
         <span class="tag">DIY · most flexible</span>
@@ -840,7 +858,9 @@
       <div class="buy reveal"><div class="bt"><h4>3.7 V LiPo pouch (1000–2000 mAh)</h4><span class="price">~$8</span></div><span class="sub">JST-PH 2.0 connector — match your board</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=3.7V+lipo+battery+2000mAh+JST+PH+2.0" target="_blank" rel="noopener">search: 3.7V LiPo JST-PH</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>ESP32 18650 dev board</h4><span class="price">~$9</span></div><span class="sub">ESP32 with onboard 18650 holder + charging</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=ESP32+18650+development+board" target="_blank" rel="noopener">search: ESP32 18650 board</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>TP4056 charging module (protected)</h4><span class="price">~$1</span></div><span class="sub">DIY LiPo charging + protection</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=TP4056+charging+module+protection" target="_blank" rel="noopener">search: TP4056 protected</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>Low-current / always-on power bank</h4><span class="price">~$15</span></div><span class="sub">"IoT" bank that won't auto-shut-off</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=power+bank+low+current+mode+always+on" target="_blank" rel="noopener">search: always-on power bank</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Voltaic V50 "Always On" bank</h4><span class="price">~$74</span></div><span class="sub">The only battery here verified to never sleep · <b>use its USB-A port</b> (the USB-C PD port still sleeps!) · pass-through charging = mini-UPS</span><div class="links"><a class="verified" href="https://voltaicsystems.com/V50/" target="_blank" rel="noopener">voltaicsystems.com/V50</a><a class="search" href="https://www.amazon.com/s?k=Voltaic+V50+always+on" target="_blank" rel="noopener">on Amazon</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>USB keep-alive dongle</h4><span class="price">~$8–15</span></div><span class="sub">Budget fix: pulses ~100 mA load to keep ANY bank awake (costs ~10 mA average) · inline on the cable · adjustable version if your bank is stubborn</span><div class="links"><a class="verified" href="https://thepihut.com/products/power-bank-keepalive-usb-c" target="_blank" rel="noopener">Pi Hut KeepAlive USB-C</a><a class="verified" href="https://www.amazon.com/dp/B0G2XMW8DQ" target="_blank" rel="noopener">USB current maintainer</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>Plain USB wall adapter</h4><span class="price">~$5</span></div><span class="sub"><b>The real answer for any node near an outlet</b>: wall adapters have no load detection — they never sleep, ever. Batteries are for placement freedom only</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=5v+usb+c+wall+adapter" target="_blank" rel="noopener">search: 5V USB-C adapter</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>18650 Li-ion cells (quality)</h4><span class="price">~$10</span></div><span class="sub">Reputable brand, true capacity</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=18650+rechargeable+battery+button+top" target="_blank" rel="noopener">search: 18650 cells</a></div></div>
     </div>
   </div>
