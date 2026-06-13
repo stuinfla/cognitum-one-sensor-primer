@@ -6,18 +6,25 @@
 //               (repo-wide sweep, first 30 lines)
 //   doc-deep  : EVERY *.md in the repo not already in the corpus (full text, chunked)
 // Embeddings: local Xenova/all-MiniLM-L6-v2 (384-dim, quantized ONNX). Store: @ruvector/rvf.
+// Deps resolved PORTABLY via kb/resolve-deps.mjs (project node_modules -> env -> Mac paths).
 // Usage: node kb/.build-ruvector-kb/build.mjs   (old kb files backed up as *.v1.*)
-import { createRequire } from 'module';
+//   KB_REPO_ROOT overrides the repo root (defaults to two dirs up from this script).
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'node:url';
+import { loadRvf, loadTransformers, configureModel } from '../resolve-deps.mjs';
 
-const require = createRequire('/Users/stuartkerr/.npm-global/lib/node_modules/');
-const { RvfDatabase } = require('@ruvector/rvf');
+const { mod: rvfMod, via: rvfVia } = loadRvf();
+const { RvfDatabase } = rvfMod;
+console.log('[build] @ruvector/rvf via:', rvfVia);
 
-const ROOT = '/Users/stuartkerr/Code/Cognitum Sensor Primer/cognitum-one-sensor-primer';
+const __dirname = path.dirname(fileURLToPath(import.meta.url)); // kb/.build-ruvector-kb
+// repo root = two levels up (kb/.build-ruvector-kb -> kb -> root), overridable for CI.
+const ROOT = process.env.KB_REPO_ROOT || path.resolve(__dirname, '..', '..');
 const R = path.join(ROOT, 'ruvector');
 const OUT = path.join(ROOT, 'kb/ruvector-kb.rvf');
 const IDMAP = path.join(ROOT, 'kb/ruvector-kb.ids.json');
+const PASSAGES = path.join(ROOT, 'kb/ruvector-kb.passages.jsonl');
 
 // ---------- enumeration helpers ----------
 const SKIP_DIRS = new Set(['node_modules', 'target', '.git', 'dist', 'build']);
@@ -68,7 +75,19 @@ for (const f of walk(path.join(R, 'docs'))) {
   let kind = 'doc';
   if (rp.startsWith('docs/research/')) kind = 'research';
   else if (rp.toLowerCase().includes('adr')) kind = 'adr';
+  else if (rp.toLowerCase().includes('tutorial')) kind = 'tutorial';
   add(kind, rp, title, text, f);
+}
+
+// 1b. tutorials — explicit sweep so tutorials are guaranteed present & tagged.
+//     Any *tutorial*.md repo-wide + the basic guide, full text.
+for (const p of walk(R)) {
+  if (!p.endsWith('.md') || ingestedMd.has(p)) continue;
+  const base = path.basename(p).toLowerCase();
+  if (/tutorial/.test(base) || /basic_tutorial/.test(base)) {
+    const text = read(p);
+    add('tutorial', rel(p), mdTitle(text, path.basename(p)), text, p);
+  }
 }
 
 // 2. crates/** Cargo.toml (manifest summaries) + README.md (full text) -> crate
@@ -103,14 +122,67 @@ for (const f of walk(path.join(R, 'examples'))) {
   add('example', rel(f), mdTitle(text, path.dirname(rel(f))), text, f);
 }
 
-// 4. npm/** package.json -> npm
-for (const f of walk(path.join(R, 'npm'))) {
-  if (path.basename(f) !== 'package.json') continue;
-  try {
-    const j = JSON.parse(read(f));
-    const text = `npm package: ${j.name || rel(f)}\nVersion: ${j.version || ''}\nDescription: ${j.description || ''}\nKeywords: ${(j.keywords || []).join(', ')}\nPath: ${rel(f)}`;
-    add('npm', rel(f), j.name || rel(f), text);
-  } catch { add('npm', rel(f), rel(f), `npm package manifest (unparseable JSON) at ${rel(f)}`); }
+// 4. npm package.json -> npm. Was npm/** only; now ALSO crates/**/package.json +
+//    ui/**/package.json (node/wasm binding manifests). Skip per-platform prebuilt
+//    stubs (**/npm/<os>-<arch>/package.json) and vendored stub/ dirs — noise, not knowledge.
+{
+  const npmManifest = (f) => {
+    const rp = rel(f);
+    if (ingestedMd.has(f)) return;
+    if (/\/npm\/[^/]+\/package\.json$/.test(rp)) return;        // per-platform binary stub
+    if (/(^|\/)(stub|pkg|\.vite|dist)(\/|$)/.test(rp)) return;   // vendored / generated output
+    try {
+      const j = JSON.parse(read(f));
+      const scripts = j.scripts ? Object.keys(j.scripts).join(', ') : '';
+      const bin = j.bin ? (typeof j.bin === 'string' ? j.bin : Object.keys(j.bin).join(', ')) : '';
+      const text = `npm package: ${j.name || rp}\nVersion: ${j.version || ''}\nPath: ${rp}\n`
+        + `Description: ${j.description || ''}\n`
+        + (bin ? `Bin: ${bin}\n` : '')
+        + (scripts ? `Scripts: ${scripts}\n` : '')
+        + (j.dependencies ? `Dependencies: ${Object.keys(j.dependencies).join(', ')}\n` : '')
+        + `Keywords: ${(j.keywords || []).join(', ')}`;
+      add('npm', rp, j.name || rp, text, f);
+    } catch { add('npm', rp, rp, `npm package manifest (unparseable JSON) at ${rp}`, f); }
+  };
+  for (const base of ['npm', 'crates', 'ui', 'examples']) {
+    for (const f of walk(path.join(R, base))) {
+      if (path.basename(f) === 'package.json') npmManifest(f);
+    }
+  }
+  // repo-root package.json (workspace npm manifest)
+  const rootPkg = path.join(R, 'package.json');
+  if (fs.existsSync(rootPkg)) npmManifest(rootPkg);
+}
+
+// 4b. workspace-root manifest — root Cargo.toml ([workspace.members] map) -> crate
+{
+  const f = path.join(R, 'Cargo.toml');
+  const t = tryRead(f);
+  if (t) {
+    const members = (t.match(/members\s*=\s*\[([\s\S]*?)\]/m) || [, ''])[1]
+      .split(/[\s,]+/).map((s) => s.replace(/["']/g, '')).filter(Boolean).join(', ');
+    add('crate', 'Cargo.toml', 'Cargo.toml workspace manifest',
+      `Cargo workspace manifest: Cargo.toml\nWorkspace members: ${members}\n\n${t}`, f);
+  }
+}
+
+// 4c. nested example-crate manifests — examples/**/Cargo.toml -> crate
+let exCrateCount = 0;
+for (const f of walk(path.join(R, 'examples'))) {
+  if (path.basename(f) !== 'Cargo.toml') continue;
+  const rp = rel(f);
+  const t = read(f);
+  const pkg = t.match(/^\[package\]([\s\S]*?)(?=^\[|\s*$(?![\s\S]))/m);
+  const sec = pkg ? pkg[1] : '';
+  const name = (sec.match(/^name\s*=\s*"([^"]*)"/m) || [, ''])[1] || `${path.basename(path.dirname(f))} (workspace manifest)`;
+  const desc = (sec.match(/^description\s*=\s*"([^"]*)"/m) || [, ''])[1];
+  const members = (t.match(/^members\s*=\s*\[([\s\S]*?)\]/m) || [, ''])[1]
+    .split(/[\s,]+/).map((s) => s.replace(/"/g, '')).filter(Boolean).join(', ');
+  let text = `Rust crate: ${name}\nPath: ${rp}\n`;
+  if (desc) text += `Description: ${desc}\n`;
+  if (members) text += `Workspace members: ${members}\n`;
+  add('crate', rp, name, text, f);
+  exCrateCount++;
 }
 
 // 5. repo README.md + CHANGELOG.md (top 600 lines) -> doc
@@ -135,6 +207,26 @@ if (fs.existsSync(skillsDir)) {
   }
 }
 
+// 6b. high-value sub-module .rs BODIES (FULL text, chunked) — query engine + attention CLI
+//     + hyperbolic postgres. Indexed in full (not just lead doc-comment); added to
+//     fullBodyFiles so steps 7/8 skip them.
+const fullBodyFiles = new Set();
+for (const sub of [
+  'crates/rvlite/src',
+  'crates/ruvector-attention-cli/src/commands',
+  'crates/ruvector-postgres/src/hyperbolic',
+  'crates/ruvector-postgres/src/graph',     // SPARQL+Cypher graph engine bodies
+  'crates/ruvector-postgres/src/routing',   // FastGRNN routing bodies
+]) {
+  const dir = path.join(R, sub);
+  if (!fs.existsSync(dir)) continue;
+  for (const p of walk(dir)) {
+    if (!p.endsWith('.rs')) continue;
+    fullBodyFiles.add(p);
+    add('crate-src', rel(p), path.basename(p), `Rust source ${rel(p)} (full):\n${read(p)}`, p);
+  }
+}
+
 // ============ v2 ENRICHMENT ============
 
 // 7. crate-src — every crate in the repo (every Cargo.toml dir with src/lib.rs|src/main.rs):
@@ -150,12 +242,16 @@ for (const ct of cargoTomls) {
   crateCount++;
   leadFiles.add(lead);
   const relDir = rel(cdir) || '.';
-  const text = read(lead);
-  const doc = docBlock(text, 200); // full leading doc block even when longer than 100 lines
-  const body = firstLines(text, 100);
-  add('crate-src', rel(lead), `${crateName} ${path.basename(lead)}`,
-    `Crate ${crateName} (${relDir}) — ${path.basename(lead)} leading doc + first 100 lines:\n` +
-    (doc ? `/* doc */\n${doc}\n\n` : '') + body);
+  // Skip the truncated lead entry if this lead file is already indexed in full (6b);
+  // still emit the module-list entry below.
+  if (!fullBodyFiles.has(lead)) {
+    const text = read(lead);
+    const doc = docBlock(text, 200); // full leading doc block even when longer than 100 lines
+    const body = firstLines(text, 100);
+    add('crate-src', rel(lead), `${crateName} ${path.basename(lead)}`,
+      `Crate ${crateName} (${relDir}) — ${path.basename(lead)} leading doc + first 100 lines:\n` +
+      (doc ? `/* doc */\n${doc}\n\n` : '') + body);
+  }
   // module list + examples/benches/tests/docs file names
   const mods = [...walk(path.join(cdir, 'src'))].filter((p) => p.endsWith('.rs')).map((p) => path.relative(path.join(cdir, 'src'), p)).sort();
   const extras = [];
@@ -171,9 +267,10 @@ for (const ct of cargoTomls) {
 }
 
 // 8. crate-src — repo-wide sweep: every .rs file's leading //! doc block (first 30 lines)
+//     (skip lead files and the full-body files already indexed in 6b)
 let rsDocCount = 0;
 for (const p of walk(R)) {
-  if (!p.endsWith('.rs') || leadFiles.has(p)) continue;
+  if (!p.endsWith('.rs') || leadFiles.has(p) || fullBodyFiles.has(p)) continue;
   const doc = docBlock(firstLines(read(p), 30));
   if (!doc) continue;
   rsDocCount++;
@@ -216,6 +313,7 @@ for (const d of docsFiles) {
       id: String(nextId++),
       path: d.path, kind: d.kind, title: d.title, chunk: i + 1, of: parts.length,
       embedText: `${d.title} — ${d.path}\n${p}`.slice(0, MAX + 300),
+      text: p,                       // FULL, untruncated chunk text for the passages sidecar
       preview: p.trim().slice(0, 200),
     });
   });
@@ -224,15 +322,19 @@ for (const d of docsFiles) {
 console.log('=== ENUMERATION (files per kind) ===');
 console.log(JSON.stringify(counts, null, 2));
 console.log('crates with lead file:', crateCount, '| .rs files with //! doc:', rsDocCount, '| md swept (doc-deep):', mdDeepCount);
+console.log('example-crate manifests:', exCrateCount, '| full-body .rs files (rvlite+attn-cli+hyperbolic):', fullBodyFiles.size);
 console.log('total files:', docsFiles.length, '| total chunks:', chunks.length);
 const preCk = {};
 for (const c of chunks) preCk[c.kind] = (preCk[c.kind] || 0) + 1;
 console.log('chunks per kind:', JSON.stringify(preCk, null, 2));
 
 // ---------- embeddings ----------
-const T = await import('file:///Users/stuartkerr/Code/AppealArmor/node_modules/@xenova/transformers/src/transformers.js');
-T.env.localModelPath = '/Users/stuartkerr/Code/PowerPlatePulse/scripts/models-cache';
-T.env.allowRemoteModels = false;
+// Embedder resolved portably (project node_modules -> XENOVA_PATH env -> Mac build).
+// Use the local MiniLM cache when present (fast, offline); otherwise allow remote download.
+const { T, modelCache: MODEL_CACHE, via: tVia } = await loadTransformers();
+const { haveLocalModel } = configureModel(T, MODEL_CACHE);
+console.log('[build] transformers via:', tVia);
+console.log('Embedder:', haveLocalModel ? `local cache ${MODEL_CACHE}` : `remote download (cache: ${MODEL_CACHE})`);
 const embed = await T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
 
 // back up v1 store + sidecars before overwriting
@@ -248,6 +350,11 @@ if (fs.existsSync(OUT)) fs.unlinkSync(OUT);
 if (fs.existsSync(OUT + '.idmap.json')) fs.unlinkSync(OUT + '.idmap.json');
 const db = await RvfDatabase.create(OUT, { dimensions: 384, metric: 'cosine' });
 
+// Full-text passages sidecar: one JSON object per line {id,text,path,title}.
+// Same id as the vector in the .rvf and in the id map — so retrieval can join.
+fs.rmSync(PASSAGES, { force: true });
+const passagesFd = fs.openSync(PASSAGES, 'w');
+let passageLines = 0;
 const BATCH = 48;
 let accepted = 0, rejected = 0;
 const t0 = Date.now();
@@ -255,11 +362,15 @@ for (let i = 0; i < chunks.length; i += BATCH) {
   const batch = chunks.slice(i, i + BATCH);
   const out = await embed(batch.map(c => c.embedText), { pooling: 'mean', normalize: true });
   const dim = out.dims[1];
-  const entries = batch.map((c, j) => ({
-    id: c.id,
-    vector: Array.from(out.data.slice(j * dim, (j + 1) * dim)),
-    metadata: { path: c.path, kind: c.kind, title: c.title.slice(0, 120), chunk: c.chunk },
-  }));
+  const entries = batch.map((c, j) => {
+    fs.writeSync(passagesFd, JSON.stringify({ id: c.id, text: c.text, path: c.path, title: c.title }) + '\n');
+    passageLines++;
+    return {
+      id: c.id,
+      vector: Array.from(out.data.slice(j * dim, (j + 1) * dim)),
+      metadata: { path: c.path, kind: c.kind, title: c.title.slice(0, 120), chunk: c.chunk },
+    };
+  });
   const r = await db.ingestBatch(entries);
   accepted += r.accepted; rejected += r.rejected;
   if ((i / BATCH) % 20 === 0) {
@@ -267,7 +378,8 @@ for (let i = 0; i < chunks.length; i += BATCH) {
     console.log(`progress ${i + batch.length}/${chunks.length} (${rate.toFixed(1)}/s, accepted=${accepted}, rejected=${rejected})`);
   }
 }
-console.log(`ingest done: accepted=${accepted} rejected=${rejected} in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+fs.closeSync(passagesFd);
+console.log(`ingest done: accepted=${accepted} rejected=${rejected} in ${((Date.now() - t0) / 1000).toFixed(0)}s | passages lines: ${passageLines}`);
 
 const status = await db.status();
 console.log('status:', JSON.stringify(status));
@@ -299,8 +411,12 @@ await db.close();
 // sidecar id map (metadata lookup; vectors live ONLY in the .rvf)
 const map = {};
 for (const c of chunks) map[c.id] = { path: c.path, kind: c.kind, title: c.title, chunk: c.chunk, of: c.of, preview: c.preview };
-fs.writeFileSync(IDMAP, JSON.stringify({ generated: new Date().toISOString(), entries: map }));
-console.log('id map written:', IDMAP);
+fs.writeFileSync(IDMAP, JSON.stringify({
+  model: 'Xenova/all-MiniLM-L6-v2', dimensions: 384, metric: 'cosine',
+  generated: new Date().toISOString(), entries: map,
+}));
+console.log('id map written:', IDMAP, '| header: model=Xenova/all-MiniLM-L6-v2 dim=384 metric=cosine');
+console.log('Passages reconcile: vectors =', status.totalVectors, '| passages lines =', passageLines, '| id-map ids =', Object.keys(map).length, '| match =', status.totalVectors === passageLines && passageLines === Object.keys(map).length);
 console.log('=== AFTER (chunks per kind) ===');
 console.log(JSON.stringify(preCk, null, 2));
 console.log('file size:', fs.statSync(OUT).size, 'bytes');

@@ -1,0 +1,19 @@
+{
+  "generated": "2026-06-13T23:08:55.265Z",
+  "embeddingModel": "Xenova/all-MiniLM-L6-v2",
+  "dimensions": 384,
+  "metric": "cosine",
+  "stores": {
+    "ruvector": {
+      "rvf": "ruvector-kb.rvf",
+      "sourceRepo": "github.com/ruvnet/ruvector",
+      "sha": "4dedde800ccab7117b21213f0b472a252c9142d2"
+    },
+    "ruview": {
+      "rvf": "ruview-kb.rvf",
+      "sourceRepo": "github.com/ruvnet/RuView",
+      "sha": "3d7530f08dbf5043d2aebc716f029fc4794caa97",
+      "describe": "v1701"
+    }
+  }
+}

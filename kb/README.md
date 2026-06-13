@@ -1,99 +1,147 @@
-# The RVF Knowledge Bases — what they are and exactly how to use them
+# The Cognitum RVF Knowledge Bases — what they are and exactly how to use them
 
-*You downloaded (or are about to download) `ruvector-kb.rvf` and/or `ruview-kb.rvf` from the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). This README assumes you've never touched an RVF file before. That's fine — nobody has, it's brand new. Follow along.*
+*You downloaded (or are about to download) `ruvector-kb.rvf` and/or `ruview-kb.rvf` from the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). This README assumes you've never touched an RVF file before. That's fine — it's a new format. Follow along; everything below is verified working.*
 
 ---
 
 ## 1. What is this thing?
 
-An `.rvf` file is a **portable, self-contained vector database in a single file** — RuVector's own format. Think of it like a PDF, but instead of pages it holds *meaning*: every document in a codebase, converted to numbers (embeddings) that let a computer find content by **what it means**, not what it's called.
+An `.rvf` file is a **portable, self-contained vector database in a single file** — RuVector's own format. Think of it like a PDF, but instead of pages it holds *meaning*: every document in a codebase, converted to embeddings so a computer can find content by **what it means**, not just what it's named.
 
-These two files are **complete semantic indexes of ruvnet's repositories**, built mechanically — no human chose what to include, a script enumerated *everything*:
+These two files are **complete semantic indexes of ruvnet's repositories**, built mechanically — no human chose what to include; a script enumerated *everything*:
 
-| File | Covers | Size | Inside |
-|---|---|---|---|
-| `ruvector-kb.rvf` | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector) (the 1.7M-line Rust engine) | ~24 MB | **13,691 vectors** from **6,572 entries** (v2): all 277 ADR files, 278 research docs across 80 dirs, 216 crate manifests + 200 crate READMEs, 99 example READMEs, 85 npm packages, 37 skills — **plus crate source knowledge**: every crate's lib.rs/main.rs doc header + first 100 lines and module inventory (299 crates incl. nested ruvix/rvAgent/rvf workspaces), the leading `//!` doc comment of 3,600 .rs files, and 966 more markdown files swept from everywhere else (.claude agents/skills, example docs, crate-internal ADRs, npm docs) |
-| `ruview-kb.rvf` | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) (the WiFi sensing platform) | ~7.2 MB | **4,184 vectors** from **1,613 files** (v2): all 160+ ADR files, the 2,468-line user guide, 106 scripts (first 40 lines each), 39 crate manifests, 41 firmware headers, both tutorials — **plus**: 40 crates' lib.rs/main.rs headers + module lists, 643 .rs doc comments, 343 more markdown/manifest files (plugins, archive/v1, .claude, plans, aether-arena), and full text of the 4 UI pages |
+| File | Covers | `.rvf` size | Vectors | Embedding |
+|---|---|---|---|---|
+| `ruvector-kb.rvf` | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector) (the ~1.7M-line Rust engine) | ~25 MB | **14,052** | Xenova/all-MiniLM-L6-v2 · 384-dim · cosine |
+| `ruview-kb.rvf` | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) (the WiFi/CSI sensing platform) | ~7.4 MB | **4,306** | Xenova/all-MiniLM-L6-v2 · 384-dim · cosine |
 
-**Why they exist:** the markdown primers on the same site are curated summaries — readable, but summaries drop things (we proved this: our own first drafts undercounted ADRs, examples, and whole research directories). The KBs are the **uncurated backstop**: if it's in the repo's knowledge layer, it's in here. Generated **June 12, 2026** from same-day checkouts (`ruvector` @ `4dedde8`, `RuView` @ `3d7530f0`/v1701). Embeddings: `Xenova/all-MiniLM-L6-v2`, 384-dim, computed locally — no cloud touched your queries or these builds.
+Embeddings are computed **locally** with MiniLM — no cloud touched your queries or these builds. One chunk ≈ 1,000 tokens (~4,000 chars, paragraph-aligned).
 
-**Companion files (keep them together!):** each `.rvf` ships with sidecars — `ruvector-kb.ids.json` / `ruview-kb.meta.json` (maps result IDs back to file paths + previews — required) and `*.idmap.json` (the store's own index map). A `*.MANIFEST.md` documents counts, verification queries, and rebuild commands.
+**Why they exist:** the markdown primers on the same site are curated summaries — readable, but summaries drop things. The KBs are the **uncurated backstop**: if it's in the repo's knowledge layer (ADRs, docs, research, crate manifests + READMEs, every `//!` doc comment, each crate's lead file + module inventory, scripts, firmware headers, UI text), it's in here.
 
-## 2. How do I use it? (three ways, easiest first)
+### The files in a bundle (keep them together)
 
-### Way 1 — Give it to Claude Code (the spoon-fed path)
+| File | Required? | What it is |
+|---|---|---|
+| `*.rvf` | yes | the vector store (HNSW index, 384-dim, cosine) |
+| `*.passages.jsonl` | **yes** | **full-text sidecar** — one `{id, text, path, title}` JSON object per line. The `.rvf` returns `{id, distance}` only; retrieval **joins those ids to the full passage text here.** Without it you get numbers, not text. |
+| `ruvector-kb.ids.json` / `ruview-kb.meta.json` | yes | id → `{path, kind, title, chunk, preview}` metadata map |
+| `*.rvf.idmap.json` | yes | the store's own internal id↔label map (auto-managed; do not delete) |
+| `*.MANIFEST.md` | no | provenance, per-kind counts, verification queries, rebuild commands |
+| `ask-kb.mjs`, `kb-mcp-server.mjs`, `resolve-deps.mjs`, `package.json` | yes (to *run* it) | the working CLI + MCP server + dep resolver (see below) |
+| the relevant build script | no | rebuild from a fresh checkout |
 
-**Step 1.** Unzip the bundle and copy the whole folder into your project as `kb/`. From wherever you downloaded it:
+> **The two-part design:** vectors live in the `.rvf`; the readable text lives in `.passages.jsonl`. A search embeds your query, asks the `.rvf` for the nearest ids, then looks each id up in `.passages.jsonl` to return the **full** passage. This is why both files ship together.
+
+---
+
+## 2. Setup (once)
+
 ```bash
-cd /path/to/your-project
-unzip ~/Downloads/ruvector-kb-bundle.zip -d kb/
-ls kb/   # you should see: ruvector-kb.rvf, ruvector-kb.ids.json, ruvector-kb.idmap.json, ...
+cd kb
+npm i        # installs @ruvector/rvf + @xenova/transformers into kb/node_modules
 ```
 
-**Step 2.** Create (or edit) `.mcp.json` in your project root. If the file doesn't exist, paste exactly this:
+That's it. The scripts resolve those two deps from `kb/node_modules` automatically (a small `resolve-deps.mjs` handles it). On first use the MiniLM model (~25 MB) downloads from HuggingFace and is cached; after that, queries run fully offline.
+
+> Node 18+ required. The native `@ruvector/rvf` binding ships prebuilt binaries for macOS (arm64/x64), Linux (x64/arm64-gnu), and Windows x64 — no compiler needed.
+
+---
+
+## 3. How to use it (three real, working ways)
+
+### Way 1 — As an MCP server in Claude Code (the bundled `kb-mcp-server.mjs`)
+
+The bundle ships a **working** MCP stdio server, `kb-mcp-server.mjs`. It embeds your query locally, searches the requested `.rvf`, and returns the **full passage text** of each hit.
+
+**Step 1.** Unzip the bundle into your project as `kb/`, then `cd kb && npm i` (section 2).
+
+**Step 2.** Create (or edit) `.mcp.json` in your **project root** with exactly this — point `args` at the absolute path of the bundled server:
+
 ```json
 {
   "mcpServers": {
-    "ruvector-kb": {
-      "command": "npx",
-      "args": ["-y", "@ruvector/rvf-mcp-server", "--transport", "stdio", "--store", "kb/ruvector-kb.rvf"]
+    "cognitum-kb": {
+      "command": "node",
+      "args": ["<ABSOLUTE-PATH-TO>/kb/kb-mcp-server.mjs"]
     }
   }
 }
 ```
-If `.mcp.json` already exists, add only the `"ruvector-kb": { ... }` block inside your existing `"mcpServers"` object.
 
-**Step 3.** Open your project's `CLAUDE.md` (create it in the project root if it doesn't exist) and paste this exact line at the end:
+One server serves **both** KBs — you pick which with the `store` argument on each call.
+
+**Step 3.** Paste this line at the end of your project's `CLAUDE.md`:
+
 ```
-A semantic knowledge base of the entire ruvector/RuView ecosystem is mounted as MCP server `ruvector-kb` — query it FIRST (before grep/manual exploration) for any question about ruvector or RuView crates, ADRs, APIs, firmware, or setup.
+A semantic KB of the ruvector/RuView ecosystem is mounted as MCP server `cognitum-kb` (tool `search_kb`, store="ruvector" or "ruview") — query it FIRST for any ruvector/RuView question.
 ```
 
-**Step 4 — confirm it's actually working** (don't skip this):
-1. Restart Claude Code in the project (`exit`, then `claude`). On first start it will ask you to approve the new `ruvector-kb` MCP server — approve it.
-2. Type `/mcp` — you should see `ruvector-kb` listed as **connected**. If it says *failed*, run `npx -y @ruvector/rvf-mcp-server --help` once in your terminal (first run downloads the package), then restart Claude Code again.
-3. Ask Claude: *"Using the ruvector-kb MCP server, which crate implements dynamic min-cut?"* A working setup answers with `ruvector-mincut` and cites real file paths in seconds. If Claude starts grepping the repo instead, the server isn't connected — go back to step 2.
+**Step 4 — confirm it actually works (don't skip this):**
 
-Once confirmed, just ask things naturally — *"what's the seed ingest packet format?"*, *"which ADR covers calibration?"* — Claude searches the **whole tree's meaning** in milliseconds instead of grep-sampling 1.7M lines and missing subdirectories.
+1. **Restart** Claude Code in the project (`exit`, then `claude`). Approve the new `cognitum-kb` server when prompted.
+2. Type **`/mcp`** — you should see `cognitum-kb` listed as **connected**.
+3. Ask: *"Using cognitum-kb, which crate implements dynamic min-cut?"* A working setup calls `search_kb({store:"ruvector", query:"dynamic min-cut"})` and answers with real file paths (e.g. `crates/ruQu/src/mincut.rs`, `crates/ruvector-dag/src/mincut/local_kcut.rs`) and full passage text — in seconds, instead of grep-sampling 1.7M lines.
 
-**Using the RuView KB too (or instead)?** Same pattern — add a second server block with `"ruview-kb"` as the name and `"kb/ruview-kb.rvf"` as the store, and a matching CLAUDE.md line. Both can run side by side; building your first sensor screen, you'll want both (RuView for firmware/CLI questions, ruvector for the engine underneath).
+The tool: `search_kb({ query: string, store: "ruvector" | "ruview", k?: number = 6 })`.
 
-*(If `@ruvector/rvf-mcp-server` flags differ in your version, run `npx @ruvector/rvf-mcp-server --help` — the package is young and moving.)*
+> ⚠️ **Do NOT use `@ruvector/rvf-mcp-server`.** The published `@ruvector/rvf-mcp-server` package is a **non-functional stub** — it never reads a prebuilt `.rvf` and returns no passage text. Use the bundled `kb-mcp-server.mjs` shown above. (Earlier versions of this site/README pointed at that package; that was wrong.)
 
-### Way 2 — Query from Node.js
+### Way 2 — From the command line (`ask-kb.mjs`)
+
+```bash
+node kb/ask-kb.mjs ruvector "how do I load an rvf file in Node" 5
+node kb/ask-kb.mjs ruview  "how do I calibrate an empty room" 5
+```
+
+Format: `node kb/ask-kb.mjs <ruvector|ruview> "question" [k]`. It prints each hit's path, title, distance, and the **full passage text**.
+
+### Way 3 — From Node (the `searchKb` API)
+
+`ask-kb.mjs` exports `searchKb`, which does the embed → `.rvf` query → passage-join for you:
+
 ```js
-import { RvfDatabase } from '@ruvector/rvf';        // npm i @ruvector/rvf @xenova/transformers
-import { pipeline } from '@xenova/transformers';
-import ids from './ruvector-kb.ids.json' with { type: 'json' };
+import { searchKb } from './kb/ask-kb.mjs';
 
-const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-const db = await RvfDatabase.open('ruvector-kb.rvf');
-const q = await embed('how do I load an rvf file in Node', { pooling: 'mean', normalize: true });
-const hits = await db.query(Array.from(q.data), 5);
-hits.forEach(h => console.log(ids[h.id]?.path, ids[h.id]?.title));
-```
-Results come back as `{id, distance}` — the `ids.json` sidecar turns IDs back into file paths and previews.
-
-### Way 3 — Rust
-```rust
-use rvf_runtime::RvfStore;                          // cargo add rvf-runtime
-let store = RvfStore::open_readonly("ruvector-kb.rvf")?;
-// embed your query with any 384-dim MiniLM-compatible model, then store.query(&vec, 5)
+const hits = await searchKb({ store: 'ruvector', query: 'SONA LoRA adaptation API', k: 5 });
+for (const h of hits) {
+  console.log(h.distance.toFixed(4), h.path, h.title);
+  console.log(h.text);          // FULL passage text, joined from the .passages.jsonl sidecar
+}
 ```
 
-## 3. When to use the KB vs the primer
+Each hit is `{ id, distance, path, title, text }`. If you'd rather wire the raw store yourself: `@ruvector/rvf`'s `RvfDatabase.openReadonly(file)` → `db.query(vec384, k)` returns `{id, distance}`; resolve `id` against `*.passages.jsonl` for the text and `*.ids.json`/`*.meta.json` for metadata. Embed queries with the same model (`Xenova/all-MiniLM-L6-v2`, `pooling:'mean', normalize:true`).
 
-- **Read the primer** (`ruvector-primer.md` / `ruview-primer.md`) when you want orientation: what the system *is*, what to install, the honest capability grades.
-- **Query the KB** when you need to *find* something specific — an ADR, a crate, a research doc, a script — especially anything a summary might have skipped. The KB doesn't summarize; it locates.
+---
 
-## 4. Is it stale? How do I rebuild it?
+## 4. When to use the KB vs the primer
 
-Check the source repo's HEAD against the commit above (`git ls-remote <repo> HEAD`). To rebuild from a fresh checkout, the exact builder scripts are in this folder: `build-ruview-kb.mjs` and `.build-ruvector-kb/build.mjs` (Node 18+, ~3 and ~10 minutes respectively, fully local). Each manifest lists the verification queries a rebuild should pass. The previous (docs-only) v1 stores are kept alongside as `*.v1.rvf`.
+- **Read the primer** (`ruvector-primer.md` / `ruview-primer.md`) for orientation: what the system *is*, what to install, the honest capability grades.
+- **Query the KB** to *find* something specific — an ADR, a crate, a research doc, a script — especially anything a summary might have skipped. The KB doesn't summarize; it locates and returns the source text.
 
-## 5. Honest limits
+---
+
+## 5. Is it stale? How do I rebuild it?
+
+Check the source repos' HEAD against the pinned SHAs in `.last-built.json` / the manifests (`git ls-remote <repo> HEAD`). To rebuild from a fresh checkout (the upstream repos are git submodules here):
+
+```bash
+cd kb && npm i                       # once
+node kb/.build-ruvector-kb/build.mjs # ~10 min
+node kb/build-ruview-kb.mjs          # ~3 min
+node kb/guard-check.mjs              # MUST pass before you trust/ship a rebuild
+```
+
+`guard-check.mjs` verifies passages/index/idmap line-count **parity**, scans for the old **200/240-char preview-truncation** bug, and runs a **live query** that must return non-empty text. In CI, `.github/workflows/rebuild-kb.yml` runs all of this automatically whenever the submodule pointers move, and refuses to commit a KB that fails the guard.
+
+---
+
+## 6. Honest limits
 
 - Query quality is bounded by MiniLM-L6 (384-dim) — excellent for "where is X / which thing does Y," not a reasoning engine.
-- The KBs index the repos' **knowledge layer plus the source's self-description** (docs, manifests, READMEs, headers, scripts, every `//!` doc comment, each crate's lead file + module inventory) — still not every line of every function body. Ask "where is the kalman tracker implemented" and it answers; it won't recite line 400 of a 2,000-line file.
-- Search returns `{id, distance}` only; without the `.json` sidecars you get numbers, not paths. Keep the files together.
-- Built 2026-06-12; both upstream repos ship daily. The manifests carry the exact provenance.
+- The KBs index the repos' **knowledge layer plus the source's self-description** (docs, manifests, READMEs, headers, scripts, every `//!` doc comment, each crate's lead file + module inventory) — not every line of every function body. Ask "where is the kalman tracker implemented" and it answers; it won't recite line 400 of a 2,000-line file.
+- A search returns `{id, distance}` from the `.rvf`; the readable text comes from `*.passages.jsonl`. **Keep the files together** — without the sidecar you get numbers, not passages.
+- The `@ruvector/rvf-mcp-server` npm package is a stub and is intentionally **not** used here (see Way 1).
+- Built June 13, 2026 from same-day submodule checkouts (ruvector `4dedde80`, RuView `v1701`); both upstream repos ship daily. The manifests and `.last-built.json` carry the exact provenance/SHAs.
 
 *Generated by Claude (Fable 5) for the Cognitum One Sensor Primer. Questions → start at the [site](https://cognitum-sensor-primer.vercel.app).*

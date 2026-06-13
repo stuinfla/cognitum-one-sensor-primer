@@ -1,0 +1,25 @@
+{
+  "name": "cognitum-kb",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-contained Cognitum RVF knowledge bases (ruvector + RuView) with a portable CLI and MCP stdio server. Run `npm i` here, then use ask-kb.mjs / kb-mcp-server.mjs.",
+  "bin": {
+    "cognitum-ask-kb": "./ask-kb.mjs",
+    "cognitum-kb-mcp": "./kb-mcp-server.mjs"
+  },
+  "scripts": {
+    "ask": "node ask-kb.mjs",
+    "mcp": "node kb-mcp-server.mjs",
+    "guard": "node guard-check.mjs",
+    "build:ruvector": "node .build-ruvector-kb/build.mjs",
+    "build:ruview": "node build-ruview-kb.mjs"
+  },
+  "dependencies": {
+    "@ruvector/rvf": "latest",
+    "@xenova/transformers": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

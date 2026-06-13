@@ -12,18 +12,25 @@
 //
 // Usage: node kb/build-ruview-kb.mjs
 // Output: kb/ruview-kb.rvf + kb/ruview-kb.meta.json (old files backed up as *.v1.*)
+// Deps resolved PORTABLY via kb/resolve-deps.mjs (project node_modules -> env -> Mac paths).
+//   KB_REPO_ROOT overrides the repo root (defaults to the parent of kb/).
 
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { loadRvf, loadTransformers, configureModel } from './resolve-deps.mjs';
 
-const require = createRequire(import.meta.url);
-const { RvfDatabase } = require('/Users/stuartkerr/.npm-global/lib/node_modules/@ruvector/rvf');
+const { mod: rvfMod, via: rvfVia } = loadRvf();
+const { RvfDatabase } = rvfMod;
+console.log('[build-ruview] @ruvector/rvf via:', rvfVia);
 
-const ROOT = '/Users/stuartkerr/Code/Cognitum Sensor Primer/cognitum-one-sensor-primer';
+const __dirname = path.dirname(fileURLToPath(import.meta.url)); // kb/
+// repo root = parent of kb/, overridable for CI.
+const ROOT = process.env.KB_REPO_ROOT || path.resolve(__dirname, '..');
 const RUVIEW = path.join(ROOT, 'RuView');
 const OUT_RVF = path.join(ROOT, 'kb/ruview-kb.rvf');
 const OUT_META = path.join(ROOT, 'kb/ruview-kb.meta.json');
+const OUT_PASSAGES = path.join(ROOT, 'kb/ruview-kb.passages.jsonl');
 
 const CHUNK_CHARS = 4000;   // ~1000 tokens
 const OVERLAP_CHARS = 400;
@@ -154,6 +161,112 @@ for (const f of fs.readdirSync(path.join(RUVIEW, 'ui')).filter((f) => f.endsWith
   addDoc(`ui/${f}`, 'doc', t ? t[1] : f, `UI page: ${f}\nTitle: ${t ? t[1] : '(none)'}\n${metas}`);
 }
 
+// 6b. examples/**/README.md — explicit example coverage (full text)
+{
+  const exDir = path.join(RUVIEW, 'examples');
+  if (fs.existsSync(exDir)) {
+    for (const p of walk(exDir, true)) {
+      if (path.basename(p) !== 'README.md') continue;
+      const rel = path.relative(RUVIEW, p);
+      const text = read(p);
+      addDoc(rel, 'example', titleOf(text, path.dirname(rel)), text, p);
+    }
+  }
+}
+
+// 6c. tutorials — explicit sweep so tutorials are guaranteed present & tagged.
+//     docs/tutorials/**/*.md, any *tutorial*.md repo-wide, and the user guides.
+{
+  const tutDir = path.join(RUVIEW, 'docs/tutorials');
+  if (fs.existsSync(tutDir)) {
+    for (const p of walk(tutDir, true)) {
+      if (!/\.(md|txt)$/.test(p) || ingestedPaths.has(p)) continue;
+      const rel = path.relative(RUVIEW, p);
+      const text = read(p);
+      addDoc(rel, 'tutorial', titleOf(text, path.basename(p)), text, p);
+    }
+  }
+  for (const p of walk(RUVIEW, true)) {
+    if (ingestedPaths.has(p)) continue;
+    const base = path.basename(p).toLowerCase();
+    if (!/\.md$/.test(p)) continue;
+    if (/tutorial/.test(base) || /user[-_]guide/.test(base)) {
+      const rel = path.relative(RUVIEW, p);
+      const text = read(p);
+      addDoc(rel, 'tutorial', titleOf(text, path.basename(p)), text, p);
+    }
+  }
+}
+
+// 6d. npm — EVERY package.json in the repo (minus exclusions). ENTIRE CATEGORY was
+//     previously missing from RuView. Ingest name+description+scripts+deps+bin.
+let npmCount = 0;
+for (const p of walk(RUVIEW, true)) {
+  if (path.basename(p) !== 'package.json') continue;
+  const rel = path.relative(RUVIEW, p);
+  // honor audit exclusions: skip generated/vendored manifest noise
+  if (/(^|\/)(\.vite|pkg|dist|stub)(\/|$)/.test(rel)) continue;
+  if (/\/npm\/[^/]+\/package\.json$/.test(rel)) continue; // per-platform prebuilt stub
+  let j;
+  try { j = JSON.parse(read(p)); } catch { addDoc(rel, 'npm', rel, `npm package manifest (unparseable JSON) at ${rel}`, p); npmCount++; continue; }
+  const scripts = j.scripts ? Object.entries(j.scripts).map(([k, v]) => `  ${k}: ${v}`).join('\n') : '';
+  const bin = j.bin ? (typeof j.bin === 'string' ? j.bin : Object.keys(j.bin).join(', ')) : '';
+  const deps = Object.keys(j.dependencies || {});
+  const devDeps = Object.keys(j.devDependencies || {});
+  const text =
+    `npm package: ${j.name || rel}\nVersion: ${j.version || ''}\nPath: ${rel}\n` +
+    `Description: ${j.description || ''}\n` +
+    (bin ? `Bin: ${bin}\n` : '') +
+    (j.type ? `Module type: ${j.type}\n` : '') +
+    (scripts ? `Scripts:\n${scripts}\n` : '') +
+    (deps.length ? `Dependencies: ${deps.join(', ')}\n` : '') +
+    (devDeps.length ? `DevDependencies: ${devDeps.join(', ')}\n` : '') +
+    (j.keywords?.length ? `Keywords: ${j.keywords.join(', ')}\n` : '');
+  addDoc(rel, 'npm', j.name || rel, text, p);
+  npmCount++;
+}
+
+// 6e. workspace-root manifests — v2/Cargo.toml and python/Cargo.toml ([workspace.members]).
+for (const rel of ['v2/Cargo.toml', 'python/Cargo.toml', 'Cargo.toml']) {
+  const abs = path.join(RUVIEW, rel);
+  const t = tryRead(abs);
+  if (!t || ingestedPaths.has(abs)) continue;
+  const members = (t.match(/members\s*=\s*\[([\s\S]*?)\]/m) || [, ''])[1]
+    .split(/[\s,]+/).map((s) => s.replace(/["']/g, '')).filter(Boolean).join(', ');
+  addDoc(rel, 'crate', `${rel} workspace manifest`,
+    `Cargo workspace manifest: ${rel}\nWorkspace members: ${members}\n\n${t}`, abs);
+}
+
+// 6f. tutorial labeling — docs/guides/** and **/user_guide*.md tagged kind:'tutorial'.
+for (const p of walk(RUVIEW, true)) {
+  if (ingestedPaths.has(p) || !/\.md$/.test(p)) continue;
+  const rel = path.relative(RUVIEW, p);
+  const base = path.basename(p).toLowerCase();
+  if (rel.startsWith('docs/guides/') || /user_guide/.test(base)) {
+    const text = read(p);
+    addDoc(rel, 'tutorial', titleOf(text, path.basename(p)), text, p);
+  }
+}
+
+// 6g. high-value sub-module .rs BODIES (FULL text, chunked) — Tauri desktop flash/ota/
+//     provision/discovery commands + domain, and the swarm RL / multiview sensing crate.
+//     Indexed in full (not just lead doc-comment); added to fullBodyFiles so the repo-wide
+//     doc-comment sweep (step 8) skips them.
+const fullBodyFiles = new Set();
+for (const sub of [
+  'v2/crates/wifi-densepose-desktop/src',
+  'v2/crates/ruview-swarm/src',
+]) {
+  const dir = path.join(RUVIEW, sub);
+  if (!fs.existsSync(dir)) continue;
+  for (const p of walk(dir, true)) {
+    if (!p.endsWith('.rs')) continue;
+    fullBodyFiles.add(p);
+    const rel = path.relative(RUVIEW, p);
+    addDoc(rel, 'crate-src', path.basename(p), `Rust source ${rel} (full):\n${read(p)}`, p);
+  }
+}
+
 // ============ v2 ENRICHMENT ============
 
 // 7. crate-src — every crate in the repo (every Cargo.toml dir with src/):
@@ -191,9 +304,10 @@ for (const ct of cargoTomls.sort()) {
 }
 
 // 8. crate-src — repo-wide sweep: every .rs file's leading //! doc block (first 30 lines)
+//     (skip lead files and the full-body files already indexed in 6g)
 let rsDocCount = 0;
 for (const p of walk(RUVIEW, true)) {
-  if (!p.endsWith('.rs') || leadFiles.has(p)) continue;
+  if (!p.endsWith('.rs') || leadFiles.has(p) || fullBodyFiles.has(p)) continue;
   const doc = docBlock(firstLines(read(p), 30));
   if (!doc) continue;
   rsDocCount++;
@@ -227,15 +341,19 @@ for (const rel of ['.claude-plugin/marketplace.json', 'plugins/ruview/.claude-pl
 console.log('=== CORPUS (source files per kind) ===');
 console.log(JSON.stringify(sourceCounts, null, 2));
 console.log('crates with lead file:', crateCount, '| .rs files with //! doc:', rsDocCount, '| md swept (doc-deep):', mdDeepCount);
+console.log('npm manifests:', npmCount, '| full-body .rs files (desktop+swarm):', fullBodyFiles.size);
 console.log('Total chunks to embed:', entries.length);
 const kindTotals = {};
 for (const e of entries) kindTotals[e.kind] = (kindTotals[e.kind] || 0) + 1;
 console.log('Chunks per kind:', JSON.stringify(kindTotals));
 
 // ---------- embed + ingest ----------
-const T = await import('file:///Users/stuartkerr/Code/AppealArmor/node_modules/@xenova/transformers/src/transformers.js');
-T.env.localModelPath = '/Users/stuartkerr/Code/PowerPlatePulse/scripts/models-cache';
-T.env.allowRemoteModels = false;
+// Embedder resolved portably (project node_modules -> XENOVA_PATH env -> Mac build).
+// Use the local MiniLM cache when present (fast, offline); otherwise allow remote download.
+const { T, modelCache: MODEL_CACHE, via: tVia } = await loadTransformers();
+const { haveLocalModel } = configureModel(T, MODEL_CACHE);
+console.log('[build-ruview] transformers via:', tVia);
+console.log('Embedder:', haveLocalModel ? `local cache ${MODEL_CACHE}` : `remote download (cache: ${MODEL_CACHE})`);
 const t0 = Date.now();
 const fe = await T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
 console.log('Embedder loaded in', Date.now() - t0, 'ms');
@@ -254,6 +372,11 @@ fs.rmSync(OUT_RVF + '.idmap.json', { force: true });
 const db = await RvfDatabase.create(OUT_RVF, { dimensions: 384, metric: 'cosine' });
 
 const meta = {};
+// Full-text passages sidecar: one JSON object per line {id,text,path,title}.
+// Same id as the vector in the .rvf and in meta — so retrieval can join.
+fs.rmSync(OUT_PASSAGES, { force: true });
+const passagesFd = fs.openSync(OUT_PASSAGES, 'w');
+let passageLines = 0;
 const BATCH = 32;
 let ingested = 0;
 for (let i = 0; i < entries.length; i += BATCH) {
@@ -263,6 +386,9 @@ for (let i = 0; i < entries.length; i += BATCH) {
   const ingest = batch.map((e, j) => {
     const id = String(i + j + 1);
     meta[id] = { path: e.path, kind: e.kind, title: e.title, chunk: `${e.chunkIdx + 1}/${e.chunkTotal}`, preview: e.text.slice(0, 240).replace(/\s+/g, ' ') };
+    // FULL, untruncated chunk text -> passages sidecar.
+    fs.writeSync(passagesFd, JSON.stringify({ id, text: e.text, path: e.path, title: e.title }) + '\n');
+    passageLines++;
     return {
       id,
       vector: Float32Array.from(out.data.slice(j * dim, (j + 1) * dim)),
@@ -274,7 +400,8 @@ for (let i = 0; i < entries.length; i += BATCH) {
   if (r.rejected) console.error('REJECTED', r.rejected, 'in batch at', i);
   if ((i / BATCH) % 20 === 0) process.stdout.write(`\r${i + batch.length}/${entries.length}`);
 }
-console.log(`\nIngested ${ingested} vectors`);
+fs.closeSync(passagesFd);
+console.log(`\nIngested ${ingested} vectors | passages lines: ${passageLines}`);
 
 const status = await db.status();
 console.log('=== POST-INGEST ===');
@@ -284,6 +411,7 @@ console.log('Distinct source paths in KB:', new Set(entries.map((e) => e.path)).
 console.log('Reconcile: chunks assembled =', entries.length, '| vectors in store =', status.totalVectors, '| match =', entries.length === status.totalVectors);
 
 fs.writeFileSync(OUT_META, JSON.stringify({ model: 'Xenova/all-MiniLM-L6-v2', dimensions: 384, metric: 'cosine', entries: meta }, null, 1));
+console.log('Passages reconcile: vectors =', status.totalVectors, '| passages lines =', passageLines, '| meta ids =', Object.keys(meta).length, '| match =', status.totalVectors === passageLines && passageLines === Object.keys(meta).length);
 
 // ---------- verification queries ----------
 const QUERIES = [

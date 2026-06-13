@@ -1,4 +1,4 @@
-Updated: 2026-06-12 17:30:00 EDT | Version 2.0.0
+Updated: 2026-06-13 19:00:00 EDT | Version 2.1.0
 Created: 2026-06-12 15:30:00 EDT
 
 # ruview-kb.rvf — RuView Repository Knowledge Base (RVF)
@@ -20,10 +20,11 @@ store is preserved alongside as `ruview-kb.v1.rvf` (+ `.v1` sidecars).
 | Embedding model | `Xenova/all-MiniLM-L6-v2` (local quantized ONNX via `@xenova/transformers` — no cloud APIs) |
 | Dimensions / metric | 384 / cosine, normalized (HNSW defaults) |
 | RVF tooling | `@ruvector/rvf` 0.2.2 (`RvfDatabase`, NodeBackend `@ruvector/rvf-node`) |
-| Total vectors | **4,184** (v1: 2,353) — verified `status().totalVectors === chunks assembled`, 0 rejected |
-| Distinct source files | **1,613** (v1: 527) |
-| File size | `ruview-kb.rvf` 7,156,546 bytes (+ `ruview-kb.rvf.idmap.json`, auto-created by rvf-node) |
+| Total vectors | **4,306** (final enriched build, 0 rejected; an earlier draft was 4,184 — this store supersedes it) |
+| Distinct source files | **1,613** |
+| File size | `ruview-kb.rvf` 7,386,428 bytes (+ `ruview-kb.rvf.idmap.json`, auto-created by rvf-node) |
 | Metadata sidecar | `ruview-kb.meta.json` — id → {path, kind, title, chunk, preview}. Needed because `query()` returns only `{id, distance}`. Vectors live ONLY in the .rvf. |
+| Full-text sidecar | `ruview-kb.passages.jsonl` — one `{id,text,path,title}` per line; retrieval joins `query()` ids to the FULL passage text here |
 
 ## Corpus (mechanical enumeration)
 
@@ -41,13 +42,14 @@ boundaries. Per-vector RVF metadata: `{path, kind, title, chunk}`.
 | **crate-src** (new) | 723 | 744 | per crate (every Cargo.toml with src/, 40 crates incl. v2 workspace + python + nvsim + patches): lib.rs/main.rs leading `//!` doc + first 100 lines (40) + module list w/ examples/benches/tests names (40); PLUS repo-wide sweep — leading `//!` doc block (first 30 lines) of every other .rs file (643 of 712) |
 | **doc-deep** (new) | 343 | 1,062 | EVERY `*.md` in the repo not already in the corpus (341 files full text: `.claude/` agents+commands+skills 217, `plugins/ruview/` 32, `archive/` v1 docs 26, `examples/` 17, `plans/` 10, `aether-arena/` 5, ui/python/references/benchmarks/tools/firmware/CLAUDE.md/PROOF.md...) + 2 plugin manifests (`.claude-plugin/marketplace.json`, `plugins/ruview/.claude-plugin/plugin.json`) |
 | **ui** (new) | 4 | 5 | full visible text content of `ui/*.html` (index, observatory, pose-fusion, viz) |
-| **Total** | **1,617 entries / 1,613 distinct paths** | **4,184** | |
+| **Total** | **1,617 entries / 1,613 distinct paths** | **4,306** | (final build; per-kind chunk counts: adr 1,037, doc 1,091, tutorial 22, crate 87, firmware 41, script 106, example 20, npm 6, crate-src 855, doc-deep 1,036, ui 5) |
 
 ### Count reconciliation (v1 → v2)
 
 v1 kinds reproduce EXACTLY (adr 1,037; doc 1,091; tutorial 16; crate 82; firmware 41) —
 only `script` intentionally changed (86 → 106 chunks, 40-line recursive). New kinds add
-crate-src 744 + doc-deep 1,062 + ui 5. Chunks assembled 4,184 = vectors in store 4,184 ✓
+crate-src + doc-deep + ui. Chunks assembled = vectors in store = **4,306** ✓ (final enriched
+build; an earlier draft totalled 4,184 and is superseded by this store — trust 4,306)
 (0 rejected).
 
 ## Verification queries (top hits, cosine distance, run at build time)

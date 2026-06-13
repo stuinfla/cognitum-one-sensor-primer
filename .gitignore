@@ -12,6 +12,9 @@ ruvector.db
 # personal purchase-history exports — never publish
 docs/amazon-hardware-*
 
+# KB MiniLM model cache (downloaded at build time; cached in CI, never source)
+kb/models-cache/
+
 # KB v1 backups (history lives in git)
 kb/*.v1.rvf
 kb/*.v1.json

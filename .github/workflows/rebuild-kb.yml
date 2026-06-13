@@ -1,0 +1,101 @@
+name: Rebuild RVF knowledge bases
+
+# Evergreen automation. The companion "Update RuView submodule" workflow bumps the RuView /
+# ruvector submodule POINTERS once a day. That bump is a commit that touches the `RuView` and
+# `ruvector` gitlink paths — which is exactly what triggers THIS workflow below. So: upstream
+# moves -> daily bump commit -> this rebuilds the KBs from the new checkout, guards them, and
+# commits the refreshed .rvf/sidecars/zips. Also runnable by hand from the Actions tab.
+on:
+  push:
+    paths:
+      - 'RuView'      # submodule gitlink — moves when the daily bump points it at a new SHA
+      - 'ruvector'    # submodule gitlink — same
+  workflow_dispatch:
+
+permissions:
+  contents: write     # needed to commit the rebuilt artifacts back
+
+# If a bump lands while a previous rebuild is still running, cancel the old one — only the
+# newest checkout matters.
+concurrency:
+  group: rebuild-kb
+  cancel-in-progress: true
+
+env:
+  # MiniLM model cache lives in the workspace so actions/cache can persist it between runs.
+  KB_MODEL_CACHE: ${{ github.workspace }}/kb/models-cache
+  EMBED_MODEL: Xenova/all-MiniLM-L6-v2
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out the repo WITH submodules at the SHAs the bump commit pinned.
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0          # need full history so `git describe` works for the README pins
+
+      # 2. Node 20 (the build/guard scripts are Node 18+; 20 is the current LTS).
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install the two runtime deps in kb/. On ubuntu-x64, @ruvector/rvf resolves through
+      #    @ruvector/rvf-node which ships a linux-x64-gnu prebuilt, so no native build needed.
+      #    resolve-deps.mjs then finds both from kb/node_modules (the portable path).
+      - name: Install KB deps
+        working-directory: kb
+        run: npm i @ruvector/rvf @xenova/transformers
+
+      # 4. Cache the MiniLM model dir. Key on the model name so a model change busts the cache.
+      #    First run downloads from HuggingFace (allowRemoteModels=true when not cached); later
+      #    runs restore it and the builds run fully offline.
+      - name: Cache MiniLM model
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.KB_MODEL_CACHE }}
+          key: minilm-${{ env.EMBED_MODEL }}-v1
+
+      # 5. Rebuild BOTH knowledge bases from the freshly-checked-out submodules.
+      #    KB_REPO_ROOT points the build scripts at this workspace (they default to it anyway).
+      - name: Rebuild ruvector KB
+        env:
+          KB_REPO_ROOT: ${{ github.workspace }}
+        run: node kb/.build-ruvector-kb/build.mjs
+
+      - name: Rebuild RuView KB
+        env:
+          KB_REPO_ROOT: ${{ github.workspace }}
+        run: node kb/build-ruview-kb.mjs
+
+      # 6. ANTI-TRUNCATION GUARD (critical). Fails the whole job (exit 1) if either KB is broken:
+      #    passages/index/idmap line-count parity, the 200/240-char preview-truncation bug, or a
+      #    canned query that returns no text. A red guard means NOTHING gets committed.
+      - name: Guard — parity + anti-truncation + live query
+        run: node kb/guard-check.mjs
+
+      # 7. Rebuild the self-contained download zips (only after the guard is green).
+      - name: Rebuild bundle zips
+        run: node kb/make-bundles.mjs
+
+      # 8. Refresh the README's generated-date + pinned submodule SHAs, and write the marker.
+      - name: Update README pins + write build marker
+        run: node kb/update-readme-pins.mjs
+
+      # 9. Commit + push the refreshed artifacts as github-actions[bot]. No-op if nothing changed.
+      - name: Commit rebuilt KBs
+        run: |
+          if git diff --quiet -- kb/; then
+            echo "No KB changes to commit."
+            exit 0
+          fi
+          RV_DESC=$(git -C RuView describe --tags --always || echo unknown)
+          RVEC_SHA=$(git -C ruvector rev-parse --short HEAD || echo unknown)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kb/
+          git commit -m "Rebuild KBs: RuView ${RV_DESC}, ruvector ${RVEC_SHA}"
+          git push
