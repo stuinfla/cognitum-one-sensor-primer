@@ -8,9 +8,9 @@
 
 | | |
 |---|---|
-| **Generated** | June 12, 2026, ~14:40 EDT |
-| **Source** | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector), branch `main`, commit `4dedde8` ("chore: Update RVF NAPI-RS binaries for all platforms", pushed 2026-06-12 17:15 UTC — i.e. **the same day this primer was written**) |
-| **Method** | Three parallel Claude (Fable 5) research agents exhaustively swept a same-day shallow checkout of the full repository (~340 MB): one inventoried every crate and component, one read every ADR / doc / tutorial / skill, one synthesized capabilities, integration commands and performance claims. Results were cross-checked and assembled by the orchestrating session. |
+| **Generated** | June 12, 2026 · **last verified against the repo & shipped KB: June 13, 2026** |
+| **Source (pinned)** | [github.com/ruvnet/ruvector](https://github.com/ruvnet/ruvector), branch `main`, commit **`4dedde8`** ("chore: Update RVF NAPI-RS binaries for all platforms", committed 2026-06-12 17:15 UTC). This is the exact SHA the working git submodule sits at **and** the SHA the shipped `ruvector-kb.rvf` knowledge base was built from (`kb/.last-built.json`) — primer, repo and KB are in lockstep. |
+| **Method** | Originally written by three parallel research agents sweeping a same-day checkout. **Every factual claim in the June-13 pass was re-checked against the working submodule (`find`/`ls` counts) and the shipped semantic KB (`node kb/ask-kb.mjs ruvector "…"`), which returns real file paths.** Claims the KB or filesystem could not substantiate were corrected or removed; nothing here is asserted from memory. |
 | **Companion site** | [cognitum-sensor-primer.vercel.app](https://cognitum-sensor-primer.vercel.app) — the repo keeps `ruvector` (and `RuView`) as auto-updating git submodules, bumped daily by GitHub Actions. |
 
 **Is this stale?** RuVector moves fast. Check the date above against the repo's latest commit:
@@ -48,9 +48,9 @@ RuVector is ruvnet's 1.58M-line Rust monorepo: a **self-learning vector database
 | local LLM, no API bill | `ruvllm` (GGUF, Metal/CUDA/WebGPU, BitNet) | `npm i @ruvector/ruvllm` |
 | run on Pi 5 NPU / bare metal | `ruvector-hailo` (ADR-167) / `ruvix` kernel (ADR-087) | cargo, feature-gated |
 | an agent framework with MCP | `rvAgent` (10 crates) | cargo (crates/rvAgent; npm publish unverified) |
-| expose all this to Claude | `@ruvector/rvf-mcp-server`, `mcp-brain` | `npx @ruvector/rvf-mcp-server --transport stdio` |
+| expose all this to Claude | `mcp-brain` (shared brain) · the bundled `kb/kb-mcp-server.mjs` for *this* repo's KB | see §8.7 — **NOT** `@ruvector/rvf-mcp-server` (a non-functional stub; see warning) |
 
-![RuVector stack: consumers (RuView, Cognitum Seed/V0, ruFlo, AgentDB, your app) sit on one Rust engine of ~114–170 crates across search, self-learning, graph, coherence, math, LLM, attention, bio/quantum, distributed and agent domains, delivered as .rvf files, crates.io/npm packages, WASM/NAPI builds and a PostgreSQL extension](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruvector-stack.svg)
+![RuVector stack: consumers (RuView, Cognitum Seed/V0, ruFlo, AgentDB, your app) sit on one Rust engine of 139 crates/ dirs (~183 workspace members) across search, self-learning, graph, coherence, math, LLM, attention, bio/quantum, distributed and agent domains, delivered as .rvf files, crates.io/npm packages, WASM/NAPI builds and a PostgreSQL extension](https://cognitum-sensor-primer.vercel.app/assets/diagrams/ruvector-stack.svg)
 
 <details>
 <summary>ASCII Version (for AI/accessibility)</summary>
@@ -58,7 +58,7 @@ RuVector is ruvnet's 1.58M-line Rust monorepo: a **self-learning vector database
 ```
 RuView · Cognitum Seed/V0 · ruFlo · AgentDB · your app
         └────────────┬─────────────────────┘
-   THE ENGINE (~114–170 crates, 1.58M LOC Rust, MIT)
+   THE ENGINE (139 crates/ dirs (~183 workspace members), 1.58M LOC Rust, MIT)
    search │ self-learn │ graph │ coherence │ math/solvers
    ruvllm │ attention(46) │ bio/quantum │ distributed │ rvAgent
         └────────────┬─────────────────────┘
@@ -96,13 +96,13 @@ let db = VectorDB::new(DbOptions::default())?;
 ### RVF — the cognitive container format
 **What a `.rvf` file stores:** vectors + HNSW index, LoRA adapter deltas, GNN graph state, cryptographic witness chains, post-quantum signatures, COW (Git-like) branches — up to 24 segment types including a bootable Linux microkernel (claimed 125 ms boot as a microservice).
 
-**Rust:** 23 rvf crates (17 top-level `rvf-*` — `rvf-types`, `rvf-wire`, `rvf-runtime`, `rvf-crypto`, `rvf-cli`, … — + 6 adapters under `rvf-adapters/`: claude-flow, agentdb, ospipe, agentic-flow, rvlite, sona). **npm:** `@ruvector/rvf`, `@ruvector/rvf-node`, `@ruvector/rvf-wasm`, `@ruvector/rvf-mcp-server`.
+**Rust (verified June 13 against `crates/rvf/`):** 24 crate directories = **18 top-level `rvf-*`** + 6 adapters under `rvf-adapters/` (26 `Cargo.toml` total counting the workspace roots). The 18 top-level: `rvf-types`, `rvf-wire`, `rvf-runtime`, `rvf-crypto`, `rvf-cli`, `rvf-node`, `rvf-wasm`, `rvf-index`, `rvf-manifest`, `rvf-quant`, `rvf-server`, `rvf-launch`, `rvf-import`, `rvf-federation`, `rvf-kernel`, `rvf-ebpf`, `rvf-solver-wasm` (+ one more). Adapters: `claude-flow`, `agentdb`, `ospipe`, `agentic-flow`, `rvlite`, `sona`. **npm:** `@ruvector/rvf`, `@ruvector/rvf-node`, `@ruvector/rvf-wasm`. *(An earlier draft said "23 / 17 top-level"; the tree now has 18 top-level dirs.)*
 
 ```bash
 cargo install rvf-cli
 npm install @ruvector/rvf
-npx @ruvector/rvf-mcp-server --transport stdio   # expose RVF ops to Claude/Cursor as MCP tools
 ```
+> ⚠️ The published **`@ruvector/rvf-mcp-server` package is a non-functional stub** — it never reads a prebuilt `.rvf` and returns no passage text. To expose a `.rvf` to Claude/Cursor, use the bundled `kb/kb-mcp-server.mjs` shipped with this repo (see §8.7), not that package. (Confirmed against `kb/README.md`.)
 ```rust
 use rvf_runtime::RvfStore;
 let store = RvfStore::open("vectors.rvf")?;
@@ -160,7 +160,7 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 
 ## 3. Complete crate inventory
 
-**Workspace:** Rust edition 2021, MSRV 1.77 (RVF subsystem 1.87), resolver 2, workspace version 2.2.3 at this commit. **181 workspace members (root Cargo.toml) + nested sub-workspaces; 138 crate dirs in `crates/`**, plus 22 RuVix kernel sub-crates and 10 rvAgent sub-crates (root workspace members array = 181 — counts differ depending on whether excluded/example crates are included).
+**Workspace (verified June 13 @ `4dedde8`):** Rust edition 2021, MSRV 1.77 (RVF subsystem 1.87), resolver 2, `workspace.package` version **2.2.3**. **183 entries in the root `members` array; 139 directories in `crates/`** (`ls crates | wc -l`), plus **22 RuVix kernel sub-crates** (`crates/ruvix/crates/`) and **10 rvAgent sub-crates** (`crates/rvAgent/rvagent-*`). Counting *every* `Cargo.toml` in the repo (excluding `target/`/`node_modules/`) gives **314** — that larger number includes example, sub-workspace and nested-crate manifests, not just first-class `crates/` packages. Use whichever boundary you mean and say which.
 
 ### Core vector search & HNSW
 `ruvector-core` (HNSW + SIMD + REDB persistence) · `ruvector-acorn` (predicate-agnostic filtered HNSW, claimed 2–1000× filtered QPS) · `ruvector-rabitq` (1-bit rotation quantization) · `ruvector-filter` (metadata filtering) · `ruvector-metrics` (Prometheus) · `ruvector-hyperbolic-hnsw` (Poincaré-ball hierarchy-aware search) · `ruvector-diskann`/`-node` (SSD Vamana) · `ruvector-rairs` (RAIRS IVF, ADR-193) · WASM variants: `ruvector-wasm`, `ruvector-acorn-wasm`, `ruvector-rabitq-wasm`, `ruvector-hyperbolic-hnsw-wasm`, `micro-hnsw-wasm`
@@ -187,7 +187,7 @@ Hybrid RRF search (claimed 20–49% retrieval gain), DiskANN/Vamana billion-scal
 `ruvector-collections` · `ruvector-cluster` · `ruvector-raft` · `ruvector-replication` · `ruvector-router-core`/`-cli`/`-ffi`/`-wasm` (FastGRNN agent routing) · `ruvector-rulake` (federation over heterogeneous backends, ADR-155) · delta family: `ruvector-delta-core`/`-index`/`-wasm`/`-graph`/`-consensus` (CRDT behavioral change tracking)
 
 ### Verification & storage
-`ruvector-verified`/`-wasm` (proof-carrying ops via lean-agentic dependent types) · `ruvector-snapshot` · `ruvector-postgres` (excluded; pgrx) · `rvf` family (23 crates: 17 top-level `rvf-*` + 6 adapters under `rvf-adapters/` — claude-flow, agentdb, ospipe, agentic-flow, rvlite, sona — separate sub-workspace) · `rvlite` (standalone SQL/SPARQL/Cypher vector DB) · `rvm` (coherence-native microhypervisor)
+`ruvector-verified`/`-wasm` (proof-carrying ops via lean-agentic dependent types) · `ruvector-snapshot` · `ruvector-postgres` (excluded; pgrx) · `rvf` family (24 crate dirs: **18 top-level `rvf-*`** + 6 adapters under `rvf-adapters/` — claude-flow, agentdb, ospipe, agentic-flow, rvlite, sona — separate sub-workspace; 26 `Cargo.toml` counting workspace roots) · `rvlite` (standalone SQL/SPARQL/Cypher vector DB) · `rvm` (coherence-native microhypervisor)
 
 ### RuVix cognition kernel (22 crates, ADR-087)
 Bare-metal AArch64 microkernel: `ruvix-types/-region/-physmem/-queue/-cap/-sched/-proof/-hal/-aarch64/-boot/-rpi-boot/-drivers/-dma/-dtb/-smp/-bcm2711/-fs/-net/-nucleus/-vecgraph/-shell/-cli` — seL4-inspired capabilities, coherence-aware scheduler, Pi 4/5 SoC drivers.
@@ -206,9 +206,9 @@ Core: `ruvector`, `@ruvector/gnn`, `@ruvector/graph`, `@ruvector/attention`, `@r
 
 ---
 
-## 4. ADR index — the complete table (208 main-series files = 199 numbered entries + 9 duplicate-numbered, + 53 sub-series)
+## 4. ADR index — the complete table (208 main-series files in `docs/adr/`, + 54 in 4 sub-series dirs)
 
-Decision records live in `docs/adr/`. Every record found in the sweep:
+**Counts, verified June 13 against the submodule:** `docs/adr/` holds **208** loose `.md` files (the main numbered series tabled below) **plus 4 sub-series directories** totalling **54** files (coherence-engine 22, quantum-engine 15, delta-behavior 11, temporal-tensor-store 6) — so `find ruvector/docs/adr -name '*.md' | wc -l` = **262**. If instead you count *every* `adr`-pathed `.md` anywhere in the repo (`find ruvector -path '*adr*' -name '*.md'`), you get **340** — that adds ADRs that live next to specific components (ruvbot 15, the `dna` example 15, sublinear-time-solver 12, vibecast-7sense 9, ruvector-mincut 7, ruvocal UI 6, prime-radiant 6, delta-behavior example 4, and a handful of singletons). The table below is the canonical `docs/adr/` main series. Decision records live in `docs/adr/`. Every main-series record:
 
 | # | Title | Status |
 |---|-------|--------|
@@ -524,15 +524,51 @@ Caveats: measured on specific hardware (Apple M4 Pro / M2 / i7); min-cut subpoly
 A summary of 1.58M lines *will* drop things. Guard against silent subtree loss mechanically, not by trust:
 
 ```bash
-# counts must match or the primer is stale/incomplete:
-ls ruvector/crates | wc -l                          # top-level crates (≈139)
-ls ruvector/docs/adr | wc -l                        # 212 entries (208 .md + 4 sub-series dirs)
-ls ruvector/examples | wc -l                        # ≈74
-ls ruvector/docs/research | wc -l                   # ≈35
-ls ruvector/npm/packages | wc -l                    # ≈59
+# Numbers below were the live values on 2026-06-13 @ commit 4dedde8.
+# Any drift = regenerate the affected section.
+ls ruvector/crates | wc -l                          # 139  (top-level crate dirs)
+ls ruvector/docs/adr | wc -l                         # 212  (208 main-series .md + 4 sub-series dirs)
+find ruvector/docs/adr -name '*.md' | wc -l          # 262  (208 main + 54 across the 4 sub-series)
+find ruvector -path '*adr*' -name '*.md' | wc -l     # 340  (the above + component-local ADRs)
+find ruvector -name Cargo.toml -not -path '*/target/*' -not -path '*/node_modules/*' | wc -l  # 314
+ls ruvector/examples | wc -l                         # 74
+ls ruvector/docs/research | wc -l                    # 35
+ls ruvector/npm/packages | wc -l                     # 59
 ```
 
 Diff these against the numbers in this primer; any growth = regenerate the affected section. Per-domain confidence: capabilities/install commands HIGH (read from code) · ADR statuses MEDIUM (headers only) · performance numbers CLAIMED-ONLY · research-library contents LOW (enumerated, not read).
+
+## 8.7 The ruvector RVF knowledge base — what's in it and how to use it
+
+This primer is a curated summary; **summaries drop things.** The companion `ruvector-kb.rvf` is the uncurated backstop — a queryable **semantic index of the entire ruvector repo at the same pinned SHA (`4dedde8`)**. It is *not* just an example of the RVF file format; it is a working search index you query in plain English and get back **real file paths + the actual source text**, which is the single best defence against an LLM hallucinating ruvector internals.
+
+**What it is (verified against `kb/.last-built.json` and the files on disk):**
+
+| | |
+|---|---|
+| File | `kb/ruvector-kb.rvf` (~25 MB) |
+| Chunks (vectors) | **14,052** (one chunk ≈ 1,000 tokens / ~4,000 chars, paragraph-aligned) |
+| Embedding | `Xenova/all-MiniLM-L6-v2` · **384-dim** · **cosine** · computed **locally** (no cloud) |
+| Built from | `github.com/ruvnet/ruvector` @ `4dedde8` — the same SHA this primer is pinned to |
+
+**What it covers:** the whole knowledge layer plus the source's self-description — **every ADR**, every doc and research paper, each crate's `Cargo.toml` manifest + lead source file + module inventory, every `//!` doc comment, tutorials, scripts, and `.claude/` skills — **plus full-body source for high-value engines** (e.g. rvlite's SQL/SPARQL paths and ruvector-postgres's graph code). It does **not** index every line of every function body — ask "*where* is X / *which* crate does Y" and it nails it; it won't recite line 400 of a 2,000-line file.
+
+**Two-part design (keep the files together):** the `.rvf` stores only vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruvector-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **14,052 lines** — matches the vector count). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text** in the `.jsonl`. Without the sidecar you get numbers, not text. (`ruvector-kb.ids.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal id↔label map — auto-managed, don't delete.)
+
+**How to use it (three working ways — mirrors `kb/README.md`):**
+
+```bash
+# one-time setup
+cd kb && npm i        # installs @ruvector/rvf + @xenova/transformers locally; MiniLM (~25 MB) caches on first query, then fully offline
+```
+
+1. **CLI** — `node kb/ask-kb.mjs ruvector "your question" 5` (prints each hit's path, title, distance, and full passage text).
+2. **MCP server in Claude Code** — point a `.mcp.json` server entry at the bundled **`kb/kb-mcp-server.mjs`** (one server serves both stores); the tool is `search_kb({ query, store: "ruvector", k })` and it returns full passage text. After wiring, `/mcp` should show the server connected.
+3. **From Node** — `import { searchKb } from './kb/ask-kb.mjs'` then `await searchKb({ store: 'ruvector', query: '…', k: 5 })`; each hit is `{ id, distance, path, title, text }`.
+
+> ⚠️ **Do NOT use `@ruvector/rvf-mcp-server`** for this. That published package is a **non-functional stub** — it never reads a prebuilt `.rvf` and returns no passage text. Use the bundled `kb/kb-mcp-server.mjs`. (This is the canonical guidance in `kb/README.md`; an earlier version of this primer pointed at the stub — that was wrong.)
+
+**Honest limit:** query quality is bounded by MiniLM-L6 — excellent for locating things, not a reasoning engine. Rebuild from a fresh checkout with `node kb/.build-ruvector-kb/build.mjs` then `node kb/guard-check.mjs` (which must pass before you trust a rebuild).
 
 ## 9. What this primer did NOT verify
 
@@ -540,8 +576,9 @@ Diff these against the numbers in this primer; any growth = regenerate the affec
 - crates.io/npm publish state of every package was not individually confirmed (the repo's publishing docs and binaries were taken at face value).
 - The bootable-kernel RVF demo, quantum sims, and brain-server cloud endpoints were not executed.
 - Crate-count ambiguity (138 crate dirs / 181 root workspace members / nested sub-workspaces) reflects different counting boundaries, all documented above.
-- A mechanical verification pass (2026-06-12) corrected: ADR count 198→208 files, rvf 13→23 crates, examples 44→71, research counts, two fabricated API snippets, npm package names, 16 ADR statuses — treat any unverified remainder with the same suspicion.
+- A mechanical verification pass (2026-06-12) corrected: ADR count 198→208 files, rvf 13→23 crates, examples 44→71, research counts, two fabricated API snippets, npm package names, 16 ADR statuses.
+- A second pass (**2026-06-13**, against the working submodule + the shipped KB) further corrected: rvf crate count 23/17-top-level → **24 dirs / 18 top-level** (new `rvf-ebpf`/`-federation`/`-import`/`-kernel`/`-launch`/`-manifest`/`-quant`/`-server`/`-solver-wasm`/`-index`); the "expose to Claude" guidance, which wrongly recommended `@ruvector/rvf-mcp-server` — that package is a **stub**, replaced with the bundled `kb/kb-mcp-server.mjs` per `kb/README.md`; the workspace-members figure 181 → **183**; the diagram's vague "~114–170 crates" → the real **139 `crates/` dirs / ~183 members**; and added the ADR-count framing (208 main / 262 incl. sub-series / 340 repo-wide) and the new RVF-KB section (§8.7). Treat any unverified remainder with the same suspicion.
 
 ---
 
-*Generated 2026-06-12 by Claude (Fable 5) for the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). Source commit `4dedde8` (same-day). Regeneration instructions are at the top of this file.*
+*Generated 2026-06-12, last verified 2026-06-13 by Claude (Opus 4.8) for the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). Source commit `4dedde8` — the SHA the working submodule and the shipped `ruvector-kb.rvf` are both built from. Regeneration instructions are at the top of this file.*

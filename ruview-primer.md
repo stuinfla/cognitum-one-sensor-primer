@@ -8,9 +8,9 @@
 
 | | |
 |---|---|
-| **Generated** | June 12, 2026, ~16:00 EDT |
-| **Source** | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) — branch `main`, commit `3d7530f0`, tag **v1701**, committed **2026-06-12 09:09 EDT** (same day this primer was written). `ruvnet/wifi-densepose` is the same repository — it was renamed; the old URL redirects. |
-| **Method** | Three parallel Claude (Fable 5) research agents exhaustively swept a same-day checkout (~160 MB): one mapped every crate, REST route, WebSocket shape and UDP packet; one indexed all 160 ADR files (156 unique numbers), 90 scripts, both tutorials, the firmware tree and the docs; one graded every capability works-today / experimental / stub with code citations. The orchestrating session cross-checked them against each other and against directly-verified repo facts. |
+| **Generated** | June 12, 2026 · **last verified against the repo & shipped KB: June 13, 2026** |
+| **Source (pinned)** | [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView) — branch `main`, commit **`3d7530f0`**, `git describe` = **v1701**, committed **2026-06-12 09:09 EDT**. This is the exact SHA the working git submodule sits at **and** the SHA the shipped `ruview-kb.rvf` was built from (`kb/.last-built.json`, which records `describe: "v1701"`). `ruvnet/wifi-densepose` is the same repository — renamed; the old URL redirects. |
+| **Method** | Originally written by three parallel research agents. **The June-13 pass re-checked every count against the working submodule (`find`/`ls`) and verified specific facts against the shipped semantic KB (`node kb/ask-kb.mjs ruview "…"`), which returns real file paths.** Counts confirmed: 160 ADR-numbered files (162 `.md` incl. README in `docs/adr/`; 168 if you count `adr`-pathed `.md` anywhere in the repo), 39 `v2/crates` dirs (41 `Cargo.toml` repo-wide), 90 scripts, 76 firmware C/H files. Nothing here is asserted from memory. |
 | **Companion docs** | `ruvector-primer.md` (the engine underneath, same site) · the [Complete Walkthrough](https://cognitum-sensor-primer.vercel.app/guide) (beginner end-to-end) |
 
 **Is this stale?** RuView ships multiple automated releases per day. Check:
@@ -277,7 +277,9 @@ wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API fo
 
 ---
 
-## 8. The complete ADR index (160 ADR files / 156 unique numbers)
+## 8. The complete ADR index (160 ADR-numbered files / 156 unique numbers)
+
+**Counts, verified June 13:** `docs/adr/` holds **162 `.md`** files — **160 are ADR-numbered** (highest is ADR-163; 156 unique numbers after gaps/dupes, see note under the table), the other two are `README.md` + an index. Counting `adr`-pathed `.md` anywhere in the repo gives **168** (adds `v2/docs/adr` 3, `plugins/ruview` 1, `docs/research/BFLD` 1, a `.claude` singleton). The table below is the canonical `docs/adr/` numbered series.
 
 | # | Title | Status |
 |---|---|---|
@@ -393,7 +395,7 @@ wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API fo
 | 115 | **Home Assistant via MQTT + Matter** | — |
 | 116 | HA + Matter as Seed Cog | — |
 | 117 | PyPI Modernization (PyO3/maturin) | — |
-| 118 | **BFLD — Beamforming Feedback Detection** | — |
+| 118 | **BFLD — Beamforming Feedback Layer for Detection** | — |
 | 119 | BFLD Frame Format & Wire Protocol | — |
 | 120 | BFLD Privacy Class & Hash Rotation | — |
 | 121 | BFLD Identity Risk Scoring | — |
@@ -491,6 +493,38 @@ wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API fo
 
 ---
 
+## 11.5 The RuView RVF knowledge base — what's in it and how to use it
+
+This primer is a curated summary; **summaries drop things.** The companion `ruview-kb.rvf` is the uncurated backstop — a queryable **semantic index of the entire RuView repo at the same pinned commit (`3d7530f0` / v1701)**. You query it in plain English and get back **real file paths + the actual source text** — the best defence against an LLM inventing RuView internals (a fabricated CLI flag, a wrong UDP magic, a non-existent crate).
+
+**What it is (verified against `kb/.last-built.json` and the files on disk):**
+
+| | |
+|---|---|
+| File | `kb/ruview-kb.rvf` (~7.4 MB) |
+| Chunks (vectors) | **4,306** (one chunk ≈ 1,000 tokens / ~4,000 chars, paragraph-aligned) |
+| Embedding | `Xenova/all-MiniLM-L6-v2` · **384-dim** · **cosine** · computed **locally** (no cloud) |
+| Built from | `github.com/ruvnet/RuView` @ `3d7530f0`, `git describe` = **v1701** — the same commit this primer is pinned to |
+
+**What it covers:** the repo's knowledge layer plus the source's self-description — **every ADR**, the docs (incl. the 2,468-line user-guide), research specs (e.g. the Soul Signature spec), each crate's manifest + lead source + module inventory, every `//!` doc comment, the 90 scripts, the **firmware headers** (`csi_collector`, the `0xC511` packet defs, the C6 sync modules), `provision.py` flags, and UI text. It does **not** index every line of every function body — it locates "*where* is the Kalman tracker / *which* magic is the 8-dim packet," not line 400 of a 2,000-line `main.rs`.
+
+**Two-part design (keep the files together):** the `.rvf` stores vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruview-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **4,306 lines** — matches the vector count). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text**. Without the sidecar you get numbers, not text. (`ruview-kb.meta.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal map — auto-managed, don't delete.)
+
+**How to use it (three working ways — mirrors `kb/README.md`):**
+
+```bash
+# one-time setup (shared with the ruvector KB)
+cd kb && npm i        # installs @ruvector/rvf + @xenova/transformers locally; MiniLM caches on first query, then offline
+```
+
+1. **CLI** — `node kb/ask-kb.mjs ruview "your question" 5` (prints each hit's path, title, distance, full passage text). Examples: `"how do I calibrate an empty room"`, `"0xC5110003 8-dim feature vector"`.
+2. **MCP server in Claude Code** — point a `.mcp.json` entry at the bundled **`kb/kb-mcp-server.mjs`** (one server serves *both* stores); the tool is `search_kb({ query, store: "ruview", k })` and it returns full passage text. After wiring, `/mcp` should show it connected.
+3. **From Node** — `import { searchKb } from './kb/ask-kb.mjs'` then `await searchKb({ store: 'ruview', query: '…', k: 5 })`; each hit is `{ id, distance, path, title, text }`.
+
+> ⚠️ **Do NOT use `@ruvector/rvf-mcp-server`** for this. That published package is a **non-functional stub** — it never reads a prebuilt `.rvf` and returns no passage text. Use the bundled `kb/kb-mcp-server.mjs`. (Canonical guidance in `kb/README.md`.)
+
+**Honest limit:** query quality is bounded by MiniLM-L6 — excellent for locating things, not a reasoning engine. Rebuild from a fresh checkout with `node kb/build-ruview-kb.mjs` then `node kb/guard-check.mjs` (which must pass before you trust a rebuild).
+
 ## 12. What this primer did NOT verify
 
 - No hardware was flashed and no server was run against live CSI for this document; "✅" means verified-in-code/witness-logs, not re-tested on a bench.
@@ -498,7 +532,8 @@ wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API fo
 - A few deep specifics came from single-agent reads and may have approximate line numbers; the three agents disagreed on workspace crate count (15 vs 38 — the 38-crate enumeration matches the current tree; 15 is the stale figure in the repo's own CLAUDE.md).
 - The `aether_embedding` field layout reported by one agent conflicts with the documented 48-byte ADR-069 packet; this primer uses the documented 8-dim table (verified in `docs/user-guide.md`).
 - Mechanical verification (2026-06-12) corrected: ADR 163→160 files, invented CLI flags (`--mesh-key`, `--specialists`, `--room`, `--mqtt-privacy-mode`), firmware-file and blueprint counts, and flagged release-note-only firmware claims.
+- A second pass (**2026-06-13**, against the working submodule + the shipped KB) confirmed the counts (160 ADR-numbered files / 162 `.md` in `docs/adr/` / 168 repo-wide; 39 `v2/crates`; 90 scripts; 76 firmware C/H), corrected the **ADR-118 title** (it is "Beamforming Feedback **Layer** for Detection" on disk, not "…Detection"), added the ADR-count framing, added the RuView RVF-KB section (§11.5), and reconfirmed the pinned commit is `3d7530f0` / **v1701** (NOT "v0.7.1-esp32-70" — that string mixes the *firmware* version scheme with the rolling-server scheme; `git describe` on the pinned submodule returns `v1701`, which is what `kb/.last-built.json` records).
 
 ---
 
-*Generated 2026-06-12 by Claude (Fable 5) for the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). Source: RuView main @ `3d7530f0` (v1701, same-day). Companion: `ruvector-primer.md`. Regeneration instructions at the top of this file.*
+*Generated 2026-06-12, last verified 2026-06-13 by Claude (Opus 4.8) for the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). Source: RuView main @ `3d7530f0` (`git describe` = v1701) — the commit the working submodule and the shipped `ruview-kb.rvf` are both built from. Companion: `ruvector-primer.md`. Regeneration instructions at the top of this file.*
