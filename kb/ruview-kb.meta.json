@@ -30144,6 +30144,160 @@
    "title": "plugins/ruview/.claude-plugin/plugin.json",
    "chunk": "1/1",
    "preview": "Plugin manifest plugins/ruview/.claude-plugin/plugin.json: { \"name\": \"ruview\", \"description\": \"End-to-end RuView (WiFi-DensePose) toolkit for Claude Code: onboarding, ESP32 hardware setup, configuration, sensing applications, model trai"
+  },
+  "4307": {
+   "path": "PRIMER#about-this-document-read-this-first",
+   "kind": "primer-orientation",
+   "title": "About this document (read this first)",
+   "chunk": "1/1",
+   "preview": "# The RuView / WiFi-DensePose Primer **A drop-in AI context document — drag this file into any project or AI chat and your assistant starts already knowing RuView's architecture, every crate, every API route, the wire protocol, the trainin"
+  },
+  "4308": {
+   "path": "PRIMER#0-executive-summary-read-this-if-you-read-nothing-else",
+   "kind": "primer-orientation",
+   "title": "0. Executive summary (read this if you read nothing else)",
+   "chunk": "1/1",
+   "preview": "## 0. Executive summary (read this if you read nothing else) RuView turns cheap ESP32 boards into through-wall human sensors: **presence, person count, breathing rate, heart rate, motion, falls work today**; skeletal pose is heuristic out "
+  },
+  "4309": {
+   "path": "PRIMER#0-1-instant-playbooks-task-exact-steps",
+   "kind": "primer-orientation",
+   "title": "0.1 Instant playbooks (task → exact steps)",
+   "chunk": "1/1",
+   "preview": "## 0.1 Instant playbooks (task → exact steps) **▶ \"I just got a Cognitum One Seed and a batch of fresh ESP32-C6s — make them work.\"** 1. Demo first, no hardware: `docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest` → `curl l"
+  },
+  "4310": {
+   "path": "PRIMER#0-2-fault-table-symptom-cause-fix",
+   "kind": "primer-orientation",
+   "title": "0.2 Fault table (symptom → cause → fix)",
+   "chunk": "1/1",
+   "preview": "## 0.2 Fault table (symptom → cause → fix) | Symptom | Likeliest cause | Fix | |---|---|---| | Flash does nothing | charge-only USB-C cable; or MR60 case-edge port | data cable; inner port; hold BOOT | | Won't join WiFi | 5 GHz-only SSID |"
+  },
+  "4311": {
+   "path": "PRIMER#0-3-glossary-so-terms-are-never-guessed",
+   "kind": "primer-orientation",
+   "title": "0.3 Glossary (so terms are never guessed)",
+   "chunk": "1/1",
+   "preview": "## 0.3 Glossary (so terms are never guessed) **CSI** — Channel State Information: per-subcarrier amplitude+phase of a WiFi link; the raw signal. **Subcarrier/tone** — one OFDM frequency bin; more tones = finer body detail (S3 HT ≈ 56–114, "
+  },
+  "4312": {
+   "path": "PRIMER#1-what-ruview-is",
+   "kind": "primer-orientation",
+   "title": "1. What RuView is",
+   "chunk": "1/1",
+   "preview": "## 1. What RuView is RuView turns **Channel State Information** — the fine-grained way bodies disturb WiFi radio — into human understanding: presence, person count, breathing rate, heart rate, motion/activity, fall detection, and (with tra"
+  },
+  "4313": {
+   "path": "PRIMER#2-architecture-at-a-glance",
+   "kind": "primer-orientation",
+   "title": "2. Architecture at a glance",
+   "chunk": "1/1",
+   "preview": "## 2. Architecture at a glance ![RuView data flow: ESP32 nodes stream CSI over UDP 5005 to the Rust sensing-server, which serves dashboards/REST, WebSocket streams and MQTT; an 8-dim feature stream on UDP 5006 goes through a host bridge in"
+  },
+  "4314": {
+   "path": "PRIMER#3-the-crates-v2-workspace-39-incl-the-ruv-neural-git-submodule-and-homecore-plug",
+   "kind": "primer-orientation",
+   "title": "3. The crates (v2/ workspace, 39 — incl. the `ruv-neural` git submodule and `homecore-plugin-example`)",
+   "chunk": "1/2",
+   "preview": "## 3. The crates (v2/ workspace, 39 — incl. the `ruv-neural` git submodule and `homecore-plugin-example`) ### Sensing core | Crate | Purpose | |---|---| | `wifi-densepose-core` | CSI frame primitives, types, traits, errors | | `wifi-densep"
+  },
+  "4315": {
+   "path": "PRIMER#3-the-crates-v2-workspace-39-incl-the-ruv-neural-git-submodule-and-homecore-plug",
+   "kind": "primer-orientation",
+   "title": "3. The crates (v2/ workspace, 39 — incl. the `ruv-neural` git submodule and `homecore-plugin-example`)",
+   "chunk": "2/2",
+   "preview": " scaffolds) `homecore` (state machine/event bus) · `homecore-api` (HA wire-compatible REST/WS) · `homecore-automation` · `homecore-assist` (voice/intent, measured 0.855 cosine match) · `homecore-hap` (Apple Home — ⚠️ stub) · `homecore-plugi"
+  },
+  "4316": {
+   "path": "PRIMER#4-complete-rest-api-sensing-server",
+   "kind": "primer-orientation",
+   "title": "4. Complete REST API (sensing-server)",
+   "chunk": "1/1",
+   "preview": "## 4. Complete REST API (sensing-server) Registered in `v2/crates/wifi-densepose-sensing-server/src/main.rs` (~line 6972+): ``` Health: GET /health /health/live /health/ready /health/version /health/metrics Info: GET / /api/v"
+  },
+  "4317": {
+   "path": "PRIMER#5-udp-wire-protocol-the-0xc511-family",
+   "kind": "primer-orientation",
+   "title": "5. UDP wire protocol (the 0xC511 family)",
+   "chunk": "1/1",
+   "preview": "## 5. UDP wire protocol (the 0xC511 family) All little-endian, magic at bytes 0–3. Defined in `wifi-densepose-hardware/src/esp32_parser.rs` and firmware `csi_collector.h`. | Magic | Packet | Notes | |---|---|---| | `0xC5110001` | **Raw CS"
+  },
+  "4318": {
+   "path": "PRIMER#6-cli-reference",
+   "kind": "primer-orientation",
+   "title": "6. CLI reference",
+   "chunk": "1/1",
+   "preview": "## 6. CLI reference ### sensing-server flags `--source auto|simulate|wifi|esp32` · `--http-port` (default **8080** from source, **3000** in Docker) · `--ws-port` (8765/3001) · `--udp-port 5005` · `--ui-path` · `--tick-ms 100` (default 100)"
+  },
+  "4319": {
+   "path": "PRIMER#7-capabilities-graded-honestly",
+   "kind": "primer-orientation",
+   "title": "7. Capabilities, graded honestly",
+   "chunk": "1/2",
+   "preview": "## 7. Capabilities, graded honestly | Capability | Status | Where | Notes | |---|---|---|---| | Presence & person count | ✅ | `multistatic.rs`, `field_model.rs`, mincut `DynamicPersonMatcher` | v0.7.1 fixed count-pinned-to-1 (#803) and cap"
+  },
+  "4320": {
+   "path": "PRIMER#7-capabilities-graded-honestly",
+   "kind": "primer-orientation",
+   "title": "7. Capabilities, graded honestly",
+   "chunk": "2/2",
+   "preview": "i-densepose-pointcloud`, tomography.rs | pairs naturally with the XIAO ESP32S3 **Sense** (camera-on-an-S3) | | Health scripts | ⚠️ | scripts/: sleep-monitor, apnea-detector, gait-analyzer, stress-monitor | present; real-world validation in "
+  },
+  "4321": {
+   "path": "PRIMER#8-the-complete-adr-index-160-adr-numbered-files-156-unique-numbers",
+   "kind": "primer-orientation",
+   "title": "8. The complete ADR index (160 ADR-numbered files / 156 unique numbers)",
+   "chunk": "1/3",
+   "preview": "## 8. The complete ADR index (160 ADR-numbered files / 156 unique numbers) **Counts, verified June 13:** `docs/adr/` holds **162 `.md`** files — **160 are ADR-numbered** (highest is ADR-163; 156 unique numbers after gaps/dupes, see note un"
+  },
+  "4322": {
+   "path": "PRIMER#8-the-complete-adr-index-160-adr-numbered-files-156-unique-numbers",
+   "kind": "primer-orientation",
+   "title": "8. The complete ADR index (160 ADR-numbered files / 156 unique numbers)",
+   "chunk": "2/3",
+   "preview": "ted Sensing Server in Desktop App | Accepted | | 56 | Desktop Complete Capabilities Reference | Accepted | | 57 | Firmware CSI Build Guard | — | | 58 | Dual-Modal WASM Browser Pose (video+CSI) | — | | 59 | Live ESP32 CSI Pipeline Integratio"
+  },
+  "4323": {
+   "path": "PRIMER#8-the-complete-adr-index-160-adr-numbered-files-156-unique-numbers",
+   "kind": "primer-orientation",
+   "title": "8. The complete ADR index (160 ADR-numbered files / 156 unique numbers)",
+   "chunk": "3/3",
+   "preview": "ction | — | | 139 | WorldGraph Digital Twin | In progress | | 140 | Semantic State Schema + Ruflo Bridge | — | | 141 | BFLD Privacy Control Plane | — | | 142 | Evolution Tracker + VoxelMap Evidence | — | | 143 | RF SLAM v2 | — | | 144 | UWB"
+  },
+  "4324": {
+   "path": "PRIMER#9-docs-tutorials-scripts-firmware-where-everything-lives",
+   "kind": "primer-orientation",
+   "title": "9. Docs, tutorials, scripts, firmware — where everything lives",
+   "chunk": "1/1",
+   "preview": "## 9. Docs, tutorials, scripts, firmware — where everything lives ### Tutorials (docs/tutorials/) - **cognitum-seed-pretraining.md** — beginner, ~1 hour, ~$36 hardware: 2× ESP32-S3 → Seed, self-supervised pretraining, kNN, no labels/camera"
+  },
+  "4325": {
+   "path": "PRIMER#10-hardware-matrix",
+   "kind": "primer-orientation",
+   "title": "10. Hardware matrix",
+   "chunk": "1/1",
+   "preview": "## 10. Hardware matrix | Device | CSI | Status | Notes | |---|---|---|---| | ESP32-C6 (XIAO C6, DevKitC, SuperMini) | 242-tone HE-LTF | ✅ **the fidelity pick** (v0.8.0) | needs IDF 5.5.2 🔶 (release-notes claim; checkout's own docs still s"
+  },
+  "4326": {
+   "path": "PRIMER#11-last-three-firmware-releases-what-changed",
+   "kind": "primer-orientation",
+   "title": "11. Last three firmware releases (what changed)",
+   "chunk": "1/1",
+   "preview": "## 11. Last three firmware releases (what changed) - **v0.8.0-esp32** (2026-06-11) 🔶 release-notes-sourced (the checkout does not contain these claims, and its firmware README still documents IDF v5.4 — verify before building): true HE-LT"
+  },
+  "4327": {
+   "path": "PRIMER#11-5-the-ruview-rvf-knowledge-base-what-s-in-it-and-how-to-use-it",
+   "kind": "primer-orientation",
+   "title": "11.5 The RuView RVF knowledge base — what's in it and how to use it",
+   "chunk": "1/1",
+   "preview": "## 11.5 The RuView RVF knowledge base — what's in it and how to use it This primer is a curated summary; **summaries drop things.** The companion `ruview-kb.rvf` is the uncurated backstop — a queryable **semantic index of the entire RuView"
+  },
+  "4328": {
+   "path": "PRIMER#12-what-this-primer-did-not-verify",
+   "kind": "primer-orientation",
+   "title": "12. What this primer did NOT verify",
+   "chunk": "1/1",
+   "preview": "## 12. What this primer did NOT verify - No hardware was flashed and no server was run against live CSI for this document; \"✅\" means verified-in-code/witness-logs, not re-tested on a bench. - All accuracy numbers (82.3% triplet, 82.69% PCK"
   }
  }
 }

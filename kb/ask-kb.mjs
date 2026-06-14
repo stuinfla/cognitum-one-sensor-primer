@@ -93,7 +93,12 @@ function loadPassages(file) {
 // ===================================================================================
 
 const MAX_DOC_CHARS = 12000;            // cap for an assembled full document
-const RAW_HITS = 24;                    // chunks fetched from the vector index to group/rerank
+// Chunks fetched from the vector index to group into documents and rerank. Kept generous so the
+// small TOP-DOWN ORIENTATION LAYER (a few dozen `PRIMER#` section chunks) reliably enters the
+// candidate pool for orientation queries — a tiny synthesized section can sit just outside a
+// narrow window yet be the correct whole-document answer once reranked (FIX 5). Reranking is
+// order-stable for the closest deep docs, so widening does not disturb non-orientation results.
+const RAW_HITS = 96;
 
 // FIX 2 — low-signal path patterns and the query keyword that *re-enables* each.
 // A penalty is added to a doc's effective distance UNLESS the query mentions the kind.
@@ -114,6 +119,59 @@ const LOW_SIGNAL = [
 const SEED_QUERY_RE = /\b(cognitum\s+seed|seed\s+(onboard\w*|pipeline|product)|onboard\w*\s+seed)\b/i;
 const SEED_GOOD_RE  = /(adr[-_]?069|adr[-_]?116|(^|\/)seed|onboard|(^|\/)cog-)/i;
 const SEED_BAD_RE   = /(rng|random|pretrain|nvsim|prng|np\.random|torch\.manual_seed)/i;
+
+// FIX 5 — TOP-DOWN ORIENTATION LAYER. The primers are indexed as synthetic `PRIMER#<section>`
+// documents (kind 'primer-orientation') that synthesize the answers to the six comprehension-
+// journey archetypes a raw repo lacks: what-is-it / concepts / how-each-works / maturity /
+// where-are-the-docs / how-to-use-end-to-end. When a query is one of those top-down orientation
+// questions, bias toward the matching PRIMER section so the SYNTHESIZED answer wins over a deep
+// ADR/source fragment. Deep ADR/source still wins for narrow how-X-works questions (no orient cue).
+const PRIMER_PATH_RE = /^PRIMER#/;
+// Generic orientation cue: the query is asking to be oriented to the product as a whole.
+const ORIENT_QUERY_RE = new RegExp([
+  'what\\s+(is|are|does)\\b',                       // "what is X" / "what does X do" / "what are the concepts"
+  '\\bwhat\\s+can\\b',
+  '\\bcore\\s+(capabilit|concept|feature)',          // "core capabilities/concepts"
+  '\\bcapabilit(y|ies)\\b',
+  '\\bhow\\s+(mature|complete)\\b',                  // maturity archetype
+  '\\b(production|experimental)\\b',
+  '\\bwhat\\s+works\\b',
+  '\\bwhere\\s+(is|are)\\b.*\\b(doc|documentation|adr)', // docs/ADR-location archetype
+  '\\bdocumentation\\b.*\\badr',
+  '\\badr\\s+index\\b',
+  '\\b(install|set\\s*up|setup|use)\\b.*\\bend[\\s-]*to[\\s-]*end\\b', // end-to-end usage
+  '\\bend[\\s-]*to[\\s-]*end\\b',
+  '\\bget(ting)?\\s+started\\b',
+  '\\boverview\\b',
+].join('|'), 'i');
+
+// Archetype → words that, when present in BOTH the query and a PRIMER section's title/path, mean
+// THIS section is the better-routed orientation answer (e.g. "where are the ADRs" -> the section
+// titled "ADR index"). Used to nudge between competing PRIMER sections so the closest-titled one
+// wins, without overriding the generic orientation lift. Each matched cue adds a small extra boost.
+const PRIMER_ROUTE_CUES = [
+  { q: /\b(adr|decision\s+record)/i,                        sec: /\badr\b|decision/i,                       w: 0.20 },
+  { q: /\b(doc|documentation)/i,                            sec: /\bdoc|where everything lives|tutorial/i,  w: 0.10 },
+  { q: /\b(mature|maturity|complete|production|experimental|works|graded|honest)/i, sec: /matur|gotcha|graded|honest|complete/i, w: 0.18 },
+  { q: /\b(capabilit|concept|feature)/i,                    sec: /capabilit|concept|crate inventory|big/i,  w: 0.16 },
+  { q: /\b(install|set\s*up|setup|quickstart|get\s*started|use|end[\s-]*to[\s-]*end|playbook)/i, sec: /executive summary|install|quickstart|playbook|knowledge base|use it/i, w: 0.14 },
+  { q: /\b(crate|inventory)/i,                              sec: /crate inventory|inventory/i,              w: 0.16 },
+];
+
+// Returns a NON-NEGATIVE amount to SUBTRACT from a PRIMER document's effective distance when the
+// query is an orientation question. The generic lift makes the synthesized layer beat a vector-
+// closer deep doc; the route cues then nudge between PRIMER sections toward the best-titled one.
+// Gentle enough that a clearly-better deep match still wins for narrow how-X-works questions.
+function orientationBoost(query, path, title = '') {
+  if (!PRIMER_PATH_RE.test(path)) return 0;
+  const generic = ORIENT_QUERY_RE.test(query) ? 0.55 : 0.12;
+  let route = 0;
+  const hay = `${path} ${title}`;
+  for (const c of PRIMER_ROUTE_CUES) {
+    if (c.q.test(query) && c.sec.test(hay)) route += c.w;
+  }
+  return generic + route;
+}
 
 const STOPWORDS = new Set(['the','a','an','and','or','of','to','in','for','on','with','how','do','i','is','are',
   'what','when','where','why','it','this','that','kb','query','question','search','find','show','me','please','about']);
@@ -194,21 +252,70 @@ function stitch(prevTail, next) {
 }
 
 // Assemble the FULL document from its chunks (id-ordered), de-overlapping as we go so it reads
-// as one clean document. If the stitched text still exceeds MAX_DOC_CHARS, keep it from the
-// document's beginning (status/context/decision for ADRs, intro for guides) up to the cap and
-// note the truncated tail.
-function assembleDocument(chunks /* matchedId reserved for future windowing */) {
+// as one clean document. If the stitched text fits under MAX_DOC_CHARS, the whole document is
+// returned. If it exceeds the cap, the window is CENTERED on the matched chunk (the chunk that
+// actually scored the hit) and expanded outward — alternating following then preceding chunks —
+// so the answer-bearing region is ALWAYS included, even when the match is a late chunk in a long
+// document. (The old behavior counted from chunk 0 and could truncate the answer.) De-overlap
+// stitching is preserved across the contiguous kept window.
+function assembleDocument(chunks, matchedId) {
   const SEP = '\n\n';
+  if (!chunks.length) return { fullText: '', chunksJoined: 0, truncated: false };
+
+  // Locate the matched chunk; default to the first chunk if not found (back-compat).
+  let center = 0;
+  if (matchedId != null) {
+    const idx = chunks.findIndex((c) => c.id === matchedId);
+    if (idx >= 0) center = idx;
+  }
+
+  // Grow a contiguous [lo, hi] window outward from `center` while it fits under the cap.
+  // Always include the matched chunk itself first, then expand following, then preceding.
+  let lo = center, hi = center;
+  let budget = chunks[center].text.length;
+  let nextLo = center - 1, nextHi = center + 1;
+  let toggle = 1; // 1 = try to extend forward first, then backward
+  while (nextLo >= 0 || nextHi < chunks.length) {
+    let extended = false;
+    const tryHi = () => {
+      if (nextHi < chunks.length) {
+        const cost = SEP.length + chunks[nextHi].text.length;
+        if (budget + cost <= MAX_DOC_CHARS) { budget += cost; hi = nextHi; nextHi++; return true; }
+        nextHi = chunks.length; // stop growing forward once it no longer fits
+      }
+      return false;
+    };
+    const tryLo = () => {
+      if (nextLo >= 0) {
+        const cost = SEP.length + chunks[nextLo].text.length;
+        if (budget + cost <= MAX_DOC_CHARS) { budget += cost; lo = nextLo; nextLo--; return true; }
+        nextLo = -1; // stop growing backward once it no longer fits
+      }
+      return false;
+    };
+    if (toggle === 1) { extended = tryHi() || tryLo(); } else { extended = tryLo() || tryHi(); }
+    toggle ^= 1;
+    if (!extended) break;
+  }
+
+  // Stitch the kept contiguous window [lo..hi] into one clean document.
   let out = '';
   let joined = 0;
-  for (let i = 0; i < chunks.length; i++) {
+  for (let i = lo; i <= hi; i++) {
     const piece = out ? stitch(out.slice(-2000), chunks[i].text) : chunks[i].text;
-    if (out && (out.length + SEP.length + piece.length) > MAX_DOC_CHARS) {
-      const tailNote = `${SEP}${SEP}[... ${chunks.length - joined} later chunk(s) truncated at ${MAX_DOC_CHARS}-char cap ...]`;
-      return { fullText: out + tailNote, chunksJoined: joined, truncated: true };
-    }
     out = out ? out + (piece ? SEP + piece : '') : piece;
     joined++;
+  }
+
+  const omitted = chunks.length - joined;
+  if (omitted > 0) {
+    const before = lo, after = chunks.length - 1 - hi;
+    const parts = [];
+    if (before > 0) parts.push(`${before} earlier`);
+    if (after > 0) parts.push(`${after} later`);
+    const note = `${SEP}${SEP}[... ${parts.join(' + ')} chunk(s) omitted; window centered on the `
+      + `matched section, capped at ${MAX_DOC_CHARS} chars ...]`;
+    return { fullText: out + note, chunksJoined: joined, truncated: true };
   }
   return { fullText: out, chunksJoined: joined, truncated: false };
 }
@@ -250,7 +357,8 @@ export async function searchKb({ query, k = 6, store, n }) {
     const boost = lexicalBoost(query, terms, d.path, d.title);
     const seed = seedAdjust(query, d.path);
     const sub = substanceBoost(byPath.get(d.path));
-    const effDistance = d.bestDistance + pen - boost + seed - sub;
+    const orient = orientationBoost(query, d.path, d.title);  // FIX 5 — top-down orientation layer
+    const effDistance = d.bestDistance + pen - boost + seed - sub - orient;
     return { ...d, effDistance };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
@@ -258,7 +366,7 @@ export async function searchKb({ query, k = 6, store, n }) {
   return ranked.slice(0, topN).map((d) => {
     const chunks = byPath.get(d.path) || [];
     const { fullText, chunksJoined, truncated } = chunks.length
-      ? assembleDocument(chunks)
+      ? assembleDocument(chunks, d.matchedId)
       : { fullText: '(NO PASSAGE TEXT — path not found in sidecar)', chunksJoined: 0, truncated: false };
     return {
       path: d.path,
