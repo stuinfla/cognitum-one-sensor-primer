@@ -29,10 +29,14 @@ const STORES = {
   ruvector: {
     rvf: path.join(KB_DIR, 'ruvector-kb.rvf'),
     passages: path.join(KB_DIR, 'ruvector-kb.passages.jsonl'),
+    // Metadata sidecar carries the per-chunk `kind` field (source/adr/doc/primer-orientation/…)
+    // that the passages sidecar lacks. Used by the intent layer (code-vs-doc, PRIMER routing).
+    meta: path.join(KB_DIR, 'ruvector-kb.ids.json'),
   },
   ruview: {
     rvf: path.join(KB_DIR, 'ruview-kb.rvf'),
     passages: path.join(KB_DIR, 'ruview-kb.passages.jsonl'),
+    meta: path.join(KB_DIR, 'ruview-kb.meta.json'),
   },
 };
 
@@ -85,6 +89,39 @@ function loadPassages(file) {
     rl.on('error', reject);
   });
 }
+
+// ---------- kind metadata sidecar loader ----------
+// The passages sidecar (.passages.jsonl) carries only {id,text,path,title}. The per-chunk
+// `kind` (source / crate-src / adr / doc / doc-deep / primer-orientation / …) lives in the
+// build metadata sidecar (.ids.json / .meta.json) keyed by the SAME numeric id. The intent
+// layer (code-vs-doc routing, ADR-vs-code pairing, PRIMER detection) needs `kind`, so we load
+// it once and fold it down to a per-PATH kind. If the sidecar is missing the layer degrades
+// gracefully (kind unknown -> no kind-based adjustments; vector+rerank still works).
+function loadKinds(file) {
+  const byPathKind = new Map(); // path -> representative kind (the doc's dominant content kind)
+  try {
+    if (!file || !fs.existsSync(file)) return byPathKind;
+    const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const entries = j.entries || {};
+    const counts = new Map(); // path -> Map(kind -> n)
+    for (const v of Object.values(entries)) {
+      if (!v || !v.path || !v.kind) continue;
+      if (!counts.has(v.path)) counts.set(v.path, new Map());
+      const m = counts.get(v.path);
+      m.set(v.kind, (m.get(v.kind) || 0) + 1);
+    }
+    for (const [p, m] of counts) {
+      let best = null, bestN = -1;
+      for (const [kind, n] of m) { if (n > bestN) { best = kind; bestN = n; } }
+      byPathKind.set(p, best);
+    }
+  } catch { /* sidecar unreadable -> empty map, graceful degrade */ }
+  return byPathKind;
+}
+
+// A path is "source code" if its dominant kind is a code kind.
+const SOURCE_KINDS = new Set(['source', 'crate-src', 'example']);
+function isSourceKind(kind) { return SOURCE_KINDS.has(kind); }
 
 // ===================================================================================
 // Retrieval-quality layer (retrieval-only; KBs are NOT rebuilt).
@@ -171,6 +208,108 @@ function orientationBoost(query, path, title = '') {
     if (c.q.test(query) && c.sec.test(hay)) route += c.w;
   }
   return generic + route;
+}
+
+// ===================================================================================
+// INTENT ROUTING LAYER (the second structural fix). MiniLM collapses every top-down
+// "orientation" query onto the generic "what X is" PRIMER section, and implementation
+// queries don't reliably surface code. This adds DETERMINISTIC intent classification on
+// top of the vector+rerank pipeline: it (a) detects an orientation archetype and force-routes
+// to the matching PRIMER#<slug> for that store, (b) hard-routes an exact "ADR-NNN" query to
+// the real ADR document (beating the index table), (c) tilts ranking toward code or toward
+// design docs by intent, and (d) guarantees an ADR proposal is paired with its built source.
+// All of this is layered as effective-distance adjustments / hard rank overrides — no rebuild.
+// ===================================================================================
+
+// Per-store map of orientation archetype -> the EXACT PRIMER# slug that answers it. Slugs were
+// discovered from the live sidecars (grep 'PRIMER#…' on the ids/meta files); only real slugs are
+// listed. `adr` is the docs-location archetype's ADR-specific sub-target (the ADR index table).
+const PRIMER_SLUGS = {
+  ruvector: {
+    maturity:     'PRIMER#8-maturity-gotchas',
+    capabilities: 'PRIMER#2-the-big-capabilities-and-how-to-actually-call-them',
+    docs:         'PRIMER#5-docs-tutorials-examples-skills',
+    adr:          'PRIMER#4-adr-index-the-complete-table-208-main-series-files-in-docs-adr-54-in-4-sub-ser',
+    playbook:     'PRIMER#0-executive-summary-which-crate-do-i-need',
+    whatis:       'PRIMER#1-what-ruvector-is',
+  },
+  ruview: {
+    maturity:     'PRIMER#7-capabilities-graded-honestly',
+    capabilities: 'PRIMER#7-capabilities-graded-honestly',
+    docs:         'PRIMER#9-docs-tutorials-scripts-firmware-where-everything-lives',
+    adr:          'PRIMER#8-the-complete-adr-index-160-adr-numbered-files-156-unique-numbers',
+    playbook:     'PRIMER#0-1-instant-playbooks-task-exact-steps',
+    whatis:       'PRIMER#1-what-ruview-is',
+  },
+};
+
+// Archetype detectors, ORDERED most-specific-first (first match wins). Each regex tests the raw
+// query. Patterns mirror the spec's intent buckets. `adr` is folded into `docs` but additionally
+// flips the docs target to the ADR-index slug when the query is specifically about ADRs.
+const ARCHETYPE_RES = [
+  // maturity / production-readiness / "how good/solid/reliable" / works-today-vs-experiment
+  { name: 'maturity', re: /\b(mature|maturity|production[- ]?ready|production\b|how (good|solid|reliable|complete)|how complete|is it (ready|done|complete)|works?\b.*\b(experiment|stub|today|yet)|ready for production|battle[- ]?tested|graded honestly)\b/i },
+  // capabilities / features / "what can it do"
+  { name: 'capabilities', re: /\b(capabilit(y|ies)|what can it do|what can ruv\w+ do|features?\b|what does it (do|offer)|what does ruv\w+ (do|offer)|big (capabilities|features))\b/i },
+  // docs / tutorials / examples / ADRs / "where do I find …"
+  { name: 'docs', re: /\b(where (are|is|can i find|do i find).*(doc|documentation|tutorial|example|adr|guide|find|live)|documentation\b|tutorials?\b|list of adrs?|adr index|where everything lives|where.*\b(docs?|guides?)\b)\b/i },
+  // playbook / setup / onboarding / end-to-end usage
+  { name: 'playbook', re: /\b(how (do i |to )?(use|set ?up|onboard|get started|getting started|start|deploy|build|run)|end[- ]to[- ]end|end to end|quick ?start|playbook|walkthrough|step[- ]by[- ]step|get up and running)\b/i },
+  // what-is / overview / introduce
+  { name: 'whatis', re: /\b(what is|what'?s |overview of|introduce|introduction to|tell me about)\b/i },
+];
+
+// A query is "clearly orientation" only when it is short & conceptual: no concrete symbol, file
+// path, ADR number, code-y token, or function/struct reference. This keeps the force-route from
+// firing on a deep how-X-works-in-the-code question that happens to contain "how to".
+const SPECIFIC_SIGNAL_RE = /(\badr[-\s_]?\d|[a-z_]+\.[a-z]{1,4}\b|\bfn\b|\bstruct\b|\bimpl\b|::|\/|\b[a-z_]+\(\)|\bcrate::|\bsrc\b)/i;
+function isOrientationQuery(query) {
+  const words = (query.trim().match(/\S+/g) || []).length;
+  if (words > 14) return false;                 // long queries are usually specific
+  if (SPECIFIC_SIGNAL_RE.test(query)) return false;
+  return true;
+}
+
+// Classify the orientation archetype (most-specific-first). Returns archetype name or null.
+function classifyArchetype(query) {
+  if (!isOrientationQuery(query)) return null;
+  for (const a of ARCHETYPE_RES) {
+    if (a.re.test(query)) {
+      // The docs archetype splits: if the query is specifically about ADRs, target the ADR index.
+      if (a.name === 'docs' && /\b(adr|decision record)\b/i.test(query)) return 'adr';
+      return a.name;
+    }
+  }
+  return null;
+}
+
+// Code-vs-doc intent. Returns 'code' | 'design' | null.
+const CODE_INTENT_RE = /\b(in (the )?code|in source|implementation|how is .*(computed|implemented|calculated|done)|\bfunction\b|\bstruct\b|signature|source code|actual code|which file|in the source|the (rust|code))\b/i;
+const DESIGN_INTENT_RE = /\b(why\b|rationale|design decision|design choice|proposed\b|proposal\b|trade[- ]?off|tradeoff|motivation|reasoning behind|the decision to)\b/i;
+function codeDocIntent(query) {
+  // Code intent takes priority when both fire (explicit "in the code" beats a stray "why").
+  if (CODE_INTENT_RE.test(query)) return 'code';
+  if (DESIGN_INTENT_RE.test(query)) return 'design';
+  return null;
+}
+
+// Exact ADR-by-number, e.g. "ADR-027" / "adr 27" -> zero-padded "027". Returns [nums] or [].
+function adrNumbers(query) {
+  return (query.match(/\badr[-\s_]?(\d{1,4})\b/gi) || [])
+    .map((m) => m.replace(/[^0-9]/g, '').padStart(3, '0'));
+}
+// Does a path point at the REAL ADR doc for this number (not the index table / a passing mention)?
+function pathIsAdrDoc(p, num) {
+  return new RegExp(`(^|/)adr[-_]?0*${num}\\b`, 'i').test(p) || new RegExp(`adr[-_]?0*${num}[-_]`, 'i').test(p);
+}
+
+// Does this document carry an ADR "Status:" header (## Status / **Status**: …)? Such a header
+// marks a proposal/decision (intent) — the trigger for INTENT(4) ADR-vs-code pairing. We scan the
+// doc's first chunk(s) where the header lives.
+function adrHasStatus(chunks) {
+  if (!chunks || !chunks.length) return false;
+  const head = chunks.slice(0, 2).map((c) => c.text).join('\n');
+  return /(^|\n)\s*(#+\s*status\b|\*\*status\*\*\s*:|status\s*:)/i.test(head);
 }
 
 const STOPWORDS = new Set(['the','a','an','and','or','of','to','in','for','on','with','how','do','i','is','are',
@@ -329,7 +468,14 @@ export async function searchKb({ query, k = 6, store, n }) {
   if (!fs.existsSync(conf.rvf)) throw new Error(`rvf not found: ${conf.rvf}`);
   const topN = Math.max(1, n || 5);
   const [qv, { byId, byPath }] = await Promise.all([embed(query), loadPassages(conf.passages)]);
+  const byPathKind = loadKinds(conf.meta);          // intent layer: per-path content kind
   const terms = queryTerms(query);
+
+  // ---- INTENT CLASSIFICATION (deterministic, computed once per query) ----
+  const archetype = classifyArchetype(query);                 // 'maturity'|'capabilities'|… | null
+  const targetPrimerSlug = archetype ? (PRIMER_SLUGS[store] || {})[archetype] : null;
+  const adrNums = adrNumbers(query);
+  const intent = codeDocIntent(query);                        // 'code' | 'design' | null
 
   const db = await RvfDatabase.openReadonly(conf.rvf);
   let hits;
@@ -351,19 +497,74 @@ export async function searchKb({ query, k = 6, store, n }) {
     }
   }
 
-  // FIXes 2/3/4 — compute effective distance per document.
+  // INTENT: ensure force-routed targets are IN the candidate pool even if MiniLM ranked them out
+  // of the raw window. (a) the target PRIMER slug for an orientation archetype; (b) the real ADR
+  // document for an exact ADR-NNN query. We synthesize a doc entry from byPath so it can be ranked
+  // and then hard-boosted below. Without this, a force-route could point at a doc not in `docs`.
+  const ensureDoc = (p) => {
+    if (!p || docs.has(p)) return;
+    const chunks = byPath.get(p);
+    if (!chunks || !chunks.length) return;
+    docs.set(p, { path: p, title: chunks[0].title, bestDistance: 1.0, matchedId: chunks[0].id });
+  };
+  if (targetPrimerSlug) ensureDoc(targetPrimerSlug);
+  // For an exact ADR query, find the real ADR doc path(s) by scanning the passages index.
+  const adrDocPaths = [];
+  if (adrNums.length) {
+    for (const num of adrNums) {
+      for (const p of byPath.keys()) {
+        if (pathIsAdrDoc(p, num) && !PRIMER_PATH_RE.test(p)) { adrDocPaths.push(p); ensureDoc(p); }
+      }
+    }
+  }
+
+  // FIXes 2/3/4 + INTENT — compute effective distance per document.
+  // Hard routes use a large negative adjustment so the routed doc wins decisively; intent tilts
+  // are gentle (break ties / nudge) so they don't override a clearly-better vector match.
+  const HARD_WIN = 5.0;     // dominates any plausible distance + penalty (force #1)
   const ranked = [...docs.values()].map((d) => {
     const pen = demotionPenalty(query, d.path);
     const boost = lexicalBoost(query, terms, d.path, d.title);
     const seed = seedAdjust(query, d.path);
     const sub = substanceBoost(byPath.get(d.path));
     const orient = orientationBoost(query, d.path, d.title);  // FIX 5 — top-down orientation layer
-    const effDistance = d.bestDistance + pen - boost + seed - sub - orient;
-    return { ...d, effDistance };
+    let intentAdj = 0;
+
+    // INTENT (1) — orientation archetype force-route to the matching PRIMER slug.
+    if (targetPrimerSlug && d.path === targetPrimerSlug) intentAdj += HARD_WIN;
+
+    // INTENT (2) — exact ADR-by-number hard route to the real ADR doc (must beat the index table).
+    if (adrDocPaths.includes(d.path)) intentAdj += HARD_WIN;
+
+    // INTENT (3) — code-vs-doc tilt. Use the doc's content kind from the metadata sidecar.
+    if (intent) {
+      const kind = byPathKind.get(d.path);
+      if (intent === 'code'   && isSourceKind(kind)) intentAdj += 0.30;   // prefer real code body
+      if (intent === 'design' && kind === 'adr')     intentAdj += 0.22;   // prefer the ADR/doc
+    }
+
+    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - intentAdj;
+    return { ...d, effDistance, kind: byPathKind.get(d.path) || null };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
+  // INTENT (4) — ADR-vs-code pairing for completeness. If #1 is an ADR carrying a Status: header
+  // (a proposal/decision = intent, not built reality) and NO source doc is in the top-N, pull the
+  // best-matching source doc into the returned set so the reader sees proposal vs built code. We
+  // only ADD a result (and tag it); we never displace the routed #1 or break whole-doc return.
+  let pairedSource = null;
+  if (ranked.length) {
+    const top = ranked[0];
+    const topKind = top.kind || byPathKind.get(top.path);
+    if (topKind === 'adr' && adrHasStatus(byPath.get(top.path))) {
+      const inTop = ranked.slice(0, topN).some((d) => isSourceKind(d.kind));
+      if (!inTop) {
+        pairedSource = ranked.find((d) => isSourceKind(d.kind)) || null;
+      }
+    }
+  }
+
   // FIX 1 — assemble the FULL document for the top-N distinct documents.
-  return ranked.slice(0, topN).map((d) => {
+  const assemble = (d, label) => {
     const chunks = byPath.get(d.path) || [];
     const { fullText, chunksJoined, truncated } = chunks.length
       ? assembleDocument(chunks, d.matchedId)
@@ -374,13 +575,25 @@ export async function searchKb({ query, k = 6, store, n }) {
       fullText,
       bestDistance: d.bestDistance,
       effDistance: d.effDistance,
+      kind: d.kind || byPathKind.get(d.path) || null,
+      label: label || null,            // intent label (e.g. 'paired-source') for callers/UI
       chunksJoined,
       truncated,
       // back-compat aliases for callers that still read .text / .distance
       text: fullText,
       distance: d.bestDistance,
     };
-  });
+  };
+
+  const out = ranked.slice(0, topN).map((d) => assemble(d));
+
+  // INTENT (4) — append the paired implementing source so proposal-vs-built-reality is visible.
+  // Appended (not inserted) so the routed/ranked order — including the whole-doc #1 ADR — is intact.
+  if (pairedSource && !out.some((r) => r.path === pairedSource.path)) {
+    out.push(assemble(pairedSource, 'paired-source (implements the ADR above)'));
+  }
+
+  return out;
 }
 
 // ---------- CLI ----------
@@ -394,7 +607,8 @@ async function main() {
   const results = await searchKb({ query, k, store });
   console.log(`\n=== ${store} KB — "${query}" — top ${results.length} documents ===\n`);
   results.forEach((r, i) => {
-    console.log(`#${i + 1}  distance=${r.bestDistance.toFixed(4)} (eff=${r.effDistance.toFixed(4)})`);
+    console.log(`#${i + 1}  distance=${r.bestDistance.toFixed(4)} (eff=${r.effDistance.toFixed(4)})`
+      + `${r.kind ? `  kind=${r.kind}` : ''}${r.label ? `  [${r.label}]` : ''}`);
     console.log(`path : ${r.path}`);
     console.log(`title: ${r.title}`);
     console.log(`chars: ${r.fullText.length} | chunks: ${r.chunksJoined}${r.truncated ? ' (truncated)' : ''}`);
