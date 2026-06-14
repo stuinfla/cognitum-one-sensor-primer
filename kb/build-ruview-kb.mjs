@@ -325,6 +325,41 @@ for (const p of walk(RUVIEW, true)) {
   addDoc(rel, 'doc-deep', titleOf(text, path.basename(p)), text, p);
 }
 
+// 9b. source — FULL FILE BODIES of the IMPLEMENTING code, chunked like docs (~4000 chars).
+//     The #1 fix: steps 7/8 only indexed lead files (first 100 lines) and every other .rs as
+//     its leading //! doc-comment ONLY (2-line stubs). Here we ingest the WHOLE body of each
+//     source file so "how does X work in the implementation / in the code" returns actual code
+//     (signatures, params, function bodies), tagged kind:'source'. Steps 7/8 KEEP their
+//     lead-doc + module-inventory entries (orientation); this ADDS bodies.
+//     SCOPE (size control): IMPLEMENTING code = files under any `/src/` dir, crate-root .rs
+//     (lib.rs/main.rs/mod.rs anywhere), and real example PROGRAMS under examples/*/src.
+//     EXCLUDE target/ node_modules/ .git/ dist/ build/ pkg/ .vite/ stub/ noise dirs,
+//     tests/ benches/ __tests__/, minified/bundled output, non-src example fixtures.
+const CODE_EXT = new Set(['.rs', '.py', '.ts', '.tsx', '.js', '.mjs', '.go', '.c', '.h', '.cpp', '.hpp']);
+const CRATE_ROOTS = new Set(['lib.rs', 'main.rs', 'mod.rs']);
+const NOISE_DIR_RE = /(^|\/)(target|node_modules|\.git|dist|build|pkg|\.vite|stub)(\/|$)/;
+const MINIFIED_RE = /\.(min|bundle)\.(js|css|mjs)$/;
+function sourceInScope(rel) {
+  if (NOISE_DIR_RE.test(rel)) return false;
+  if (MINIFIED_RE.test(rel)) return false;
+  if (/(^|\/)(tests|benches|__tests__)\//.test(rel)) return false;
+  if (/(^|\/)src\//.test(rel)) return true;
+  if (CRATE_ROOTS.has(path.basename(rel))) return true;
+  return false;
+}
+let srcBodyCount = 0, srcBodyBytes = 0;
+for (const p of walk(RUVIEW, true)) {
+  const ext = path.extname(p);
+  if (!CODE_EXT.has(ext)) continue;
+  if (fullBodyFiles.has(p)) continue;          // already indexed in full by step 6g
+  const rel = path.relative(RUVIEW, p);
+  if (!sourceInScope(rel)) continue;
+  const body = read(p);
+  if (!body.trim()) continue;
+  srcBodyCount++; srcBodyBytes += body.length;
+  addDoc(rel, 'source', path.basename(p), `Source ${rel} (full):\n${body}`);
+}
+
 // 10. ui — full text content of ui/*.html
 for (const f of fs.readdirSync(path.join(RUVIEW, 'ui')).filter((f) => f.endsWith('.html')).sort()) {
   const text = htmlText(read(path.join(RUVIEW, 'ui', f)));
@@ -342,6 +377,7 @@ console.log('=== CORPUS (source files per kind) ===');
 console.log(JSON.stringify(sourceCounts, null, 2));
 console.log('crates with lead file:', crateCount, '| .rs files with //! doc:', rsDocCount, '| md swept (doc-deep):', mdDeepCount);
 console.log('npm manifests:', npmCount, '| full-body .rs files (desktop+swarm):', fullBodyFiles.size);
+console.log('SOURCE full-body files (kind:source, src/** + crate-roots):', srcBodyCount, '| bytes:', srcBodyBytes, '| ~chunks:', Math.ceil(srcBodyBytes / 3600));
 console.log('Total chunks to embed:', entries.length);
 const kindTotals = {};
 for (const e of entries) kindTotals[e.kind] = (kindTotals[e.kind] || 0) + 1;

@@ -288,6 +288,46 @@ for (const p of walk(R)) {
   add('doc-deep', rp, mdTitle(text, path.basename(p)), text, p);
 }
 
+// 9b. source — FULL FILE BODIES of the IMPLEMENTING code, chunked like docs (~4000 chars).
+//     This is the #1 fix: steps 7/8 only indexed lead files (first 100 lines) and every other
+//     .rs as its leading //! doc-comment ONLY, so e.g. index.rs was a 2-line stub. Here we
+//     ingest the WHOLE body of each source file so "how does X work in the implementation"
+//     returns actual code (signatures, params, function bodies), tagged kind:'source'.
+//     Steps 7/8 KEEP their lead-doc + module-inventory entries (orientation); this ADDS bodies.
+//
+//     SCOPE (size control — projected full-repo sweep ~17.5k ruvector chunks of which most is
+//     docs/research/*.js artifacts + per-platform npm stubs, NOT implementation): we restrict
+//     to the IMPLEMENTING code = files under any `/src/` dir, crate-root .rs files
+//     (lib.rs/main.rs/mod.rs anywhere), and real example PROGRAMS under examples/*/src.
+//     EXCLUDE: target/ node_modules/ .git/ dist/ build/ pkg/ .vite/ stub/ (noise dirs),
+//     tests/ benches/ __tests__/ (not implementation), minified/bundled output, and
+//     example fixtures that are not under examples/*/src.
+const CODE_EXT = new Set(['.rs', '.py', '.ts', '.tsx', '.js', '.mjs', '.go', '.c', '.h', '.cpp', '.hpp']);
+const CRATE_ROOTS = new Set(['lib.rs', 'main.rs', 'mod.rs']);
+const NOISE_DIR_RE = /(^|\/)(target|node_modules|\.git|dist|build|pkg|\.vite|stub)(\/|$)/;
+const MINIFIED_RE = /\.(min|bundle)\.(js|css|mjs)$/;
+function sourceInScope(rp) {
+  if (NOISE_DIR_RE.test(rp)) return false;
+  if (MINIFIED_RE.test(rp)) return false;
+  if (/(^|\/)(tests|benches|__tests__)\//.test(rp)) return false;
+  // implementing code: under a /src/ dir, OR a crate-root rs file (lib/main/mod.rs)
+  if (/(^|\/)src\//.test(rp)) return true;
+  if (CRATE_ROOTS.has(path.basename(rp))) return true;
+  return false;
+}
+let srcBodyCount = 0, srcBodyBytes = 0;
+for (const p of walk(R)) {
+  const ext = path.extname(p);
+  if (!CODE_EXT.has(ext)) continue;
+  if (fullBodyFiles.has(p)) continue;          // already indexed in full by step 6b
+  const rp = rel(p);
+  if (!sourceInScope(rp)) continue;
+  const body = read(p);
+  if (!body.trim()) continue;
+  srcBodyCount++; srcBodyBytes += body.length;
+  add('source', rp, path.basename(p), `Source ${rp} (full):\n${body}`, /* absPath */ undefined);
+}
+
 // ---------- chunking (~1000 tokens ~= 4000 chars) ----------
 const MAX = 4000;
 function chunkText(text) {
@@ -323,6 +363,7 @@ console.log('=== ENUMERATION (files per kind) ===');
 console.log(JSON.stringify(counts, null, 2));
 console.log('crates with lead file:', crateCount, '| .rs files with //! doc:', rsDocCount, '| md swept (doc-deep):', mdDeepCount);
 console.log('example-crate manifests:', exCrateCount, '| full-body .rs files (rvlite+attn-cli+hyperbolic):', fullBodyFiles.size);
+console.log('SOURCE full-body files (kind:source, src/** + crate-roots):', srcBodyCount, '| bytes:', srcBodyBytes, '| ~chunks:', Math.ceil(srcBodyBytes / 3600));
 console.log('total files:', docsFiles.length, '| total chunks:', chunks.length);
 const preCk = {};
 for (const c of chunks) preCk[c.kind] = (preCk[c.kind] || 0) + 1;
