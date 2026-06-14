@@ -25,8 +25,46 @@ import { fileURLToPath } from 'node:url';
 
 const KB_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-// files shared by every bundle (the runnable shim + setup + integrity check + README)
-const SHARED = ['ask-kb.mjs', 'kb-mcp-server.mjs', 'resolve-deps.mjs', 'guard-check.mjs', 'package.json', 'README.md'];
+// Canonical host (where the live manifest + bundles are served). One place to change if it moves.
+const CANON_BASE = 'https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb';
+const MANIFEST_URL = `${CANON_BASE}/.last-built.json`;
+
+// files shared by every bundle (the runnable shim + setup + integrity check + evergreen + README)
+const SHARED = ['ask-kb.mjs', 'kb-mcp-server.mjs', 'resolve-deps.mjs', 'guard-check.mjs',
+  'kb-update.mjs', 'SOURCE.json', 'package.json', 'README.md'];
+
+// Regenerate SOURCE.json from .last-built.json so the embedded provenance NEVER drifts from
+// the manifest. Carries BOTH stores; kb-update.mjs reads this to know "where I came from".
+function writeSourceJson() {
+  const manifestPath = path.join(KB_DIR, '.last-built.json');
+  if (!fs.existsSync(manifestPath)) throw new Error('cannot write SOURCE.json: .last-built.json missing (build first)');
+  const m = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const builtUtc = m.generated;
+  const stores = {};
+  for (const [kbName, s] of Object.entries(m.stores || {})) {
+    stores[kbName] = {
+      kbName,
+      sourceRepo: s.sourceRepo || null,
+      sourceCommit: s.sha || null,
+      sourceDescribe: s.describe || null,
+      builtUtc,
+      builder: 'rvf-kb-forge',
+      canonicalManifestUrl: MANIFEST_URL,
+      canonicalBundleUrl: `${CANON_BASE}/${kbName}-kb-bundle.zip`,
+      selfUpdate: `node kb-update.mjs ${kbName}`,
+    };
+  }
+  const source = {
+    builder: 'rvf-kb-forge',
+    builtUtc,
+    canonicalManifestUrl: MANIFEST_URL,
+    selfUpdate: 'node kb-update.mjs',
+    stores,
+  };
+  fs.writeFileSync(path.join(KB_DIR, 'SOURCE.json'), JSON.stringify(source, null, 2) + '\n');
+  console.log('regenerated SOURCE.json from .last-built.json');
+}
+writeSourceJson();
 
 const BUNDLES = {
   ruvector: {

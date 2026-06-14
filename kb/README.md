@@ -136,7 +136,47 @@ node kb/guard-check.mjs              # MUST pass before you trust/ship a rebuild
 
 ---
 
-## 6. Honest limits
+## 6. Evergreen: keep your copy current
+
+When you copy this bundle into your own project, it doesn't go stale silently. **The bundle knows where it came from.** Every bundle ships two extra files:
+
+| File | What it does |
+|---|---|
+| `SOURCE.json` | machine-readable **provenance** — the source repos, the exact commit SHAs each store was built from, the build timestamp, and the **canonical URLs** of the live manifest + bundles. This is "where I came from," embedded. |
+| `kb-update.mjs` | a **zero-dependency self-updater** (Node 18+). Reads `SOURCE.json`, fetches the live canonical manifest, and tells you whether a newer build exists — and applies it on request. |
+
+**Check if a newer build exists (report only):**
+
+```bash
+cd kb            # wherever you copied the bundle
+node kb-update.mjs --check      # or just: node kb-update.mjs
+```
+
+It prints, per store, `UP TO DATE` or `BEHIND — canonical built <date> from <sha>, yours is <date>/<sha>`. Exit code `0` = current, `10` = behind, `2` = network/offline, `1` = bad/missing `SOURCE.json`. Restrict to one store with `node kb-update.mjs --check ruview`.
+
+**Self-update to the latest:**
+
+```bash
+node kb-update.mjs --apply      # downloads the canonical bundle(s), backs up first, extracts over your copy, re-verifies with guard-check.mjs
+```
+
+`--apply` is safe: it **backs up your current `kb/` directory** (to `kb.bak-<timestamp>` beside it) before replacing anything, stages the download in a temp dir, and **re-runs `guard-check.mjs`** on the updated store(s). If the guard fails, it stops and points you at the backup — your working copy is never left half-written. Offline / network failures fail loud with a clear message and a non-zero exit, changing nothing locally.
+
+**Schedule a periodic check** (cron — every Monday 09:00, logging the result):
+
+```cron
+0 9 * * 1  cd /path/to/your/project/kb && /usr/bin/node kb-update.mjs --check >> kb-update.log 2>&1
+```
+
+**The canonical source** is this repo's `kb/` directory on GitHub:
+- Manifest: `https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/.last-built.json`
+- Bundles: `.../kb/ruvector-kb-bundle.zip`, `.../kb/ruview-kb-bundle.zip`
+
+It **auto-rebuilds** when the upstream `ruvector` / `RuView` repos publish new commits (CI watches the submodule pointers; see `.github/workflows/rebuild-kb.yml`), so a `--check` a month or six months from now reflects the latest upstream — your copy stays evergreen instead of frozen in time.
+
+---
+
+## 7. Honest limits
 
 - Query quality is bounded by MiniLM-L6 (384-dim) — excellent for "where is X / which thing does Y," not a reasoning engine.
 - The KBs index the repos' **knowledge layer plus the source's self-description** (docs, manifests, READMEs, headers, scripts, every `//!` doc comment, each crate's lead file + module inventory) — not every line of every function body. Ask "where is the kalman tracker implemented" and it answers; it won't recite line 400 of a 2,000-line file.

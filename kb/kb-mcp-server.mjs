@@ -25,11 +25,12 @@ const TOOLS = [
   {
     name: 'search_kb',
     description:
-      'Semantic search over the Cognitum RuVector / RuView knowledge bases. Returns the FULL '
-      + 'text of the top-k matching passages (ADRs, crate docs, source doc-comments, tutorials, '
-      + 'guides), each with its repo path and title. Use store="ruvector" for the RuVector '
-      + 'monorepo (crates, min-cut, HNSW, SONA, coherence) or store="ruview" for the RuView '
-      + 'WiFi/CSI sensing app (firmware, calibration, room enrollment, MQTT, UI).',
+      'Semantic search over the Cognitum RuVector / RuView knowledge bases. Returns up to 5 '
+      + 'whole, self-contained matched DOCUMENTS (all chunks of each reassembled in order, not '
+      + 'fragments) — ADRs, crate docs, source doc-comments, tutorials, guides — each with its '
+      + 'repo path and title. Use store="ruvector" for the RuVector monorepo (crates, min-cut, '
+      + 'HNSW, SONA, coherence) or store="ruview" for the RuView WiFi/CSI sensing app '
+      + '(firmware, calibration, room enrollment, MQTT, UI).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -79,11 +80,11 @@ async function handle(msg) {
         if (store !== 'ruvector' && store !== 'ruview') return err(id, -32602, "store must be 'ruvector' or 'ruview'");
         const results = await searchKb({ query, k, store });
         const text = results.map((r, i) =>
-          `#${i + 1}  (distance ${r.distance.toFixed(4)})\n`
+          `#${i + 1}  (distance ${r.bestDistance.toFixed(4)})\n`
           + `path : ${r.path}\n`
           + `title: ${r.title}\n`
-          + `----- passage (${r.text.length} chars) -----\n`
-          + `${r.text}\n`
+          + `----- full document (${r.fullText.length} chars, ${r.chunksJoined} chunk(s)${r.truncated ? ', truncated' : ''}) -----\n`
+          + `${r.fullText}\n`
         ).join('\n========================================================\n\n');
         return ok(id, {
           content: [{ type: 'text', text: text || '(no results)' }],
