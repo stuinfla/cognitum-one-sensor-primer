@@ -124,6 +124,72 @@ const SOURCE_KINDS = new Set(['source', 'crate-src', 'example']);
 function isSourceKind(kind) { return SOURCE_KINDS.has(kind); }
 
 // ===================================================================================
+// SPECIFIC-ENTITY DETECTION (FIX 1 — orientation over-fire). A query that names a SPECIFIC
+// entity (a crate, an ADR id, a filename/.rs token, or a Capitalized multiword proper noun)
+// is NOT a generic product-orientation question, even if it begins "what does …". For such a
+// query we suppress the generic PRIMER-orientation lift AND demote primer-orientation docs so a
+// vector-closer deep doc (source / adr / crate-src / doc) wins. The crate-INVENTORY archetype
+// ("which crates make up X") is handled separately (it carries no hyphen-crate token) and still
+// routes to the inventory PRIMER.
+// ===================================================================================
+
+// Build the set of crate-style path prefixes actually present in the KB (data-driven, so the
+// detector never fires on a generic hyphenated word like "end-to-end" — only on real crates).
+// Prefixes are taken from `crates/<name>` and `v2/crates/<name>` path segments.
+function crateTokenSet(byPath) {
+  const set = new Set();
+  for (const p of byPath.keys()) {
+    const m = p.match(/(?:^|\/)(?:v\d+\/)?crates\/([a-z0-9][a-z0-9-]+)/i);
+    if (m) set.add(m[1].toLowerCase());
+  }
+  return set;
+}
+
+// A capitalized multiword proper noun, e.g. "Coherent Human Channel" / "RuvSense Domain".
+const PROPER_NOUN_RE = /\b([A-Z][a-z0-9]+(?:\s+[A-Z][a-z0-9]+){1,})\b/g;
+// A file / .rs token, e.g. "lib.rs", "main.rs", "versioning.rs", "config.toml".
+const FILE_TOKEN_RE = /\b[a-z0-9_]+\.(rs|toml|md|ts|js|mjs|py|json|yaml|yml)\b/i;
+// Common English / orientation words that may appear Title-Cased ("How Complete Is RuVector",
+// "Getting Started Guide") — a proper-noun candidate built ONLY from these is NOT a named entity, so
+// Title-Cased orientation queries still route correctly. (The product name is also a common word, so
+// "RuVector"/"RuView" alone in a Title-Cased orientation query doesn't count as a specific entity.)
+const COMMON_TITLE_WORDS = new Set(['how','what','when','where','why','which','who','is','are','the','a','an',
+  'and','or','of','to','in','for','on','with','do','does','complete','mature','maturity','production',
+  'ready','overview','introduction','getting','started','start','guide','setup','install','use','using',
+  'core','capabilities','capability','feature','features','concept','concepts','docs','documentation',
+  'tutorial','tutorials','example','examples','crate','crates','inventory','about','it','this','that',
+  'ruvector','ruview','playbook','quickstart','end','reference']);
+
+// Does the query name a SPECIFIC entity? Returns the matched hyphen-crate token(s) (lowercased)
+// plus a boolean. Used to (a) suppress generic orientation lift, (b) demote primer-orientation,
+// (c) drive the crate-overview README/BENCHMARK boost (FIX 2).
+function specificEntity(query, crateTokens) {
+  const hyphenTokens = (query.match(/\b[a-z][a-z0-9]+-[a-z0-9][a-z0-9-]*\b/gi) || [])
+    .map((t) => t.toLowerCase());
+  // Keep only hyphen tokens that ARE a known crate (or a known crate's prefix) — this excludes
+  // generic words like "end-to-end", "step-by-step", "real-time" while catching "ruvector-snapshot".
+  const crates = hyphenTokens.filter((t) =>
+    crateTokens.has(t) || [...crateTokens].some((c) => c.startsWith(t + '-') || t.startsWith(c)));
+  // A Title-Cased multiword phrase counts as a proper noun ONLY if it contains a token that is NOT a
+  // common English/orientation word (so "How Complete Is RuVector" / "Getting Started Guide" do NOT
+  // misfire, but "Coherent Human Channel" / "Tauri Desktop Frontend" do).
+  let hasProperNoun = false;
+  for (const m of query.matchAll(PROPER_NOUN_RE)) {
+    const toks = m[1].split(/\s+/);
+    if (toks.some((w) => !COMMON_TITLE_WORDS.has(w.toLowerCase()))) { hasProperNoun = true; break; }
+  }
+  const hasAdr  = /\badr[-\s_]?\d{1,4}\b/i.test(query);
+  const hasFile = FILE_TOKEN_RE.test(query);
+  const named = crates.length > 0 || hasAdr || hasFile || hasProperNoun;
+  return { named, crates };
+}
+
+// Demotion penalty added to a primer-orientation doc when the query names a specific entity.
+// Pushes primer-orientation BELOW source/adr/crate-src/doc for that query (FIX 1). Large enough to
+// out-weigh the (now-suppressed) generic lift but applied as a positive penalty on eff distance.
+const PRIMER_DEMOTE_WHEN_SPECIFIC = 0.60;
+
+// ===================================================================================
 // Retrieval-quality layer (retrieval-only; KBs are NOT rebuilt).
 // FIX 1 whole-document return, FIX 2 demote low-signal files,
 // FIX 3 exact-term/ADR/title boost, FIX 4 "Cognitum Seed" disambiguation.
@@ -354,13 +420,41 @@ function pathIsAdrDoc(p, num) {
   return new RegExp(`(^|/)adr[-_]?0*${num}\\b`, 'i').test(p) || new RegExp(`adr[-_]?0*${num}[-_]`, 'i').test(p);
 }
 
-// Does this document carry an ADR "Status:" header (## Status / **Status**: …)? Such a header
-// marks a proposal/decision (intent) — the trigger for INTENT(4) ADR-vs-code pairing. We scan the
-// doc's first chunk(s) where the header lives.
+// FIX 4 — parse an ADR's Status (Proposed / Accepted / Implemented / Superseded / Rejected /
+// Deprecated) from the top of the document. ADRs in this corpus carry the status in any of:
+//   a metadata table row:  | **Status** | Proposed |   or   | Status | Proposed |
+//   an inline header:       **Status**: Proposed       or   Status: Proposed
+//   a section + bold value: ## Status\n**Proposed**
+// Returns the normalized UPPERCASE status string, or null if none is found. We scan the doc's
+// first chunk(s) where the header lives.
+const ADR_STATUS_WORDS = '(proposed|accepted|implemented|superseded|rejected|deprecated|draft|in[\\s-]?progress)';
+function parseAdrStatus(chunks) {
+  if (!chunks || !chunks.length) return null;
+  const head = chunks.slice(0, 2).map((c) => c.text).join('\n');
+  const patterns = [
+    // table row: | **Status** | Proposed |   /   | Status | Accepted |
+    new RegExp(`\\|\\s*\\**\\s*status\\s*\\**\\s*\\|\\s*\\**\\s*${ADR_STATUS_WORDS}`, 'i'),
+    // inline: **Status**: Proposed   /   Status: Proposed
+    new RegExp(`\\**status\\**\\s*:\\s*\\**\\s*${ADR_STATUS_WORDS}`, 'i'),
+    // section: ## Status\n**Proposed**
+    new RegExp(`#+\\s*status\\b[^\\n]*\\n+\\s*\\**\\s*${ADR_STATUS_WORDS}`, 'i'),
+  ];
+  for (const re of patterns) {
+    const m = head.match(re);
+    if (m && m[1]) return m[1].toUpperCase().replace(/[\s-]+/g, '-');
+  }
+  return null;
+}
+// A status that means "design intent, not confirmed shipped" (vs ACCEPTED/IMPLEMENTED = built).
+function statusIsProposed(status) {
+  return !!status && /^(PROPOSED|DRAFT|IN-PROGRESS|REJECTED|DEPRECATED|SUPERSEDED)$/i.test(status);
+}
+// Back-compat: does the doc carry ANY status header? (trigger for INTENT(4) ADR-vs-code pairing.)
 function adrHasStatus(chunks) {
   if (!chunks || !chunks.length) return false;
   const head = chunks.slice(0, 2).map((c) => c.text).join('\n');
-  return /(^|\n)\s*(#+\s*status\b|\*\*status\*\*\s*:|status\s*:)/i.test(head);
+  return parseAdrStatus(chunks) !== null
+    || /(^|\n)\s*(#+\s*status\b|\*\*status\*\*\s*:|status\s*:|\|\s*\**status)/i.test(head);
 }
 
 const STOPWORDS = new Set(['the','a','an','and','or','of','to','in','for','on','with','how','do','i','is','are',
@@ -386,21 +480,56 @@ function conceptNouns(query, store) {
   return queryTerms(stripped).filter((t) => t !== store && !CONCEPT_STOP.has(t));
 }
 
-// Mild concept boost: SUBTRACT a small amount from a doc whose path/title token-overlaps a concept
-// noun from a concept what-is query. Gentle (capped) so a clearly-better defining doc wins on its
-// own merit; this only breaks near-ties toward the on-topic doc. PRIMER#1 (the thin product blurb)
-// is excluded so it never benefits from the concept boost. Returns NON-NEGATIVE amount to subtract.
+// Concept boost: SUBTRACT from a doc that names a concept noun from a concept what-is query.
+// FIX 3 — the DEFINING doc must beat an ADJACENT one. A concept noun that appears in the doc's
+// FILENAME SLUG or TITLE is a strong "this doc DEFINES the concept" signal (e.g. the file
+// `ADR-029-ruvsense-multistatic-sensing-mode.md` / title containing "multistatic" defines
+// "multistatic", while a sibling ADR that merely mentions it in the body does not). So we weight
+// a filename-slug / title hit FAR above a bare path-substring hit, which makes the title/slug-exact
+// defining doc out-rank an adjacent ADR. PRIMER#1 (thin product blurb) is excluded. NON-NEGATIVE.
 function conceptBoost(nouns, path, title) {
   if (!nouns || !nouns.length) return 0;
   if (PRIMER_PATH_RE.test(path) && /what\b.*\bis\b|#1-/i.test(`${path} ${title}`)) return 0;
+  const slug = (path.split('/').pop() || '').toLowerCase();   // filename slug (the defining signal)
+  const titleL = String(title || '').toLowerCase();
   const hay = `${path} ${title}`.toLowerCase();
-  let overlap = 0;
-  for (const t of nouns) if (hay.includes(t)) overlap += 1;
-  if (overlap === 0) return 0;
-  // Glossary section (ruview) is a legitimate concept target: give it the boost too, but a real
-  // defining doc with the same overlap will tie and the vector distance breaks it (glossary is
-  // synthesized & short, so a true defining doc usually has the closer distance).
-  return Math.min(0.16, 0.08 * overlap);
+  let strong = 0;   // concept noun present in the filename slug or the title (defining)
+  let weak = 0;     // concept noun present elsewhere in the path (adjacent / mention)
+  for (const t of nouns) {
+    if (slug.includes(t) || titleL.includes(t)) strong += 1;
+    else if (hay.includes(t)) weak += 1;
+  }
+  if (strong === 0 && weak === 0) return 0;
+  // Strong (slug/title) hits dominate so the defining doc clears any adjacent doc's vector lead.
+  const b = 0.30 * strong + 0.06 * weak;
+  // Glossary section (ruview) is a legitimate concept target and benefits via the same rule; a real
+  // defining doc with a slug/title hit out-scores it.
+  return Math.min(0.62, b);
+}
+
+// FIX 2 — crate-overview / metric intent. "what does crate X do" or "X compression ratio /
+// throughput / benchmark" should surface the crate's README.md / BENCHMARK.md / docs (where the
+// headline numbers live) ABOVE its benches/ + main.rs harness + bare Cargo.toml. Returns the crate
+// token the query is about, or null. (Distinct from the crate-INVENTORY archetype "which crates…".)
+const CRATE_METRIC_RE = /\b(compression(\s+ratio)?|throughput|benchmark|latency|qps|recall|speed ?up|ops\/s|ratio|perf(ormance)?)\b/i;
+const CRATE_OVERVIEW_RE = /\b(what (does|is)|overview of|tell me about|describe)\b/i;
+function crateOverviewTarget(query, entityCrates) {
+  if (!entityCrates || !entityCrates.length) return null;
+  if (CRATE_METRIC_RE.test(query) || CRATE_OVERVIEW_RE.test(query)) return entityCrates[0];
+  return null;
+}
+// Boost for a README/BENCHMARK/docs path of the targeted crate; mild penalty for that crate's
+// harness (benches/ + main.rs) and bare Cargo.toml so the prose with the numbers wins. NON-NEGATIVE
+// return = subtract from eff distance; harness/Cargo handled as a separate positive penalty.
+function crateOverviewAdjust(crateTok, path) {
+  if (!crateTok) return 0;
+  const inCrate = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateTok}(?:-[a-z0-9-]+)?/`, 'i').test(path);
+  if (!inCrate) return 0;
+  let adj = 0;
+  if (/\/(readme|benchmark)\.md$/i.test(path) || /\/docs\//i.test(path)) adj -= 0.45;  // prose w/ numbers
+  if (/\/benches?\//i.test(path) || /\/main\.rs$/i.test(path)) adj += 0.20;             // harness
+  if (/\/cargo\.toml$/i.test(path)) adj += 0.18;                                         // bare manifest
+  return adj;
 }
 
 // FIX 3 — lexical boost: ADR-number exact hit, then proper-noun/title token overlap on
@@ -554,17 +683,41 @@ export async function searchKb({ query, k = 6, store, n }) {
   const terms = queryTerms(query);
 
   // ---- INTENT CLASSIFICATION (deterministic, computed once per query) ----
-  const archetype = classifyArchetype(query, store);          // 'maturity'|'capabilities'|…|'whatis-concept'|null
+  // FIX 1 — specific-entity detection. If the query names a crate / ADR id / file / proper noun it
+  // is NOT a generic product-orientation question: suppress the orientation force-route + generic
+  // PRIMER lift and demote primer-orientation docs. The crate-INVENTORY archetype ("which crates…")
+  // is exempt (carries no hyphen-crate token) so it still routes to the inventory PRIMER.
+  const crateTokens = crateTokenSet(byPath);
+  const entity = specificEntity(query, crateTokens);
+  let archetype = classifyArchetype(query, store);            // 'maturity'|'capabilities'|…|'whatis-concept'|null
+  // Suppress force-routing archetypes when a specific entity is named — EXCEPT the crate inventory
+  // archetype ('crates'), which is a legitimate enumeration request even with a hyphen token nearby.
+  if (entity.named && archetype && archetype !== 'crates' && archetype !== 'whatis-concept') {
+    archetype = null;
+  }
   // 'whatis-concept' is a NON-routing archetype: no force-route to a PRIMER, instead a mild concept
   // boost (below) lets the vector+rerank pipeline surface the true DEFINING doc. Other archetypes
   // force-route to their PRIMER slug (null slug -> no force-route, e.g. ruvector hardware).
   const targetPrimerSlug = (archetype && archetype !== 'whatis-concept')
     ? (PRIMER_SLUGS[store] || {})[archetype]
     : null;
+  // FIX 2 — crate-overview / metric target: the crate whose README/BENCHMARK/docs should win.
+  const crateOverviewTok = crateOverviewTarget(query, entity.crates);
   // Concept nouns drive the mild concept boost for concept what-is queries (FIX 1).
   const concepts = archetype === 'whatis-concept' ? conceptNouns(query, store) : [];
-  // For ruview, a concept query may also softly boost the glossary section (a real defining doc
-  // still wins when present, because the glossary is short/synthesized with a worse distance).
+  // FIX 3 — DEFINING-DOC nouns: a concept/topic query that is NOT a product-overview, NOT a
+  // force-routed orientation archetype, and NOT a specific-entity query should still surface the
+  // DEFINING doc (e.g. "multistatic vs monostatic sensing" -> the ADR whose filename slug names
+  // "multistatic"). These nouns drive the slug/title concept boost AND pull a slug-named defining
+  // doc into the candidate pool, so a title/slug-exact doc beats an adjacent one. The whatis-concept
+  // nouns are folded in so that path keeps its existing behavior.
+  const definingNouns = (concepts.length)
+    ? concepts
+    : (!entity.named && !targetPrimerSlug && archetype !== 'crates'
+        ? conceptNouns(query, store)
+        : []);
+  // For ruview, a concept what-is query may also softly boost the glossary section (a real defining
+  // doc still wins when present, because the glossary is short/synthesized with a worse distance).
   const glossarySlug = archetype === 'whatis-concept' ? (PRIMER_SLUGS[store] || {}).glossary : null;
   const adrNums = adrNumbers(query);
   const intent = codeDocIntent(query);                        // 'code' | 'design' | null
@@ -610,19 +763,45 @@ export async function searchKb({ query, k = 6, store, n }) {
       }
     }
   }
+  // FIX 3 — a concept what-is query's DEFINING doc may sit OUTSIDE the raw vector window (the defining
+  // ADR can be titled by its codename, not the concept). Pull any doc whose FILENAME SLUG names a
+  // concept noun into the candidate pool so the strengthened concept boost can rank it; the boost
+  // (not a hard route) decides whether it actually wins. Capped scan to stay cheap.
+  if (definingNouns.length) {
+    let added = 0;
+    for (const p of byPath.keys()) {
+      if (docs.has(p) || PRIMER_PATH_RE.test(p)) continue;
+      const slug = (p.split('/').pop() || '').toLowerCase();
+      if (definingNouns.some((t) => slug.includes(t))) { ensureDoc(p); if (++added >= 40) break; }
+    }
+  }
+  // FIX 2 — ensure the targeted crate's README/BENCHMARK/docs are in the pool even if MiniLM ranked
+  // them out (the harness file is often the closer vector match).
+  if (crateOverviewTok) {
+    const cre = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateOverviewTok}(?:-[a-z0-9-]+)?/(readme|benchmark)\\.md$`, 'i');
+    for (const p of byPath.keys()) { if (cre.test(p)) ensureDoc(p); }
+  }
 
   // FIXes 2/3/4 + INTENT — compute effective distance per document.
   // Hard routes use a large negative adjustment so the routed doc wins decisively; intent tilts
   // are gentle (break ties / nudge) so they don't override a clearly-better vector match.
   const HARD_WIN = 5.0;     // dominates any plausible distance + penalty (force #1)
   const ranked = [...docs.values()].map((d) => {
+    const dkind = byPathKind.get(d.path) || null;
     const pen = demotionPenalty(query, d.path);
     const boost = lexicalBoost(query, terms, d.path, d.title);
     const seed = seedAdjust(query, d.path);
     const sub = substanceBoost(byPath.get(d.path));
-    const orient = orientationBoost(query, d.path, d.title, archetype === 'whatis-concept');  // FIX 5 — top-down orientation layer
-    // FIX 1 — concept boost: nudge docs that name the concept; extra nudge for the glossary section.
-    let concept = conceptBoost(concepts, d.path, d.title);
+    // FIX 1 — when a specific entity is named, the generic orientation lift is suppressed AND
+    // primer-orientation docs are demoted below source/adr/crate-src/doc for this query.
+    const suppressOrient = entity.named || archetype === 'whatis-concept';
+    const orient = orientationBoost(query, d.path, d.title, suppressOrient);  // FIX 5 — top-down orientation layer
+    const primerDemote = (entity.named && dkind === 'primer-orientation') ? PRIMER_DEMOTE_WHEN_SPECIFIC : 0;
+    // FIX 2 — crate-overview / metric: boost the crate's README/BENCHMARK/docs, demote its harness.
+    const crateAdj = crateOverviewAdjust(crateOverviewTok, d.path);  // negative=boost, positive=demote
+    // FIX 1/3 — concept boost: nudge docs whose slug/title names the concept (defining doc beats
+    // adjacent); extra nudge for the glossary section on a whatis-concept query.
+    let concept = conceptBoost(definingNouns, d.path, d.title);
     if (glossarySlug && d.path === glossarySlug && concepts.length) concept += 0.06;
     let intentAdj = 0;
 
@@ -639,8 +818,9 @@ export async function searchKb({ query, k = 6, store, n }) {
       if (intent === 'design' && kind === 'adr')     intentAdj += 0.22;   // prefer the ADR/doc
     }
 
-    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - concept - intentAdj;
-    return { ...d, effDistance, kind: byPathKind.get(d.path) || null };
+    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - concept - intentAdj
+      + primerDemote + crateAdj;
+    return { ...d, effDistance, kind: dkind };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
   // INTENT (4) — ADR-vs-code pairing for completeness. If #1 is an ADR carrying a Status: header
@@ -665,13 +845,25 @@ export async function searchKb({ query, k = 6, store, n }) {
     const { fullText, chunksJoined, truncated } = chunks.length
       ? assembleDocument(chunks, d.matchedId)
       : { fullText: '(NO PASSAGE TEXT — path not found in sidecar)', chunksJoined: 0, truncated: false };
+    // FIX 4 — parse + surface the ADR Status (Proposed/Accepted/Implemented/…) for ADR docs (or any
+    // doc whose head carries a Status block). `adrStatus` rides the result object so the MCP path
+    // carries it too; `statusLabel` is the human-visible header tag.
+    const kind = d.kind || byPathKind.get(d.path) || null;
+    const adrStatus = (kind === 'adr' || adrHasStatus(chunks)) ? parseAdrStatus(chunks) : null;
+    const statusLabel = adrStatus
+      ? `ADR STATUS: ${adrStatus}${statusIsProposed(adrStatus)
+          ? ' — design intent, NOT confirmed shipped'
+          : ' — accepted/implemented'}`
+      : null;
     return {
       path: d.path,
       title: d.title,
       fullText,
       bestDistance: d.bestDistance,
       effDistance: d.effDistance,
-      kind: d.kind || byPathKind.get(d.path) || null,
+      kind,
+      adrStatus,                       // FIX 4 — parsed ADR status (null if none) — carried to MCP
+      statusLabel,                     // FIX 4 — human-visible "[ADR STATUS: …]" tag
       label: label || null,            // intent label (e.g. 'paired-source') for callers/UI
       chunksJoined,
       truncated,
@@ -689,6 +881,23 @@ export async function searchKb({ query, k = 6, store, n }) {
     out.push(assemble(pairedSource, 'paired-source (implements the ADR above)'));
   }
 
+  // FIX 4 — proposal-as-reality guard. If the #1 result is a Proposed/not-yet-Implemented ADR (or a
+  // design/DDD doc with no parseable status) AND no kind:'source' implementing file is in the set,
+  // attach a clear design-intent warning so the reader never treats a proposal as shipped reality.
+  if (out.length) {
+    const top = out[0];
+    const isDesignTop = top.kind === 'adr'
+      || top.kind === 'doc' || top.kind === 'doc-deep' || top.kind === 'ddd';
+    const proposed = top.adrStatus ? statusIsProposed(top.adrStatus) : (top.kind !== 'source' && top.kind !== 'crate-src');
+    const hasSource = out.some((r) => isSourceKind(r.kind));
+    if (isDesignTop && proposed && !hasSource) {
+      const st = top.adrStatus || 'unstated (design/DDD doc)';
+      top.designIntentWarning =
+        `⚠ This is design intent (ADR status: ${st}); no implementing source was retrieved — `
+        + `treat as proposed, not confirmed built.`;
+    }
+  }
+
   return out;
 }
 
@@ -704,9 +913,11 @@ async function main() {
   console.log(`\n=== ${store} KB — "${query}" — top ${results.length} documents ===\n`);
   results.forEach((r, i) => {
     console.log(`#${i + 1}  distance=${r.bestDistance.toFixed(4)} (eff=${r.effDistance.toFixed(4)})`
-      + `${r.kind ? `  kind=${r.kind}` : ''}${r.label ? `  [${r.label}]` : ''}`);
+      + `${r.kind ? `  kind=${r.kind}` : ''}${r.label ? `  [${r.label}]` : ''}`
+      + `${r.statusLabel ? `  [${r.statusLabel}]` : ''}`);   // FIX 4 — surface ADR status in the header
     console.log(`path : ${r.path}`);
     console.log(`title: ${r.title}`);
+    if (r.designIntentWarning) console.log(r.designIntentWarning);   // FIX 4 — proposal-as-reality guard
     console.log(`chars: ${r.fullText.length} | chunks: ${r.chunksJoined}${r.truncated ? ' (truncated)' : ''}`);
     console.log('----- full document -----');
     console.log(r.fullText);
