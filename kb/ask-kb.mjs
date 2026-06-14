@@ -199,9 +199,12 @@ const PRIMER_ROUTE_CUES = [
 // query is an orientation question. The generic lift makes the synthesized layer beat a vector-
 // closer deep doc; the route cues then nudge between PRIMER sections toward the best-titled one.
 // Gentle enough that a clearly-better deep match still wins for narrow how-X-works questions.
-function orientationBoost(query, path, title = '') {
+function orientationBoost(query, path, title = '', suppressGeneric = false) {
   if (!PRIMER_PATH_RE.test(path)) return 0;
-  const generic = ORIENT_QUERY_RE.test(query) ? 0.55 : 0.12;
+  // For a concept what-is query the generic orientation lift is suppressed: we do NOT want every
+  // PRIMER (especially the thin product blurb) lifted over the real defining doc. Only the targeted
+  // route cues (if any) apply. (FIX 1)
+  const generic = suppressGeneric ? 0 : (ORIENT_QUERY_RE.test(query) ? 0.55 : 0.12);
   let route = 0;
   const hay = `${path} ${title}`;
   for (const c of PRIMER_ROUTE_CUES) {
@@ -232,6 +235,9 @@ const PRIMER_SLUGS = {
     adr:          'PRIMER#4-adr-index-the-complete-table-208-main-series-files-in-docs-adr-54-in-4-sub-ser',
     playbook:     'PRIMER#0-executive-summary-which-crate-do-i-need',
     whatis:       'PRIMER#1-what-ruvector-is',
+    crates:       'PRIMER#3-complete-crate-inventory',
+    hardware:     null,                       // ruvector has no hardware matrix -> fall through to vector
+    glossary:     null,                       // ruvector has no glossary section
   },
   ruview: {
     maturity:     'PRIMER#7-capabilities-graded-honestly',
@@ -240,7 +246,19 @@ const PRIMER_SLUGS = {
     adr:          'PRIMER#8-the-complete-adr-index-160-adr-numbered-files-156-unique-numbers',
     playbook:     'PRIMER#0-1-instant-playbooks-task-exact-steps',
     whatis:       'PRIMER#1-what-ruview-is',
+    crates:       'PRIMER#3-the-crates-v2-workspace-39-incl-the-ruv-neural-git-submodule-and-homecore-plug',
+    hardware:     'PRIMER#10-hardware-matrix',
+    glossary:     'PRIMER#0-3-glossary-so-terms-are-never-guessed',
   },
+};
+
+// The store's PRODUCT NAME(s). A what-is/concept query that names ONLY the product (no other
+// concrete concept noun) is about the product itself -> force-route to the "what X is" PRIMER#1.
+// A what-is/concept query that names a CONCRETE concept noun (RVF, witness, HNSW, GNN, segment,
+// presence, occupancy, …) is NOT a product overview -> let vector+rerank find the DEFINING doc.
+const PRODUCT_NAMES = {
+  ruvector: /\bru[\s-]?vector\b/i,
+  ruview:   /\bru[\s-]?view\b/i,
 };
 
 // Archetype detectors, ORDERED most-specific-first (first match wins). Each regex tests the raw
@@ -253,30 +271,63 @@ const ARCHETYPE_RES = [
   { name: 'capabilities', re: /\b(capabilit(y|ies)|what can it do|what can ruv\w+ do|features?\b|what does it (do|offer)|what does ruv\w+ (do|offer)|big (capabilities|features))\b/i },
   // docs / tutorials / examples / ADRs / "where do I find …"
   { name: 'docs', re: /\b(where (are|is|can i find|do i find).*(doc|documentation|tutorial|example|adr|guide|find|live)|documentation\b|tutorials?\b|list of adrs?|adr index|where everything lives|where.*\b(docs?|guides?)\b)\b/i },
+  // hardware / boards / devices — enumeration of supported physical hardware
+  { name: 'hardware', re: /\b(hardware|boards?|devices?|which (chip|board|sensor)|supported (hardware|board|device))\b/i },
+  // crate inventory — enumeration of the crates that make up the workspace / a domain
+  { name: 'crates', re: /\b(which crates|crate inventory|what crates|crates (that |which )?(make up|in|for|comprise)|list of crates|\w+ domain crates)\b/i },
   // playbook / setup / onboarding / end-to-end usage
   { name: 'playbook', re: /\b(how (do i |to )?(use|set ?up|onboard|get started|getting started|start|deploy|build|run)|end[- ]to[- ]end|end to end|quick ?start|playbook|walkthrough|step[- ]by[- ]step|get up and running)\b/i },
   // what-is / overview / introduce
-  { name: 'whatis', re: /\b(what is|what'?s |overview of|introduce|introduction to|tell me about)\b/i },
+  { name: 'whatis', re: /\b(what is|what'?s |overview of|introduce|introduction to|tell me about|difference between|role of)\b/i },
 ];
+
+// Strong playbook verbs — when present, the playbook force-route fires EVEN for a long query
+// (the word-count cap is bypassed). These signal an end-to-end "do this from scratch" walkthrough.
+const STRONG_PLAYBOOK_RE = /\b(set ?up|end[- ]to[- ]end|get started|getting started|from scratch|walk ?through|unbox|first time|step by step)\b/i;
 
 // A query is "clearly orientation" only when it is short & conceptual: no concrete symbol, file
 // path, ADR number, code-y token, or function/struct reference. This keeps the force-route from
 // firing on a deep how-X-works-in-the-code question that happens to contain "how to".
 const SPECIFIC_SIGNAL_RE = /(\badr[-\s_]?\d|[a-z_]+\.[a-z]{1,4}\b|\bfn\b|\bstruct\b|\bimpl\b|::|\/|\b[a-z_]+\(\)|\bcrate::|\bsrc\b)/i;
 function isOrientationQuery(query) {
-  const words = (query.trim().match(/\S+/g) || []).length;
-  if (words > 14) return false;                 // long queries are usually specific
+  // A strong playbook verb (set up / end-to-end / from scratch / walkthrough …) marks an
+  // end-to-end "do this from scratch" request. These run long ("set up a single sensor node end to
+  // end and see data in home assistant" = 16 words) yet should still force-route to the playbook
+  // PRIMER, so bypass the word-count cap when one is present (FIX 3).
+  if (!STRONG_PLAYBOOK_RE.test(query)) {
+    const words = (query.trim().match(/\S+/g) || []).length;
+    if (words > 14) return false;               // long queries are usually specific
+  }
   if (SPECIFIC_SIGNAL_RE.test(query)) return false;
   return true;
 }
 
+// Is a what-is/concept query about the PRODUCT ITSELF (force PRIMER#1) vs about a CONCRETE concept
+// noun (let vector+rerank find the defining doc)? Product-only: names the store product (ruvector/
+// ruview) and contains NO other concrete concept noun, OR is literally "what is this / it". A query
+// carrying any concept noun OTHER than the product name (rvf, witness, hnsw, gnn, segment, presence,
+// occupancy, quantization, …) is a concept query, not a product overview. (FIX 1)
+function isProductOverviewQuery(query, store) {
+  const prod = PRODUCT_NAMES[store];
+  // strip the product name, then see whether any meaningful concept term remains.
+  const stripped = prod ? query.replace(prod, ' ') : query;
+  const rest = queryTerms(stripped).filter((t) => t !== store && t !== 'product' && t !== 'overview');
+  if (prod && prod.test(query) && rest.length === 0) return true;   // "what is ruvector"
+  if (/\bwhat'?s?\s+(is\s+)?(this|it)\b/i.test(query) && rest.length === 0) return true; // "what is this"
+  return false;
+}
+
 // Classify the orientation archetype (most-specific-first). Returns archetype name or null.
-function classifyArchetype(query) {
+// `store` lets the what-is split distinguish a product-overview query from a concept query.
+function classifyArchetype(query, store) {
   if (!isOrientationQuery(query)) return null;
   for (const a of ARCHETYPE_RES) {
     if (a.re.test(query)) {
       // The docs archetype splits: if the query is specifically about ADRs, target the ADR index.
       if (a.name === 'docs' && /\b(adr|decision record)\b/i.test(query)) return 'adr';
+      // The what-is archetype splits: product-overview -> PRIMER#1; concept query -> no force-route
+      // (let vector+rerank find the DEFINING doc; a mild concept boost is applied downstream).
+      if (a.name === 'whatis' && !isProductOverviewQuery(query, store)) return 'whatis-concept';
       return a.name;
     }
   }
@@ -319,6 +370,37 @@ const STOPWORDS = new Set(['the','a','an','and','or','of','to','in','for','on','
 function queryTerms(q) {
   return (q.toLowerCase().match(/[a-z0-9][a-z0-9._-]*/g) || [])
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
+}
+
+// Concept nouns from a concept what-is query (FIX 1). The query's meaningful terms MINUS the
+// product name MINUS generic question words = the concrete concept(s) being asked about (rvf,
+// witness, hnsw, gnn, segment, presence, occupancy, …). A doc whose title/path token-overlaps one
+// of these is more likely to DEFINE it, so it gets a mild boost (below) — letting the real defining
+// ADR/source/doc out-rank the thin product blurb without a hard force-route.
+const CONCEPT_STOP = new Set(['what','difference','between','role','format','file','files','does',
+  'store','stores','support','supported','index','indices','chain','segment','detection','counting',
+  'augmented','work','works']);
+function conceptNouns(query, store) {
+  const prod = PRODUCT_NAMES[store];
+  const stripped = prod ? query.replace(prod, ' ') : query;
+  return queryTerms(stripped).filter((t) => t !== store && !CONCEPT_STOP.has(t));
+}
+
+// Mild concept boost: SUBTRACT a small amount from a doc whose path/title token-overlaps a concept
+// noun from a concept what-is query. Gentle (capped) so a clearly-better defining doc wins on its
+// own merit; this only breaks near-ties toward the on-topic doc. PRIMER#1 (the thin product blurb)
+// is excluded so it never benefits from the concept boost. Returns NON-NEGATIVE amount to subtract.
+function conceptBoost(nouns, path, title) {
+  if (!nouns || !nouns.length) return 0;
+  if (PRIMER_PATH_RE.test(path) && /what\b.*\bis\b|#1-/i.test(`${path} ${title}`)) return 0;
+  const hay = `${path} ${title}`.toLowerCase();
+  let overlap = 0;
+  for (const t of nouns) if (hay.includes(t)) overlap += 1;
+  if (overlap === 0) return 0;
+  // Glossary section (ruview) is a legitimate concept target: give it the boost too, but a real
+  // defining doc with the same overlap will tie and the vector distance breaks it (glossary is
+  // synthesized & short, so a true defining doc usually has the closer distance).
+  return Math.min(0.16, 0.08 * overlap);
 }
 
 // FIX 3 — lexical boost: ADR-number exact hit, then proper-noun/title token overlap on
@@ -472,8 +554,18 @@ export async function searchKb({ query, k = 6, store, n }) {
   const terms = queryTerms(query);
 
   // ---- INTENT CLASSIFICATION (deterministic, computed once per query) ----
-  const archetype = classifyArchetype(query);                 // 'maturity'|'capabilities'|… | null
-  const targetPrimerSlug = archetype ? (PRIMER_SLUGS[store] || {})[archetype] : null;
+  const archetype = classifyArchetype(query, store);          // 'maturity'|'capabilities'|…|'whatis-concept'|null
+  // 'whatis-concept' is a NON-routing archetype: no force-route to a PRIMER, instead a mild concept
+  // boost (below) lets the vector+rerank pipeline surface the true DEFINING doc. Other archetypes
+  // force-route to their PRIMER slug (null slug -> no force-route, e.g. ruvector hardware).
+  const targetPrimerSlug = (archetype && archetype !== 'whatis-concept')
+    ? (PRIMER_SLUGS[store] || {})[archetype]
+    : null;
+  // Concept nouns drive the mild concept boost for concept what-is queries (FIX 1).
+  const concepts = archetype === 'whatis-concept' ? conceptNouns(query, store) : [];
+  // For ruview, a concept query may also softly boost the glossary section (a real defining doc
+  // still wins when present, because the glossary is short/synthesized with a worse distance).
+  const glossarySlug = archetype === 'whatis-concept' ? (PRIMER_SLUGS[store] || {}).glossary : null;
   const adrNums = adrNumbers(query);
   const intent = codeDocIntent(query);                        // 'code' | 'design' | null
 
@@ -508,6 +600,7 @@ export async function searchKb({ query, k = 6, store, n }) {
     docs.set(p, { path: p, title: chunks[0].title, bestDistance: 1.0, matchedId: chunks[0].id });
   };
   if (targetPrimerSlug) ensureDoc(targetPrimerSlug);
+  if (glossarySlug) ensureDoc(glossarySlug);   // concept query: glossary may softly win for ruview
   // For an exact ADR query, find the real ADR doc path(s) by scanning the passages index.
   const adrDocPaths = [];
   if (adrNums.length) {
@@ -527,7 +620,10 @@ export async function searchKb({ query, k = 6, store, n }) {
     const boost = lexicalBoost(query, terms, d.path, d.title);
     const seed = seedAdjust(query, d.path);
     const sub = substanceBoost(byPath.get(d.path));
-    const orient = orientationBoost(query, d.path, d.title);  // FIX 5 — top-down orientation layer
+    const orient = orientationBoost(query, d.path, d.title, archetype === 'whatis-concept');  // FIX 5 — top-down orientation layer
+    // FIX 1 — concept boost: nudge docs that name the concept; extra nudge for the glossary section.
+    let concept = conceptBoost(concepts, d.path, d.title);
+    if (glossarySlug && d.path === glossarySlug && concepts.length) concept += 0.06;
     let intentAdj = 0;
 
     // INTENT (1) — orientation archetype force-route to the matching PRIMER slug.
@@ -543,7 +639,7 @@ export async function searchKb({ query, k = 6, store, n }) {
       if (intent === 'design' && kind === 'adr')     intentAdj += 0.22;   // prefer the ADR/doc
     }
 
-    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - intentAdj;
+    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - concept - intentAdj;
     return { ...d, effDistance, kind: byPathKind.get(d.path) || null };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
