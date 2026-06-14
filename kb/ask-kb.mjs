@@ -410,6 +410,74 @@ function codeDocIntent(query) {
   return null;
 }
 
+// ===================================================================================
+// FIX A — "how-works-in-code" / implementation intent (RETRIEVAL POLISH). A query that asks
+// how something is IMPLEMENTED/coded ("how is X implemented", "how does X work in code",
+// "implementation of X", "where is X coded") wants the REAL algorithm source in the crate's
+// own src/ — NOT a vendored/copied dependency, NOT the CLI entrypoint, NOT the manifest. So we:
+//   • DEMOTE wrong-file types: vendored/patched dep copies (patches/** + any hnsw_rs-style
+//     copied-dep tree), bare entrypoints (**/main.rs, **/bin/**), and Cargo.toml.
+//   • PROMOTE the crate's own src/**/*.rs (excluding main.rs) — with an EXTRA promotion for a
+//     file whose name token-matches the named operation (e.g. "insert" -> *insert*.rs,
+//     "count/counting" -> *count*.rs), so the operation's implementation module wins.
+// Scoped to the named crate(s) from the query (entity.crates) where possible; the vendored-dep
+// demotion is global (a copied dep is never the answer to "how is X implemented HERE").
+// ===================================================================================
+const IMPL_INTENT_RE = new RegExp([
+  '\\bimplement(ed|ation)?\\b',                       // "X implemented", "implementation of X"
+  '\\bhow\\s+(is|does)\\b.*\\b(work|works|coded|done)\\b.*\\bin\\s+(the\\s+)?(code|source)\\b',
+  '\\bhow\\s+\\w+\\s+(is|works?)\\s+coded\\b',
+  '\\bwhere\\s+is\\s+\\w+\\s+(coded|implemented)\\b',
+].join('|'), 'i');
+function isImplIntent(query) { return IMPL_INTENT_RE.test(query); }
+
+// Vendored / copied-dependency trees that are NEVER the answer to "how is X implemented here".
+// patches/** is the explicit vendored-patch tree; the hnsw_rs token catches the copied upstream
+// HNSW crate wherever it lands (e.g. scripts/patches/hnsw_rs/**). Kept conservative.
+const VENDORED_DEP_RE = /(^|\/)(patches)\/|(^|\/)hnsw_rs\//i;
+
+// The operation noun(s) the impl query is about: meaningful terms MINUS the named crate token(s)
+// MINUS generic impl words. Used to give an extra promotion to a src file whose name token-matches
+// the operation (e.g. "insert" -> insert.rs / *insert*.rs).
+const IMPL_STOP = new Set(['how','does','work','works','implement','implemented','implementation',
+  'code','coded','source','where','the','rust','module','crate','function','method','logic']);
+function implOperationNouns(query, crates) {
+  const crateSet = new Set((crates || []).map((c) => c.toLowerCase()));
+  return queryTerms(query)
+    .filter((t) => !crateSet.has(t) && !IMPL_STOP.has(t)
+      && !(crates || []).some((c) => t === c || c.includes(t)));
+}
+
+// Implementation-intent path adjustment (negative = promote, positive = demote). `crateTok` is the
+// named crate the query is about (or null for unscoped). `opNouns` are the operation tokens.
+function implAdjust(path, crateTok, opNouns) {
+  let adj = 0;
+  // Global: a vendored/copied-dep tree is never the real implementation of "X here".
+  if (VENDORED_DEP_RE.test(path)) adj += 0.55;
+
+  const slug = (path.split('/').pop() || '').toLowerCase();
+  const isMain = /(^|\/)main\.rs$/i.test(path);
+  const isBin  = /(^|\/)bin\//i.test(path);
+  const isCargo = /(^|\/)cargo\.toml$/i.test(path);
+  // Bare entrypoints + manifest are not the algorithm (apply globally for impl intent).
+  if (isMain || isBin) adj += 0.30;
+  if (isCargo) adj += 0.30;
+
+  if (crateTok) {
+    const inCrate = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateTok}(?:-[a-z0-9-]+)?/`, 'i').test(path);
+    if (inCrate) {
+      // Real source body of the named crate: src/**/*.rs that is NOT main.rs / a module-stub dir.
+      const isSrcRs = /(?:^|\/)src\/.+\.rs$/i.test(path);
+      if (isSrcRs && !isMain) {
+        adj -= 0.40;                                   // promote the crate's own algorithm source
+        // Extra promotion when the filename token-matches the named operation.
+        if (opNouns && opNouns.some((t) => t.length >= 3 && slug.includes(t))) adj -= 0.30;
+      }
+    }
+  }
+  return adj;
+}
+
 // Exact ADR-by-number, e.g. "ADR-027" / "adr 27" -> zero-padded "027". Returns [nums] or [].
 function adrNumbers(query) {
   return (query.match(/\badr[-\s_]?(\d{1,4})\b/gi) || [])
@@ -530,6 +598,47 @@ function crateOverviewAdjust(crateTok, path) {
   if (/\/benches?\//i.test(path) || /\/main\.rs$/i.test(path)) adj += 0.20;             // harness
   if (/\/cargo\.toml$/i.test(path)) adj += 0.18;                                         // bare manifest
   return adj;
+}
+
+// ===================================================================================
+// FIX B — targeted off-topic-magnet down-weight (RETRIEVAL POLISH). A specific document that
+// keeps surfacing as off-topic noise on UNRELATED queries gets a mild penalty UNLESS the query is
+// actually about that document's subject. General mechanism (a small allow-listed down-weight
+// table); currently a single entry for ADR-096 (rvCSI crate layout), which intruded on unrelated
+// queries (e.g. worldgraph spatial relationships). The penalty is mild so an on-topic query
+// (about rvCSI crate layout / structure) still surfaces it normally via its allow regex.
+// ===================================================================================
+const OFFTOPIC_MAGNETS = [
+  // ADR-096 (rvCSI crate layout). Allow when the query is specifically about rvCSI crate
+  // layout/structure/organization; otherwise apply a mild penalty.
+  { re: /(^|\/)adr[-_]?0*96\b/i, pen: 0.22,
+    allow: /\b(rvcsi|rv[-_]?csi|crate\s+layout|crate\s+structure|crate\s+organi|workspace\s+layout|adr[-\s_]?0*96)\b/i },
+];
+function offtopicMagnetPenalty(query, path) {
+  let pen = 0;
+  for (const m of OFFTOPIC_MAGNETS) {
+    if (m.re.test(path) && !m.allow.test(query)) pen += m.pen;
+  }
+  return pen;
+}
+
+// ===================================================================================
+// FIX C — crate-specific maturity → the crate's OWN README/BENCHMARK (RETRIEVAL POLISH). A query
+// like "is <crate> production-ready / experimental / complete" is answered by that crate's OWN
+// README.md / BENCHMARK.md (which usually carry a status/maturity note), NOT by the global
+// capabilities-graded primer or a cross-crate benchmark doc. Returns the named crate token when
+// the query is a crate-scoped maturity question, else null.
+const MATURITY_QUERY_RE = /\b(production[- ]?ready|production\b|experimental|prototype|complete|completeness|mature|maturity|stable|ready\s+for\s+production|battle[- ]?tested|is\s+it\s+(done|ready))\b/i;
+function crateMaturityTarget(query, entityCrates) {
+  if (!entityCrates || !entityCrates.length) return null;
+  if (MATURITY_QUERY_RE.test(query)) return entityCrates[0];
+  return null;
+}
+// Boost the named crate's OWN README.md / BENCHMARK.md for a crate-maturity query (negative = boost).
+function crateMaturityAdjust(crateTok, path) {
+  if (!crateTok) return 0;
+  const own = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateTok}(?:-[a-z0-9-]+)?/(readme|benchmark)\\.md$`, 'i');
+  return own.test(path) ? -0.50 : 0;
 }
 
 // FIX 3 — lexical boost: ADR-number exact hit, then proper-noun/title token overlap on
@@ -721,6 +830,14 @@ export async function searchKb({ query, k = 6, store, n }) {
   const glossarySlug = archetype === 'whatis-concept' ? (PRIMER_SLUGS[store] || {}).glossary : null;
   const adrNums = adrNumbers(query);
   const intent = codeDocIntent(query);                        // 'code' | 'design' | null
+  // FIX A — implementation ("how is X coded") intent: demote wrong-file types (vendored deps,
+  // bare entrypoints, manifests), promote the named crate's own src/**/*.rs.
+  const implIntent = isImplIntent(query);
+  const implCrateTok = (implIntent && entity.crates.length) ? entity.crates[0] : null;
+  const implOpNouns = implIntent ? implOperationNouns(query, entity.crates) : [];
+  // FIX C — crate-scoped maturity question: prefer the crate's OWN README/BENCHMARK over the
+  // global capabilities primer / cross-crate benchmark doc.
+  const crateMaturityTok = crateMaturityTarget(query, entity.crates);
 
   const db = await RvfDatabase.openReadonly(conf.rvf);
   let hits;
@@ -781,6 +898,21 @@ export async function searchKb({ query, k = 6, store, n }) {
     const cre = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateOverviewTok}(?:-[a-z0-9-]+)?/(readme|benchmark)\\.md$`, 'i');
     for (const p of byPath.keys()) { if (cre.test(p)) ensureDoc(p); }
   }
+  // FIX A — for an implementation query naming a crate, pull that crate's own src/**/*.rs (non-main)
+  // into the pool so the real algorithm source can be promoted above a vendored copy / entrypoint.
+  if (implCrateTok) {
+    const srcRe = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${implCrateTok}(?:-[a-z0-9-]+)?/src/.+\\.rs$`, 'i');
+    let added = 0;
+    for (const p of byPath.keys()) {
+      if (docs.has(p) || /(?:^|\/)main\.rs$/i.test(p)) continue;
+      if (srcRe.test(p)) { ensureDoc(p); if (++added >= 40) break; }
+    }
+  }
+  // FIX C — for a crate-maturity query, ensure the crate's own README/BENCHMARK are in the pool.
+  if (crateMaturityTok) {
+    const cre = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateMaturityTok}(?:-[a-z0-9-]+)?/(readme|benchmark)\\.md$`, 'i');
+    for (const p of byPath.keys()) { if (cre.test(p)) ensureDoc(p); }
+  }
 
   // FIXes 2/3/4 + INTENT — compute effective distance per document.
   // Hard routes use a large negative adjustment so the routed doc wins decisively; intent tilts
@@ -799,6 +931,13 @@ export async function searchKb({ query, k = 6, store, n }) {
     const primerDemote = (entity.named && dkind === 'primer-orientation') ? PRIMER_DEMOTE_WHEN_SPECIFIC : 0;
     // FIX 2 — crate-overview / metric: boost the crate's README/BENCHMARK/docs, demote its harness.
     const crateAdj = crateOverviewAdjust(crateOverviewTok, d.path);  // negative=boost, positive=demote
+    // FIX A — implementation intent: demote vendored deps / entrypoints / manifest, promote the
+    // named crate's own src/**/*.rs (extra for an operation-token-matching filename).
+    const implAdj = implIntent ? implAdjust(d.path, implCrateTok, implOpNouns) : 0;
+    // FIX B — targeted off-topic-magnet down-weight (ADR-096 unless query is about rvCSI layout).
+    const magnetPen = offtopicMagnetPenalty(query, d.path);
+    // FIX C — crate-maturity: boost the named crate's OWN README/BENCHMARK.
+    const matAdj = crateMaturityAdjust(crateMaturityTok, d.path);   // negative=boost
     // FIX 1/3 — concept boost: nudge docs whose slug/title names the concept (defining doc beats
     // adjacent); extra nudge for the glossary section on a whatis-concept query.
     let concept = conceptBoost(definingNouns, d.path, d.title);
@@ -819,7 +958,7 @@ export async function searchKb({ query, k = 6, store, n }) {
     }
 
     const effDistance = d.bestDistance + pen - boost + seed - sub - orient - concept - intentAdj
-      + primerDemote + crateAdj;
+      + primerDemote + crateAdj + implAdj + magnetPen + matAdj;
     return { ...d, effDistance, kind: dkind };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
