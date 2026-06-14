@@ -18,9 +18,12 @@ import { fileURLToPath } from 'node:url';
 
 const KB_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-// Canonical host (where the live manifest + bundles are served). One place to change if it moves.
+// Canonical hosts. The MANIFEST (.last-built.json) is small + lives in the repo, served raw.
+// The BUNDLES are large (the big .rvf alone > GitHub's 100MB file limit), so they're hosted as
+// assets on the ROLLING `kb-latest` GitHub Release — a permanent URL CI keeps current.
 const CANON_BASE = 'https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb';
 const MANIFEST_URL = `${CANON_BASE}/.last-built.json`;
+const RELEASE_BASE = 'https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest';
 
 // files shared by every bundle (the runnable shim + setup + integrity check + evergreen + README)
 const SHARED = ['ask-kb.mjs', 'kb-mcp-server.mjs', 'resolve-deps.mjs', 'guard-check.mjs',
@@ -42,7 +45,7 @@ function writeSourceJson() {
       builtUtc,
       builder: 'rvf-kb-forge',
       canonicalManifestUrl: MANIFEST_URL,
-      canonicalBundleUrl: `${CANON_BASE}/${kbName}-kb-bundle.zip`,
+      canonicalBundleUrl: `${RELEASE_BASE}/${kbName}-kb-bundle.zip`,
       selfUpdate: `node kb-update.mjs ${kbName}`,
     };
   }

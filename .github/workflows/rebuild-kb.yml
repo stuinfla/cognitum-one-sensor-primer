@@ -4,90 +4,82 @@ name: Rebuild RVF knowledge bases
 # EVERGREEN KB AUTOMATION
 #
 # The companion "Update RuView submodule" workflow bumps the RuView / ruvector
-# submodule POINTERS once a day. That bump is a commit that touches the `RuView`
-# and `ruvector` gitlink paths — which is exactly what triggers THIS workflow.
-# So: upstream moves -> daily bump commit -> this rebuilds the KBs from the new
-# checkout, guards them, regenerates bundles, and commits the refreshed artifacts.
+# submodule POINTERS once a day. That bump commit touches the `RuView` / `ruvector`
+# gitlink paths — which triggers THIS workflow. So: upstream moves -> daily bump ->
+# this rebuilds the KBs from the new checkout, guards them, regenerates the download
+# bundles, COMMITS the (sub-100MB) loose KB files, and PUBLISHES the bundles as assets
+# on the rolling `kb-latest` GitHub Release.
 #
-# Two jobs live here:
-#   • rebuild-small  — runs AUTOMATICALLY on every submodule bump (and on demand).
-#                      The SMALL (384-dim MiniLM) variant is the Seed-compatible
-#                      default and is FAST (minutes), so it is safe to run on the
-#                      free 2-core runner on every upstream move.
-#   • rebuild-big    — workflow_dispatch ONLY (manual). The BIG (768-dim BGE)
-#                      variant re-embeds ~36k passages on CPU; that is far too slow
-#                      to run automatically on a free runner (see the long comment
-#                      on that job for the honest reasoning + the runner choice).
+# WHY a Release (not committed zips): the combined bundle for ruvector is ~155MB — over
+# GitHub's 100MB per-file repo limit. The loose files in kb/stores/<repo>/ are each <100MB
+# and ARE committed (source of truth); the large download zips are gitignored and live on
+# the `kb-latest` Release, whose URL is permanent so the website + self-updater never break.
+#
+# Two jobs:
+#   • rebuild-small  — AUTOMATIC on every submodule bump (+ manual). The 384-dim MiniLM
+#                      variant is the Seed default and FAST (minutes) on the free runner.
+#   • rebuild-big    — workflow_dispatch ONLY. The 768-dim BGE variant re-embeds ~36k
+#                      passages on CPU (>1h on a free 2-core runner) — too slow to automate.
+#
+# NOTE on variant skew: an automatic small-only rebuild refreshes the small .rvf; the big
+# .rvf in the bundle then reflects the LAST manual big build until rebuild-big is run again.
+# Both variants are always present in the bundle; big simply trails small between manual runs.
 # ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     paths:
       - 'RuView'      # submodule gitlink — moves when the daily bump points it at a new SHA
-      - 'ruvector'    # submodule gitlink — same
+      - 'ruvector'
   workflow_dispatch:
     inputs:
       rebuild_big:
-        description: 'Also rebuild the BIG (768-dim) variant (SLOW, manual only). Requires a heavier runner — see job comment.'
+        description: 'Also rebuild the BIG (768-dim) variant (SLOW, manual only — needs a heavier runner).'
         type: boolean
         default: false
 
-# Least privilege: the only thing this workflow needs beyond read is to commit the
-# rebuilt artifacts back to the repo. No packages, no deployments, no PRs.
+# contents:write covers BOTH committing the loose KB files AND uploading Release assets
+# (gh release upload authenticates with the built-in GITHUB_TOKEN).
 permissions:
   contents: write
 
-# If a bump lands while a previous rebuild is still running, cancel the old one —
-# only the newest checkout matters. (Per-job groups so a manual BIG run and an
-# automatic SMALL run don't cancel each other.)
 concurrency:
   group: rebuild-kb-${{ github.workflow }}
   cancel-in-progress: true
 
 env:
-  # MiniLM model cache lives in the workspace so actions/cache can persist it between runs.
   KB_MODEL_CACHE: ${{ github.workspace }}/kb/models-cache
   EMBED_MODEL: Xenova/all-MiniLM-L6-v2
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # SMALL variant — the evergreen, always-on rebuild. Fast + Seed-critical.
+  # SMALL variant — evergreen, always-on. Fast + Seed-critical.
   # ═══════════════════════════════════════════════════════════════════════════
   rebuild-small:
     runs-on: ubuntu-latest
     steps:
-      # 1. Check out the repo WITH submodules at the SHAs the bump commit pinned.
-      #    fetch-depth: 0 so `git describe --tags` works for the README pins.
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      # 2. Node 20 (the build/guard scripts are Node 18+; 20 is the current LTS).
       - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. Install the two runtime deps in kb/. On ubuntu-x64, @ruvector/rvf resolves
-      #    through @ruvector/rvf-node which ships a linux-x64-gnu prebuilt, so no native
-      #    build is needed. resolve-deps.mjs then finds both from kb/node_modules.
-      #    `npm ci` would need a lockfile entry for these "latest" deps; the package.json
-      #    pins them as "latest", so an explicit `npm i` of the exact two is the honest call.
+      # @ruvector/rvf resolves through @ruvector/rvf-node (linux-x64-gnu prebuilt) — no native build.
       - name: Install KB deps
         working-directory: kb
         run: npm i @ruvector/rvf @xenova/transformers
 
-      # 4. Cache the MiniLM model dir. Key on the model name so a model change busts the
-      #    cache. First run downloads from HuggingFace; later runs restore it and build offline.
       - name: Cache MiniLM model
         uses: actions/cache@v4
         with:
           path: ${{ env.KB_MODEL_CACHE }}
           key: minilm-${{ env.EMBED_MODEL }}-v1
 
-      # 5. Rebuild BOTH SMALL knowledge bases from the freshly-checked-out submodules.
-      #    KB_REPO_ROOT points the build scripts at this workspace (they default to it anyway).
+      # Build scripts now write into kb/stores/<repo>/ as <repo>-kb.small.rvf (two-variant layout).
       - name: Rebuild ruvector KB (small)
         env:
           KB_REPO_ROOT: ${{ github.workspace }}
@@ -98,77 +90,44 @@ jobs:
           KB_REPO_ROOT: ${{ github.workspace }}
         run: node kb/build-ruview-kb.mjs
 
-      # 5b. (OPTIONAL) LLM-authored primer PROSE regeneration.
-      #    index-primer.mjs (step 6) only INDEXES the existing ../ruvector-primer.md /
-      #    ../ruview-primer.md; it does not WRITE them. Regenerating that prose with an LLM
-      #    needs an Anthropic API key. This step is intentionally SKIPPED unless the repo has
-      #    a secret named ANTHROPIC_API_KEY.
-      #    ┌─ ACTION REQUIRED BY A HUMAN ──────────────────────────────────────────────┐
-      #    │ This secret is NOT fabricated here. To enable prose regeneration, a human   │
-      #    │ must add it: Repo Settings -> Secrets and variables -> Actions ->           │
-      #    │ "New repository secret" -> name ANTHROPIC_API_KEY. Until then this no-ops.   │
-      #    └────────────────────────────────────────────────────────────────────────────┘
-      #    NOTE: the primer prose generator/script is owned by ANOTHER workstream. When it
-      #    exists, replace the placeholder command below with the real invocation. We do NOT
-      #    guess a command here — running a non-existent script would fail the pipeline.
-      #    (GitHub does not allow the `secrets` context directly in a step `if:`, so we map
-      #    the secret to an env var and test THAT — the standard skip-without-secret pattern.)
+      # OPTIONAL LLM-authored primer PROSE regeneration — SKIPPED unless ANTHROPIC_API_KEY is set.
+      # ┌─ ACTION REQUIRED BY A HUMAN ────────────────────────────────────────────────┐
+      # │ To enable: Repo Settings -> Secrets and variables -> Actions -> New secret    │
+      # │ named ANTHROPIC_API_KEY. Not fabricated here. Until then this step no-ops.     │
+      # └────────────────────────────────────────────────────────────────────────────┘
       - name: Regenerate primer prose (skipped unless ANTHROPIC_API_KEY is set)
         if: ${{ env.ANTHROPIC_API_KEY != '' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "ANTHROPIC_API_KEY is present — primer-prose regeneration would run here."
-          echo "TODO(other workstream): wire the real prose generator, e.g.:"
-          echo "  node kb/generate-primer.mjs ruvector && node kb/generate-primer.mjs ruview"
-          echo "Leaving as a no-op until that script lands so CI never invokes a missing command."
+          echo "ANTHROPIC_API_KEY present — primer-prose regeneration would run here."
+          echo "TODO(other workstream): wire the real generator (e.g. node kb/generate-primer.mjs ruvector)."
 
-      # 6. PRIMER ORIENTATION LAYER. index-primer.mjs appends the synthesized
-      #    top-down primer sections (../ruvector-primer.md, ../ruview-primer.md) INTO
-      #    each freshly-built .rvf so the six comprehension-journey questions return a
-      #    whole synthesized section instead of a raw repo fragment. It is an INCREMENTAL
-      #    append (new ids, appended passages + index entries) so PARITY still holds for
-      #    the guard below. The corpus build scripts do NOT do this — it is a separate
-      #    step, which is why it lives here. The primer .md files are owned by another
-      #    workstream; CI only consumes them.
-      - name: Index primer orientation into ruvector KB
+      # Append the top-down primer sections INTO the freshly-built small .rvf (incremental,
+      # parity-preserving) so the 6 comprehension-journey questions return whole sections.
+      - name: Index primer orientation (ruvector)
         run: node kb/index-primer.mjs ruvector
-
-      - name: Index primer orientation into RuView KB
+      - name: Index primer orientation (RuView)
         run: node kb/index-primer.mjs ruview
 
-      # 7. ANTI-TRUNCATION GUARD (critical). Fails the whole job (exit 1) if either KB is
-      #    broken: passages/index/idmap parity, the 200/240-char preview-truncation bug, or
-      #    a canned query that returns no text. A red guard means NOTHING below runs and
-      #    NOTHING gets committed.
+      # ANTI-TRUNCATION GUARD — parity + truncation + live query on the SMALL build. Red => stop.
       - name: Guard — parity + anti-truncation + live query
         run: node kb/guard-check.mjs
 
-      # 8. Rebuild the self-contained download zips (only reached if the guard is green).
-      #    NOTE: make-bundles.mjs currently bundles only the SMALL .rvf + sidecars. It does
-      #    not yet know about the BIG (*.big.rvf) files — see the rebuild-big job and the
-      #    TODO there. Editing make-bundles.mjs is owned by another workstream.
+      # Regenerate the download zips. make-bundles.mjs now ships BOTH variants when both are
+      # present in stores/, deduping the shared passages — one bundle per repo.
       - name: Rebuild bundle zips
         run: node kb/make-bundles.mjs
 
-      # 9. SITE FRESHNESS DATE STAMP — single source of truth.
-      #    update-readme-pins.mjs writes kb/.last-built.json (the canonical machine-readable
-      #    build marker / date) AND stamps the kb/README.md provenance line. That is the one
-      #    obvious source of truth we can safely bump mechanically here.
-      #    TODO (human / other workstream): the SITE index.html "freshness date" is owned by a
-      #    different workstream and has no single obvious source of truth this workflow can edit
-      #    without guessing. If/when index.html should read from kb/.last-built.json, wire that
-      #    up in the site build — do NOT hand-edit index.html from CI.
+      # Stamp the canonical build marker (kb/.last-built.json) + README provenance line.
       - name: Update README pins + write build marker
         run: node kb/update-readme-pins.mjs
 
-      # 10. Commit + push the refreshed artifacts as github-actions[bot]. No-op if nothing changed.
-      - name: Commit rebuilt KBs
+      # Commit the LOOSE KB files (stores/*, manifests, SOURCE.json — all <100MB). The bundle
+      # zips are gitignored (distributed via Release below), so `git add kb/` never stages them.
+      - name: Commit rebuilt KB files
         run: |
-          if git diff --quiet -- kb/; then
-            echo "No KB changes to commit."
-            exit 0
-          fi
+          if git diff --quiet -- kb/; then echo "No KB changes to commit."; exit 0; fi
           RV_DESC=$(git -C RuView describe --tags --always || echo unknown)
           RVEC_SHA=$(git -C ruvector rev-parse --short HEAD || echo unknown)
           git config user.name "github-actions[bot]"
@@ -177,46 +136,28 @@ jobs:
           git commit -m "Rebuild KBs (small): RuView ${RV_DESC}, ruvector ${RVEC_SHA}"
           git push
 
+      # Publish the refreshed bundles as assets on the rolling kb-latest Release (permanent URL).
+      - name: Publish bundles to rolling kb-latest Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view kb-latest >/dev/null 2>&1 || \
+            gh release create kb-latest --title "RVF Knowledge Bases — latest (rolling)" \
+              --notes "Always-current Cognitum RVF KB bundles (big 768-dim + small 384-dim). CI refreshes these on upstream publish."
+          gh release upload kb-latest kb/ruvector-kb-bundle.zip kb/ruview-kb-bundle.zip --clobber
+
   # ═══════════════════════════════════════════════════════════════════════════
-  # BIG variant — MANUAL ONLY (workflow_dispatch with rebuild_big = true).
-  #
-  # ── WHY this is not automatic, and why it is a SEPARATE long-timeout job ──
-  # build-big-variant.mjs re-embeds the SAME ~36k passages with Xenova/bge-base-en-v1.5
-  # (768-dim, CLS pooling). Embedding is the slow part and it is CPU-bound. On the free
-  # 2-core ubuntu-latest runner, ~36k passages at the rates this script logs (single-digit
-  # to low-tens of passages/sec) realistically takes well over an hour — and the default
-  # GitHub job is capped/contended such that a free-runner BIG build is likely to TIME OUT
-  # or burn most of the monthly free minutes for marginal benefit (BIG is the Mac/PC
-  # "sharper" variant, NOT the Seed default). Pretending the free runner can do this on
-  # every upstream bump would be dishonest and would make the evergreen pipeline flaky.
-  #
-  # ── APPROACH CHOSEN: (a) single manual job with a long timeout ──
-  # We deliberately picked the simpler of the two honest options. The matrix-shard
-  # alternative (embed shards in parallel jobs -> upload artifacts -> gather + ingest)
-  # adds a lot of YAML + artifact plumbing, yet each shard is STILL CPU-bound on a 2-core
-  # free runner, so it does not actually make a free-tier run fit in budget — it just
-  # spreads the same slow work across more billed jobs. The pragmatic, genuinely-working
-  # path is: run it by hand, on a bigger runner, only when the BIG variant needs refreshing.
-  #
-  # ── WHAT THE HUMAN MUST DO to run this ──
-  #   • Trigger from the Actions tab: "Run workflow" -> set rebuild_big = true.
-  #   • For real 36k-passage runs, change `runs-on:` below to a larger runner you have
-  #     access to (e.g. a self-hosted runner or a GitHub larger runner like
-  #     `ubuntu-latest-8-cores`). On the free 2-core runner this job will be slow and may
-  #     hit the timeout-minutes ceiling below — that is expected, not a bug.
+  # BIG variant — MANUAL ONLY (workflow_dispatch, rebuild_big = true).
+  # build-big-variant.mjs re-embeds ~36k passages with bge-base-en-v1.5 (768-dim, CLS) — CPU
+  # bound, >1h on a free 2-core runner. Run it by hand on a larger/self-hosted runner when the
+  # big variant needs refreshing. It writes <repo>-kb.big.rvf into kb/stores/<repo>/ and has its
+  # OWN reconcile gate (vectors == passages, exit 1 on mismatch).
   # ═══════════════════════════════════════════════════════════════════════════
   rebuild-big:
-    # Manual only: never runs on the automatic submodule-bump push, and only when the
-    # operator explicitly opts in via the workflow_dispatch input.
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.rebuild_big }}
-    runs-on: ubuntu-latest   # TODO(human): swap for a larger / self-hosted runner for real 36k runs.
-    # Generous ceiling so a legitimate long embed isn't killed at the 6h GitHub hard cap by
-    # surprise; on the free 2-core runner it may still not finish — see job header.
+    runs-on: ubuntu-latest   # TODO(human): swap for a larger/self-hosted runner for real 36k runs.
     timeout-minutes: 350
     env:
-      # BIG uses a different model than the small job, so give it its OWN cache dir. This MUST
-      # match the actions/cache `path` below, because build-big-variant.mjs -> chooseModelCache()
-      # honors KB_MODEL_CACHE; if the two diverged the cache would never hit.
       KB_MODEL_CACHE: ${{ github.workspace }}/kb/models-cache-big
     steps:
       - name: Checkout (with submodules)
@@ -234,73 +175,40 @@ jobs:
         working-directory: kb
         run: npm i @ruvector/rvf @xenova/transformers
 
-      # BIG uses a DIFFERENT model (bge-base-en-v1.5), so it gets its own cache key.
       - name: Cache BGE model
         uses: actions/cache@v4
         with:
-          path: ${{ env.KB_MODEL_CACHE }}   # job-level KB_MODEL_CACHE = .../models-cache-big
+          path: ${{ env.KB_MODEL_CACHE }}
           key: bge-base-en-v1.5-v1
 
-      # The BIG variant re-embeds the EXISTING passages sidecars — it does NOT re-walk the
-      # repo — so the SMALL build must already be committed. We rely on the checked-out
-      # kb/*.passages.jsonl that the small job committed. If they are missing, build them:
+      # build-big-variant.mjs re-embeds the EXISTING passages (it does not re-walk the repo), so
+      # the small build's passages must exist in stores/. Rebuild small first if they're missing.
       - name: Ensure small passages exist (re-embed source of truth)
         env:
           KB_REPO_ROOT: ${{ github.workspace }}
         run: |
-          if [ ! -f kb/ruvector-kb.passages.jsonl ] || [ ! -f kb/ruview-kb.passages.jsonl ]; then
-            echo "Passages sidecars missing — rebuilding small variant first."
+          if [ ! -f kb/stores/ruvector/ruvector-kb.passages.jsonl ] || [ ! -f kb/stores/ruview/ruview-kb.passages.jsonl ]; then
+            echo "Passages missing — rebuilding small variant first."
             node kb/.build-ruvector-kb/build.mjs
             node kb/build-ruview-kb.mjs
+            node kb/index-primer.mjs ruvector && node kb/index-primer.mjs ruview
           fi
 
-      # `both` mode = single-process embed + ingest, and it loops over BOTH stores
-      # (ruvector + ruview) internally — it takes NO store argument. Slow but simplest, and
-      # matches the chosen approach (a). For a faster manual run on a multi-core runner you
-      # could instead fan out `embed <store> <i> <n>` steps then a single `ingest <store>`
-      # per store; left as one `both` call to keep this readable for a newcomer maintainer.
+      # `both` = single-process embed + ingest over BOTH stores. Slow but simplest. For a faster
+      # run on a multi-core runner, fan out `embed <store> <i> <n>` steps then `ingest <store>`.
       - name: Build BIG variant (both stores, 768-dim BGE)
         run: node kb/build-big-variant.mjs both
 
-      # No SMALL-style guard exists for the BIG files (guard-check.mjs hardcodes the small
-      # .rvf paths). build-big-variant.mjs has its OWN reconcile gate (vectors == passages,
-      # exit 1 on mismatch), which is the integrity check for this variant.
-      # TODO(human / other workstream): extend guard-check.mjs to also accept a *.big.rvf
-      #   target so the BIG variant gets the same parity + live-query guarantees as small.
-
-      # Regenerate the SMALL bundles so SOURCE.json/manifest stay coherent, THEN add the BIG
-      # artifacts alongside in separate zips. make-bundles.mjs itself does not yet bundle the
-      # *.big.* files (it is owned by another workstream — see TODO), so we zip them here as a
-      # clearly-commented mechanical step. This means "both variants present" => both shipped.
-      - name: Rebuild small bundles (keep manifest coherent)
+      # make-bundles.mjs ships BOTH variants from stores/ — one bundle per repo, big + small.
+      - name: Rebuild bundle zips (big + small)
         run: node kb/make-bundles.mjs
-
-      - name: Bundle BIG artifacts (mechanical — make-bundles.mjs doesn't cover *.big.* yet)
-        working-directory: kb
-        run: |
-          for store in ruvector ruview; do
-            metasuffix="ids.json"; [ "$store" = "ruview" ] && metasuffix="meta.json"
-            big_files="${store}-kb.big.rvf ${store}-kb.big.rvf.idmap.json ${store}-kb.big.passages.jsonl ${store}-kb.big.${metasuffix} ${store}-kb.big.rvf.embed.json"
-            present=true
-            for f in $big_files; do [ -f "$f" ] || present=false; done
-            if [ "$present" = true ]; then
-              zip -X "${store}-kb-big-bundle.zip" $big_files \
-                ask-kb.mjs kb-mcp-server.mjs resolve-deps.mjs build-big-variant.mjs README.md
-              echo "built ${store}-kb-big-bundle.zip"
-            else
-              echo "skip ${store}: not all BIG artifacts present"
-            fi
-          done
 
       - name: Update README pins + write build marker
         run: node kb/update-readme-pins.mjs
 
-      - name: Commit rebuilt BIG KBs + bundles
+      - name: Commit rebuilt KB files (loose; <100MB)
         run: |
-          if git diff --quiet -- kb/; then
-            echo "No KB changes to commit."
-            exit 0
-          fi
+          if git diff --quiet -- kb/; then echo "No KB changes to commit."; exit 0; fi
           RV_DESC=$(git -C RuView describe --tags --always || echo unknown)
           RVEC_SHA=$(git -C ruvector rev-parse --short HEAD || echo unknown)
           git config user.name "github-actions[bot]"
@@ -308,3 +216,12 @@ jobs:
           git add kb/
           git commit -m "Rebuild KBs (big, manual): RuView ${RV_DESC}, ruvector ${RVEC_SHA}"
           git push
+
+      - name: Publish bundles to rolling kb-latest Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view kb-latest >/dev/null 2>&1 || \
+            gh release create kb-latest --title "RVF Knowledge Bases — latest (rolling)" \
+              --notes "Always-current Cognitum RVF KB bundles (big 768-dim + small 384-dim)."
+          gh release upload kb-latest kb/ruvector-kb-bundle.zip kb/ruview-kb-bundle.zip --clobber

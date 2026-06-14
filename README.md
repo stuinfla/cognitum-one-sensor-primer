@@ -19,6 +19,19 @@ with the legacy LD2450 covered), vital-signs radar (MR60BHA2), WiFi CSI nodes, a
 7. **Shopping list** — sensors, the brain, connectors, and batteries with Amazon links
 8. **Glossary** — every term in plain English
 
+## Knowledge bases (`kb/`)
+
+Queryable semantic indexes of ruvnet's **ruvector** and **RuView** repos so an AI assistant can answer from the real source instead of guessing. Each ships in two versions built from the same passages: **big** (768-dim, sharper, for Mac/PC) and **small** (384-dim, lighter, for the Seed).
+
+| In `kb/` | What it is |
+|---|---|
+| `stores/ruvector/`, `stores/ruview/` | **the deliverables** — `*-kb.big.rvf` + `*-kb.small.rvf` + shared passages/metadata + that repo's primer + a README |
+| `ask-kb.mjs`, `kb-mcp-server.mjs`, `guard-check.mjs`, `kb-update.mjs`, `resolve-deps.mjs` | the runtime tools (also shipped inside each bundle) |
+| `make-bundles.mjs`, `build-big-variant.mjs`, `build-ruview-kb.mjs`, `.build-ruvector-kb/`, `index-primer.mjs` | build machinery |
+| `.last-built.json`, `SOURCE.json`, `*.MANIFEST.md` | provenance |
+
+**Downloads:** the self-contained bundles are published on the rolling [`kb-latest` release](https://github.com/stuinfla/cognitum-one-sensor-primer/releases/tag/kb-latest) (too large for the repo's 100 MB file limit); CI refreshes them when upstream publishes. `node_modules` is gitignored — run `cd kb && npm i` to set up.
+
 ## Tech
 
 Plain static site — no build step. `index.html` + `assets/css` + `assets/js` +
