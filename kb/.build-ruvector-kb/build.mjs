@@ -22,9 +22,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url)); // kb/.build-ruv
 // repo root = two levels up (kb/.build-ruvector-kb -> kb -> root), overridable for CI.
 const ROOT = process.env.KB_REPO_ROOT || path.resolve(__dirname, '..', '..');
 const R = path.join(ROOT, 'ruvector');
-const OUT = path.join(ROOT, 'kb/ruvector-kb.rvf');
-const IDMAP = path.join(ROOT, 'kb/ruvector-kb.ids.json');
-const PASSAGES = path.join(ROOT, 'kb/ruvector-kb.passages.jsonl');
+// SMALL (384-dim) build lands in kb/stores/ruvector/ as .small.rvf (matches the two-variant layout).
+const STORE_DIR = path.join(ROOT, 'kb/stores/ruvector');
+fs.mkdirSync(STORE_DIR, { recursive: true });
+const OUT = path.join(STORE_DIR, 'ruvector-kb.small.rvf');
+const IDMAP = path.join(STORE_DIR, 'ruvector-kb.ids.json');
+const PASSAGES = path.join(STORE_DIR, 'ruvector-kb.passages.jsonl');
 
 // ---------- enumeration helpers ----------
 const SKIP_DIRS = new Set(['node_modules', 'target', '.git', 'dist', 'build']);

@@ -25,38 +25,91 @@ if (process.env.KB_DEBUG) console.error(`[ask-kb] @ruvector/rvf via: ${rvfVia}`)
 const __filename = fileURLToPath(import.meta.url); // decodes %20 etc.
 const KB_DIR = path.dirname(__filename);
 
-const STORES = {
-  ruvector: {
-    rvf: path.join(KB_DIR, 'ruvector-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruvector-kb.passages.jsonl'),
-    // Metadata sidecar carries the per-chunk `kind` field (source/adr/doc/primer-orientation/…)
-    // that the passages sidecar lacks. Used by the intent layer (code-vs-doc, PRIMER routing).
-    meta: path.join(KB_DIR, 'ruvector-kb.ids.json'),
-  },
-  ruview: {
-    rvf: path.join(KB_DIR, 'ruview-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruview-kb.passages.jsonl'),
-    meta: path.join(KB_DIR, 'ruview-kb.meta.json'),
-  },
-};
+// ---------- variant-aware store resolution ----------
+// Two builds ship per repo (same passages, different embedder):
+//   small (384-dim MiniLM)  — the Seed-compatible default; files: <store>-kb.rvf
+//   big   (768-dim bge)     — sharper, for Mac/PC;        files: <store>-kb.big.rvf
+// One tool serves both: the embedder for a query is read from the <rvf>.embed.json
+// sidecar the build wrote next to each .rvf, so the query is always embedded with the
+// SAME model the corpus was. Absent that sidecar we fall back to MiniLM (the small build).
+const MINILM_CFG = { model: 'Xenova/all-MiniLM-L6-v2', pooling: 'mean', normalize: true, queryPrefix: '' };
 
-// ---------- embedder (lazy, configurable, offline-first with remote fallback) ----------
-let _fe = null;
-async function getEmbedder() {
-  if (_fe) return _fe;
-  const { T, modelCache, via } = await loadTransformers();
-  const { haveLocalModel } = configureModel(T, modelCache);
-  if (process.env.KB_DEBUG) {
-    console.error(`[ask-kb] transformers via: ${via} | model cache: ${modelCache} `
-      + `(${haveLocalModel ? 'local' : 'remote download'})`);
-  }
-  _fe = await T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
-  return _fe;
+// KB data files live in kb/stores/<store>/ when organized that way (clear, per-repo), and
+// fall back to a flat kb/ layout otherwise (bundles unzip flat). One rule, both layouts.
+function storeDir(store) {
+  const sub = path.join(KB_DIR, 'stores', store);
+  return fs.existsSync(sub) ? sub : KB_DIR;
 }
 
-async function embed(text) {
-  const fe = await getEmbedder();
-  const out = await fe([text], { pooling: 'mean', normalize: true });
+function variantPaths(store, variant) {
+  const base = path.join(storeDir(store), `${store}-kb`);
+  // metadata sidecar (per-path `kind`): ruvector uses *.ids.json, ruview uses *.meta.json
+  const metaName = store === 'ruvector' ? 'ids.json' : 'meta.json';
+  // BOTH versions are explicitly named: .big.rvf (768-dim) and .small.rvf (384-dim).
+  // passages + metadata are SHARED (un-tagged) — built once, used by both.
+  const tag = variant === 'big' ? '.big' : '.small';
+  const rvf = `${base}${tag}.rvf`;
+  return {
+    rvf,
+    passages: `${base}.passages.jsonl`,
+    meta: `${base}.${metaName}`,
+    embedCfgPath: `${rvf}.embed.json`,
+  };
+}
+
+// Resolve the file set + embedder config for a (store, variant). variant defaults to
+// 'big' when a big build is present (best answers), else 'small' — so a fresh checkout
+// with only the Seed build still works, and a Mac bundle auto-uses the sharp one.
+function resolveConf(store, variant) {
+  if (store !== 'ruvector' && store !== 'ruview') throw new Error(`unknown store: ${store} (use ruvector|ruview)`);
+  if (variant !== 'big' && variant !== 'small') {
+    variant = fs.existsSync(path.join(storeDir(store), `${store}-kb.big.rvf`)) ? 'big' : 'small';
+  }
+  const p = variantPaths(store, variant);
+  // The big variant indexes the SAME passages/metadata as the small build (only the embedder
+  // differs), so a bundle ships ONE copy. If the big-tagged sidecars are absent, fall back to
+  // the small (untagged) ones — same content, ~115 MB smaller download per repo.
+  if (variant === 'big') {
+    const small = variantPaths(store, 'small');
+    if (!fs.existsSync(p.passages)) p.passages = small.passages;
+    if (!fs.existsSync(p.meta)) p.meta = small.meta;
+  }
+  let embedCfg = { ...MINILM_CFG };
+  if (fs.existsSync(p.embedCfgPath)) {
+    try { embedCfg = { ...MINILM_CFG, ...JSON.parse(fs.readFileSync(p.embedCfgPath, 'utf8')) }; }
+    catch (e) { if (process.env.KB_DEBUG) console.error(`[ask-kb] bad embed.json (${p.embedCfgPath}): ${e.message}`); }
+  }
+  return { ...p, embedCfg, variant };
+}
+
+// ---------- embedder (lazy, per-model, offline-first with remote fallback) ----------
+// Cached per model name so a single process can serve both the small (MiniLM) and big
+// (bge) builds without reloading. Remote download is allowed only when THAT model isn't
+// already cached locally (so a Seed-only box never reaches for the network).
+const _feCache = new Map();
+async function getEmbedder(model) {
+  if (_feCache.has(model)) return _feCache.get(model);
+  const { T, modelCache, via } = await loadTransformers();
+  T.env.localModelPath = modelCache;
+  T.env.allowRemoteModels = !fs.existsSync(path.join(modelCache, model));
+  if (process.env.KB_DEBUG) {
+    console.error(`[ask-kb] transformers via: ${via} | model ${model} | cache: ${modelCache} `
+      + `(${T.env.allowRemoteModels ? 'remote download' : 'local'})`);
+  }
+  const fe = await T.pipeline('feature-extraction', model, { quantized: true });
+  _feCache.set(model, fe);
+  return fe;
+}
+
+// Embed a QUERY with the build's embedder config. bge-style builds carry a queryPrefix
+// (asymmetric retrieval — passages were embedded with NO prefix at build time, queries
+// get the instruction prefix here); MiniLM uses no prefix and mean pooling.
+async function embed(text, cfg = MINILM_CFG) {
+  const fe = await getEmbedder(cfg.model || MINILM_CFG.model);
+  const out = await fe([(cfg.queryPrefix || '') + text], {
+    pooling: cfg.pooling || 'mean',
+    normalize: cfg.normalize !== false,
+  });
   return Float32Array.from(out.data);
 }
 
@@ -782,12 +835,11 @@ function assembleDocument(chunks, matchedId) {
 // ---------- core search: returns whole-document results ----------
 // Each result: { path, title, fullText, bestDistance, effDistance, chunksJoined, truncated,
 //                distance (alias of bestDistance), text (alias of fullText) }.
-export async function searchKb({ query, k = 6, store, n }) {
-  const conf = STORES[store];
-  if (!conf) throw new Error(`unknown store '${store}' (use 'ruvector' or 'ruview')`);
-  if (!fs.existsSync(conf.rvf)) throw new Error(`rvf not found: ${conf.rvf}`);
+export async function searchKb({ query, k = 6, store, n, variant }) {
+  const conf = resolveConf(store, variant);
+  if (!fs.existsSync(conf.rvf)) throw new Error(`rvf not found: ${conf.rvf} (variant=${conf.variant}; run \`npm i\` then build, or copy the bundle in)`);
   const topN = Math.max(1, n || 5);
-  const [qv, { byId, byPath }] = await Promise.all([embed(query), loadPassages(conf.passages)]);
+  const [qv, { byId, byPath }] = await Promise.all([embed(query, conf.embedCfg), loadPassages(conf.passages)]);
   const byPathKind = loadKinds(conf.meta);          // intent layer: per-path content kind
   const terms = queryTerms(query);
 
@@ -957,8 +1009,14 @@ export async function searchKb({ query, k = 6, store, n }) {
       if (intent === 'design' && kind === 'adr')     intentAdj += 0.22;   // prefer the ADR/doc
     }
 
-    const effDistance = d.bestDistance + pen - boost + seed - sub - orient - concept - intentAdj
+    // RANK SCALE — the additive offsets below were calibrated against MiniLM's distance scale
+    // (relevant ~0.9–1.1). bge-base packs relevant docs much tighter (~0.4–0.8), so the same
+    // raw offset over-corrects and inverts good raw rankings. Scale the WHOLE offset bundle by
+    // the per-variant rankScale (small=1.0 → unchanged; big<1 → gentler, trusts bge's raw order).
+    const RANK_SCALE = conf.embedCfg.rankScale ?? 1;
+    const offsets = pen - boost + seed - sub - orient - concept - intentAdj
       + primerDemote + crateAdj + implAdj + magnetPen + matAdj;
+    const effDistance = d.bestDistance + RANK_SCALE * offsets;
     return { ...d, effDistance, kind: dkind };
   }).sort((a, b) => a.effDistance - b.effDistance);
 
@@ -1042,14 +1100,20 @@ export async function searchKb({ query, k = 6, store, n }) {
 
 // ---------- CLI ----------
 async function main() {
-  const [store, query, kArg] = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  // optional trailing [big|small] variant selector; default auto-picks big if present
+  let variant;
+  const vIdx = argv.findIndex((a) => a === 'big' || a === 'small');
+  if (vIdx !== -1) variant = argv.splice(vIdx, 1)[0];
+  const [store, query, kArg] = argv;
   if (!store || !query) {
-    console.error('Usage: node kb/ask-kb.mjs <ruvector|ruview> "question" [k]');
+    console.error('Usage: node kb/ask-kb.mjs <ruvector|ruview> "question" [k] [big|small]');
     process.exit(2);
   }
   const k = Math.max(1, parseInt(kArg || '6', 10) || 6);
-  const results = await searchKb({ query, k, store });
-  console.log(`\n=== ${store} KB — "${query}" — top ${results.length} documents ===\n`);
+  const conf = resolveConf(store, variant);
+  const results = await searchKb({ query, k, store, variant });
+  console.log(`\n=== ${store} KB (${conf.variant} · ${conf.embedCfg.model}) — "${query}" — top ${results.length} documents ===\n`);
   results.forEach((r, i) => {
     console.log(`#${i + 1}  distance=${r.bestDistance.toFixed(4)} (eff=${r.effDistance.toFixed(4)})`
       + `${r.kind ? `  kind=${r.kind}` : ''}${r.label ? `  [${r.label}]` : ''}`

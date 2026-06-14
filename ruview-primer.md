@@ -501,14 +501,14 @@ This primer is a curated summary; **summaries drop things.** The companion `ruvi
 
 | | |
 |---|---|
-| File | `kb/ruview-kb.rvf` (~7.4 MB) |
-| Chunks (vectors) | **4,306** (one chunk ≈ 1,000 tokens / ~4,000 chars, paragraph-aligned) |
-| Embedding | `Xenova/all-MiniLM-L6-v2` · **384-dim** · **cosine** · computed **locally** (no cloud) |
+| Files | `kb/stores/ruview/ruview-kb.big.rvf` (768-dim) **and** `ruview-kb.rvf` (384-dim) |
+| Chunks (vectors) | **7,174** per version (one chunk ≈ 1,000 tokens / ~4,000 chars; includes full source bodies) |
+| Embedding | **Two versions ship together, same passages:** 🖥️ **big** `Xenova/bge-base-en-v1.5` · **768-dim** (use on Mac/PC — sharper answers) · 🌱 **small** `Xenova/all-MiniLM-L6-v2` · **384-dim** (use on the Seed — lighter). Both **cosine**, computed **locally**. The query tool auto-selects the matching embedder per `.rvf`. |
 | Built from | `github.com/ruvnet/RuView` @ `3d7530f0`, `git describe` = **v1701** — the same commit this primer is pinned to |
 
 **What it covers:** the repo's knowledge layer plus the source's self-description — **every ADR**, the docs (incl. the 2,468-line user-guide), research specs (e.g. the Soul Signature spec), each crate's manifest + lead source + module inventory, every `//!` doc comment, the 90 scripts, the **firmware headers** (`csi_collector`, the `0xC511` packet defs, the C6 sync modules), `provision.py` flags, and UI text. It does **not** index every line of every function body — it locates "*where* is the Kalman tracker / *which* magic is the 8-dim packet," not line 400 of a 2,000-line `main.rs`.
 
-**Two-part design (keep the files together):** the `.rvf` stores vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruview-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **4,306 lines** — matches the vector count). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text**. Without the sidecar you get numbers, not text. (`ruview-kb.meta.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal map — auto-managed, don't delete.)
+**Two-part design (keep the files together):** the `.rvf` stores vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruview-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **7,174 lines** — matches the vector count; **shared by both versions**). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text**. Without the sidecar you get numbers, not text. (`ruview-kb.meta.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal map — auto-managed, don't delete.)
 
 **How to use it (three working ways — mirrors `kb/README.md`):**
 

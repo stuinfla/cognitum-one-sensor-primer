@@ -43,19 +43,24 @@ const CLIP_FAIL_COUNT = 25;
 // Health sample size for the per-passage truncation scan when files are huge.
 const SAMPLE_EVERY = 1; // scan every line (files are small enough: <40MB)
 
+// data lives in kb/stores/<store>/ when organized; flat kb/ otherwise (unzipped bundle).
+// Guards the SMALL (.small.rvf) build's parity/text; the big variant's integrity is enforced
+// by build-big-variant.mjs's own reconcile-or-fail at ingest.
+const sd = (s) => (fs.existsSync(path.join(KB_DIR, 'stores', s)) ? path.join(KB_DIR, 'stores', s) : KB_DIR);
+
 const STORES = {
   ruvector: {
-    rvf: path.join(KB_DIR, 'ruvector-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruvector-kb.passages.jsonl'),
-    index: path.join(KB_DIR, 'ruvector-kb.ids.json'),     // { entries: { id: {preview,...} } }
-    idmap: path.join(KB_DIR, 'ruvector-kb.rvf.idmap.json'),
+    rvf: path.join(sd('ruvector'), 'ruvector-kb.small.rvf'),
+    passages: path.join(sd('ruvector'), 'ruvector-kb.passages.jsonl'),
+    index: path.join(sd('ruvector'), 'ruvector-kb.ids.json'),     // { entries: { id: {preview,...} } }
+    idmap: path.join(sd('ruvector'), 'ruvector-kb.small.rvf.idmap.json'),
     query: 'which crate implements dynamic min-cut',
   },
   ruview: {
-    rvf: path.join(KB_DIR, 'ruview-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruview-kb.passages.jsonl'),
-    index: path.join(KB_DIR, 'ruview-kb.meta.json'),       // { entries: { id: {preview,...} } }
-    idmap: path.join(KB_DIR, 'ruview-kb.rvf.idmap.json'),
+    rvf: path.join(sd('ruview'), 'ruview-kb.small.rvf'),
+    passages: path.join(sd('ruview'), 'ruview-kb.passages.jsonl'),
+    index: path.join(sd('ruview'), 'ruview-kb.meta.json'),       // { entries: { id: {preview,...} } }
+    idmap: path.join(sd('ruview'), 'ruview-kb.small.rvf.idmap.json'),
     query: 'how do I calibrate an empty room',
   },
 };

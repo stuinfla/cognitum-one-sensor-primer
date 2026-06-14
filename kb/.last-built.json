@@ -1,16 +1,22 @@
 {
-  "generated": "2026-06-13T23:08:55.265Z",
-  "embeddingModel": "Xenova/all-MiniLM-L6-v2",
-  "dimensions": 384,
+  "generated": "2026-06-14T18:00:00.000Z",
   "metric": "cosine",
+  "variants": {
+    "big": { "model": "Xenova/bge-base-en-v1.5", "dimensions": 768, "for": "Mac/PC — sharper", "rankScale": 0.45 },
+    "small": { "model": "Xenova/all-MiniLM-L6-v2", "dimensions": 384, "for": "Cognitum One Seed — lighter" }
+  },
   "stores": {
     "ruvector": {
-      "rvf": "ruvector-kb.rvf",
+      "rvfBig": "ruvector-kb.big.rvf",
+      "rvfSmall": "ruvector-kb.small.rvf",
+      "vectors": 29439,
       "sourceRepo": "github.com/ruvnet/ruvector",
       "sha": "4dedde800ccab7117b21213f0b472a252c9142d2"
     },
     "ruview": {
-      "rvf": "ruview-kb.rvf",
+      "rvfBig": "ruview-kb.big.rvf",
+      "rvfSmall": "ruview-kb.small.rvf",
+      "vectors": 7174,
       "sourceRepo": "github.com/ruvnet/RuView",
       "sha": "3d7530f08dbf5043d2aebc716f029fc4794caa97",
       "describe": "v1701"

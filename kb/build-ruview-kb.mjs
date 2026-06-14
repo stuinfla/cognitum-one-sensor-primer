@@ -28,9 +28,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url)); // kb/
 // repo root = parent of kb/, overridable for CI.
 const ROOT = process.env.KB_REPO_ROOT || path.resolve(__dirname, '..');
 const RUVIEW = path.join(ROOT, 'RuView');
-const OUT_RVF = path.join(ROOT, 'kb/ruview-kb.rvf');
-const OUT_META = path.join(ROOT, 'kb/ruview-kb.meta.json');
-const OUT_PASSAGES = path.join(ROOT, 'kb/ruview-kb.passages.jsonl');
+// SMALL (384-dim) build lands in kb/stores/ruview/ as .small.rvf (matches the two-variant layout).
+const STORE_DIR = path.join(ROOT, 'kb/stores/ruview');
+fs.mkdirSync(STORE_DIR, { recursive: true });
+const OUT_RVF = path.join(STORE_DIR, 'ruview-kb.small.rvf');
+const OUT_META = path.join(STORE_DIR, 'ruview-kb.meta.json');
+const OUT_PASSAGES = path.join(STORE_DIR, 'ruview-kb.passages.jsonl');
 
 const CHUNK_CHARS = 4000;   // ~1000 tokens
 const OVERLAP_CHARS = 400;

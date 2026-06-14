@@ -546,14 +546,14 @@ This primer is a curated summary; **summaries drop things.** The companion `ruve
 
 | | |
 |---|---|
-| File | `kb/ruvector-kb.rvf` (~25 MB) |
-| Chunks (vectors) | **14,052** (one chunk ≈ 1,000 tokens / ~4,000 chars, paragraph-aligned) |
-| Embedding | `Xenova/all-MiniLM-L6-v2` · **384-dim** · **cosine** · computed **locally** (no cloud) |
+| Files | `kb/stores/ruvector/ruvector-kb.big.rvf` (768-dim) **and** `ruvector-kb.rvf` (384-dim) |
+| Chunks (vectors) | **29,439** per version (one chunk ≈ 1,000 tokens / ~4,000 chars; includes full source bodies) |
+| Embedding | **Two versions ship together, same passages:** 🖥️ **big** `Xenova/bge-base-en-v1.5` · **768-dim** (use on Mac/PC — sharper answers) · 🌱 **small** `Xenova/all-MiniLM-L6-v2` · **384-dim** (use on the Seed — lighter). Both **cosine**, computed **locally**. The query tool auto-selects the matching embedder per `.rvf`. |
 | Built from | `github.com/ruvnet/ruvector` @ `4dedde8` — the same SHA this primer is pinned to |
 
 **What it covers:** the whole knowledge layer plus the source's self-description — **every ADR**, every doc and research paper, each crate's `Cargo.toml` manifest + lead source file + module inventory, every `//!` doc comment, tutorials, scripts, and `.claude/` skills — **plus full-body source for high-value engines** (e.g. rvlite's SQL/SPARQL paths and ruvector-postgres's graph code). It does **not** index every line of every function body — ask "*where* is X / *which* crate does Y" and it nails it; it won't recite line 400 of a 2,000-line file.
 
-**Two-part design (keep the files together):** the `.rvf` stores only vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruvector-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **14,052 lines** — matches the vector count). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text** in the `.jsonl`. Without the sidecar you get numbers, not text. (`ruvector-kb.ids.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal id↔label map — auto-managed, don't delete.)
+**Two-part design (keep the files together):** the `.rvf` stores only vectors + the HNSW index and returns `{id, distance}`. The readable text lives in the **`ruvector-kb.passages.jsonl`** sidecar (one `{id, text, path, title}` per line, **29,439 lines** — matches the vector count; **shared by both versions**). A search embeds your query → asks the `.rvf` for nearest ids → **joins those ids to the full passage text** in the `.jsonl`. Without the sidecar you get numbers, not text. (`ruvector-kb.ids.json` adds id→metadata; `*.rvf.idmap.json` is the store's internal id↔label map — auto-managed, don't delete.)
 
 **How to use it (three working ways — mirrors `kb/README.md`):**
 

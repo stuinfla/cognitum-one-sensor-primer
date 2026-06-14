@@ -3,19 +3,49 @@
 node_modules/
 *.log
 
-# ruflo/AgentDB local runtime (per-machine memory, not source)
+# ---- Secrets & credentials — NEVER commit to this public repo ----
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+**/secrets.json
+.mcp.json
+.anthropic
+*.apikey
+api-keys*.json
+
+# ---- Local agent runtime + our own records (per-machine, not source) ----
+# The whole .claude/ dir is local Claude Code / claude-flow tooling + our memory records —
+# never part of this public primer. Ignored wholesale (reversible if you want to share config).
+.claude/
 .swarm/
 .claude-flow/
 ruvector.db
-.claude/memory.db
+agentdb.rvf
+agentdb.rvf.lock
+*.rvf.lock
 
 # personal purchase-history exports — never publish
 docs/amazon-hardware-*
 
-# KB MiniLM model cache (downloaded at build time; cached in CI, never source)
-kb/models-cache/
+# ---- KB download bundles — distributed via GitHub Releases (too large for the 100MB repo limit) ----
+kb/*-kb-bundle.zip
 
-# KB v1 backups (history lives in git)
+# ---- KB build machinery & transient artifacts (regenerated, not source) ----
+# MiniLM/bge model cache (downloaded at build time; cached in CI, never source)
+kb/models-cache/
+# big-variant embedding shards + temp files (deleted after ingest)
+kb/*.vecs.*.jsonl
+kb/*.vecs.*.jsonl.tmp
+kb/*.tmp
+# scratch helper scripts (prefixed with _)
+kb/_*.sh
+kb/_*.mjs
+# archived v1 backups (history lives in git)
+kb/_archive/
 kb/*.v1.rvf
 kb/*.v1.json
 kb/*.v1.rvf.idmap.json

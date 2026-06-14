@@ -1,19 +1,12 @@
 #!/usr/bin/env node
-// make-bundles.mjs — build the two SELF-CONTAINED, RUNNABLE download zips.
+// make-bundles.mjs — build the SELF-CONTAINED, RUNNABLE download zips (one per repo).
 //
-// Each bundle contains everything a consumer needs to query the KB on a fresh machine:
-//   - the .rvf vector store
-//   - the ids/meta JSON metadata sidecar
-//   - the .passages.jsonl full-text sidecar (retrieval joins ids -> passages here)
-//   - the .rvf.idmap.json internal id map
-//   - the MANIFEST
-//   - the shared shim scripts: ask-kb.mjs (CLI), kb-mcp-server.mjs (MCP), resolve-deps.mjs
-//   - guard-check.mjs (integrity check)
-//   - package.json (so `cd kb && npm i` sets up @ruvector/rvf + @xenova/transformers)
-//   - the relevant build script
-//   - README.md
+// Each bundle ships BOTH variants of that repo's KB (big 768-dim + small 384-dim) plus the
+// ONE shared passages/metadata sidecar (the big variant re-uses the small build's passages,
+// so we never double the ~92 MB text in the download), the runnable tools, the evergreen
+// self-updater, a full README, and a repo-specific START-HERE.md generated below.
 //
-// Usage: node kb/make-bundles.mjs           (both)
+// Usage: node kb/make-bundles.mjs           (both repos)
 //        node kb/make-bundles.mjs ruvector  (one)
 // Uses the system `zip` (present on macOS + ubuntu-latest runners).
 
@@ -33,8 +26,7 @@ const MANIFEST_URL = `${CANON_BASE}/.last-built.json`;
 const SHARED = ['ask-kb.mjs', 'kb-mcp-server.mjs', 'resolve-deps.mjs', 'guard-check.mjs',
   'kb-update.mjs', 'SOURCE.json', 'package.json', 'README.md'];
 
-// Regenerate SOURCE.json from .last-built.json so the embedded provenance NEVER drifts from
-// the manifest. Carries BOTH stores; kb-update.mjs reads this to know "where I came from".
+// Regenerate SOURCE.json from .last-built.json so embedded provenance never drifts from the manifest.
 function writeSourceJson() {
   const manifestPath = path.join(KB_DIR, '.last-built.json');
   if (!fs.existsSync(manifestPath)) throw new Error('cannot write SOURCE.json: .last-built.json missing (build first)');
@@ -54,14 +46,10 @@ function writeSourceJson() {
       selfUpdate: `node kb-update.mjs ${kbName}`,
     };
   }
-  const source = {
-    builder: 'rvf-kb-forge',
-    builtUtc,
-    canonicalManifestUrl: MANIFEST_URL,
-    selfUpdate: 'node kb-update.mjs',
-    stores,
-  };
-  fs.writeFileSync(path.join(KB_DIR, 'SOURCE.json'), JSON.stringify(source, null, 2) + '\n');
+  fs.writeFileSync(path.join(KB_DIR, 'SOURCE.json'), JSON.stringify({
+    builder: 'rvf-kb-forge', builtUtc, canonicalManifestUrl: MANIFEST_URL,
+    selfUpdate: 'node kb-update.mjs', stores,
+  }, null, 2) + '\n');
   console.log('regenerated SOURCE.json from .last-built.json');
 }
 writeSourceJson();
@@ -69,50 +57,108 @@ writeSourceJson();
 const BUNDLES = {
   ruvector: {
     zip: 'ruvector-kb-bundle.zip',
-    files: [
-      'ruvector-kb.rvf',
-      'ruvector-kb.ids.json',
-      'ruvector-kb.passages.jsonl',
-      'ruvector-kb.rvf.idmap.json',
-      'ruvector-kb.MANIFEST.md',
-      '.build-ruvector-kb/build.mjs',
+    label: 'ruvector',
+    blurb: 'ruvnet/ruvector — the ~1.7M-line Rust AI engine (vector search, learning, coherence, math) inside the Cognitum One Seed.',
+    // per-repo DATA files (live in stores/ruvector/, staged FLAT into the zip)
+    dataFiles: ['ruvector-kb.small.rvf', 'ruvector-kb.small.rvf.idmap.json', 'ruvector-kb.passages.jsonl',
+      'ruvector-kb.ids.json', 'ruvector-kb.MANIFEST.md', 'ruvector-primer.md'],
+    // big (optional — included only if built; also in stores/ruvector/)
+    bigFiles: ['ruvector-kb.big.rvf', 'ruvector-kb.big.rvf.idmap.json', 'ruvector-kb.big.rvf.embed.json'],
+    // build scripts (live in kb/, staged preserving their path)
+    scriptFiles: ['.build-ruvector-kb/build.mjs', 'build-big-variant.mjs', 'index-primer.mjs'],
+    questions: [
+      'What is ruvector and what is it for?',
+      'Which crate implements dynamic min-cut, and how does it work?',
+      'How does SONA learn and adapt over time?',
+      'What does the coherence gate decide, and how?',
+      'How do I load an RVF file and run a query in Node?',
+      'Which crates are production-ready vs experimental?',
     ],
   },
   ruview: {
     zip: 'ruview-kb-bundle.zip',
-    files: [
-      'ruview-kb.rvf',
-      'ruview-kb.meta.json',
-      'ruview-kb.passages.jsonl',
-      'ruview-kb.rvf.idmap.json',
-      'ruview-kb.MANIFEST.md',
-      'build-ruview-kb.mjs',
+    label: 'ruview',
+    blurb: 'ruvnet/RuView — the WiFi-CSI / mmWave-radar contactless sensing platform the Seed runs (presence, occupancy, vitals, onboarding).',
+    dataFiles: ['ruview-kb.small.rvf', 'ruview-kb.small.rvf.idmap.json', 'ruview-kb.passages.jsonl',
+      'ruview-kb.meta.json', 'ruview-kb.MANIFEST.md', 'ruview-primer.md'],
+    bigFiles: ['ruview-kb.big.rvf', 'ruview-kb.big.rvf.idmap.json', 'ruview-kb.big.rvf.embed.json'],
+    scriptFiles: ['build-ruview-kb.mjs', 'build-big-variant.mjs', 'index-primer.mjs'],
+    questions: [
+      'What is RuView and what can it sense?',
+      'How does it tell an empty room from an occupied one?',
+      'How is a Cognitum Seed onboarded and pretrained?',
+      'How does an ESP32 CSI node stream data to the Seed?',
+      "What's the difference between presence detection and occupancy?",
+      'How do I connect it to Apple Home / Siri?',
     ],
   },
 };
 
+// A tailored one-page intro generated INTO each zip so a first-timer knows exactly what they have.
+function startHere(b, hasBig) {
+  const q = b.questions.map((x) => `- "${x}"`).join('\n');
+  return `# START HERE — the ${b.label} knowledge base
+
+**What you just unzipped:** a searchable "brain" for **${b.blurb}**
+
+You don't need to understand vector databases to use this. Two things:
+
+## 1. Which file do I use?
+You got **two versions of the same knowledge**:
+- 🖥️ **BIG** \`${b.label}-kb.big.rvf\` → **use on your Mac/PC** (sharper answers).${hasBig ? '' : '  *(not included in this copy — build it with `node build-big-variant.mjs both`)*'}
+- 🌱 **SMALL** \`${b.label}-kb.rvf\` → **use on the Cognitum One Seed** (lighter, runs on the device).
+
+The tools auto-pick BIG if it's here, else SMALL. You don't have to choose by hand.
+
+## 2. Try it in 3 commands
+\`\`\`bash
+npm i                                              # one time (needs Node 18+)
+node ask-kb.mjs ${b.label} "${b.questions[0]}" 5
+\`\`\`
+
+## The best use: point your AI assistant at it
+Connect it to Claude Code / Cursor / VS Code so your assistant answers from the REAL ${b.label} code instead of guessing. Full steps are in **README.md → section 3, Way 1** (a 2-line \`.mcp.json\` + 1 line in your \`CLAUDE.md\`).
+
+## Questions this KB answers well
+${q}
+
+---
+**New to the whole thing?** Open **README.md** — it explains what an RVF knowledge base is from scratch, in plain English. New to the Seed device itself? See the primer at https://cognitum-sensor-primer.vercel.app and the first-run setup at https://cognitum.shaal.dev/.
+`;
+}
+
 function build(name) {
   const b = BUNDLES[name];
-  const all = [...b.files, ...SHARED];
-  // verify every file exists before zipping (fail loud, never ship a partial bundle)
-  const missing = all.filter((f) => !fs.existsSync(path.join(KB_DIR, f)));
-  if (missing.length) throw new Error(`${name}: missing files for bundle: ${missing.join(', ')}`);
+  const storeDir = path.join(KB_DIR, 'stores', name);   // per-repo data lives here
+  // include big files only if they all exist (so the script works before/without a big build)
+  const bigPresent = b.bigFiles.every((f) => fs.existsSync(path.join(storeDir, f)));
+  const dataNames = bigPresent ? [...b.dataFiles, ...b.bigFiles] : b.dataFiles;
 
-  // Stage into a temp dir so .build-ruvector-kb/build.mjs keeps its subdir path inside the zip.
+  // (src absolute path, dest path-inside-zip) pairs. Data + shared go FLAT; scripts keep their path.
+  const pairs = [
+    ...dataNames.map((f) => [path.join(storeDir, f), f]),
+    ...b.scriptFiles.map((f) => [path.join(KB_DIR, f), f]),
+    ...SHARED.map((f) => [path.join(KB_DIR, f), f]),
+  ];
+  const missing = pairs.filter(([src]) => !fs.existsSync(src)).map(([src]) => src);
+  if (missing.length) throw new Error(`${name}: missing files for bundle:\n  ${missing.join('\n  ')}`);
+
+  // Stage into a temp dir so subdir paths (.build-ruvector-kb/build.mjs) survive inside the zip.
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), `kb-bundle-${name}-`));
-  for (const f of all) {
-    const src = path.join(KB_DIR, f);
-    const dst = path.join(stage, f);
+  for (const [src, rel] of pairs) {
+    const dst = path.join(stage, rel);
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     fs.copyFileSync(src, dst);
   }
+  // write the generated, repo-specific one-pager
+  fs.writeFileSync(path.join(stage, 'START-HERE.md'), startHere(b, bigPresent));
+
   const out = path.join(KB_DIR, b.zip);
   fs.rmSync(out, { force: true });
-  // -r recurse, -X strip extra attrs for reproducibility; run inside the stage dir.
   execFileSync('zip', ['-r', '-X', out, '.'], { cwd: stage, stdio: 'inherit' });
   fs.rmSync(stage, { recursive: true, force: true });
   const size = fs.statSync(out).size;
-  console.log(`built ${b.zip} (${(size / 1e6).toFixed(1)} MB, ${all.length} files)`);
+  console.log(`built ${b.zip} (${(size / 1e6).toFixed(1)} MB, ${pairs.length + 1} files, big=${bigPresent ? 'YES' : 'no'})`);
 }
 
 const which = process.argv[2];

@@ -32,19 +32,23 @@ const ROOT = path.resolve(KB_DIR, '..');
 const CHUNK_CHARS = 4000;     // match the corpus chunker; sections under this stay whole
 const OVERLAP_CHARS = 400;    // same sliding-window overlap the corpus uses (stitch() de-overlaps)
 
+// data lives in kb/stores/<store>/ when organized; flat kb/ otherwise. Indexes the primer
+// sections into the SMALL (.small.rvf) build (the Seed default + the source of the bundles).
+const sd = (s) => (fs.existsSync(path.join(KB_DIR, 'stores', s)) ? path.join(KB_DIR, 'stores', s) : KB_DIR);
+
 const STORES = {
   ruvector: {
     primer: path.join(ROOT, 'ruvector-primer.md'),
-    rvf: path.join(KB_DIR, 'ruvector-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruvector-kb.passages.jsonl'),
-    index: path.join(KB_DIR, 'ruvector-kb.ids.json'),
+    rvf: path.join(sd('ruvector'), 'ruvector-kb.small.rvf'),
+    passages: path.join(sd('ruvector'), 'ruvector-kb.passages.jsonl'),
+    index: path.join(sd('ruvector'), 'ruvector-kb.ids.json'),
     chunkStyle: 'split',   // ids.json uses { chunk: 1, of: 2 }
   },
   ruview: {
     primer: path.join(ROOT, 'ruview-primer.md'),
-    rvf: path.join(KB_DIR, 'ruview-kb.rvf'),
-    passages: path.join(KB_DIR, 'ruview-kb.passages.jsonl'),
-    index: path.join(KB_DIR, 'ruview-kb.meta.json'),
+    rvf: path.join(sd('ruview'), 'ruview-kb.small.rvf'),
+    passages: path.join(sd('ruview'), 'ruview-kb.passages.jsonl'),
+    index: path.join(sd('ruview'), 'ruview-kb.meta.json'),
     chunkStyle: 'slash',   // meta.json uses { chunk: "1/3" }
   },
 };
