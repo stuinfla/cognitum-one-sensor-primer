@@ -1451,7 +1451,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 <style>
   .sec-head.sec-toggle{cursor:pointer;}
   .sec-head.sec-toggle .sec-caret{
-    float:right;margin-left:14px;display:inline-flex;align-items:center;gap:7px;
+    float:left;margin-right:14px;display:inline-flex;align-items:center;gap:7px;
     font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;
     color:var(--phosphor);border:1px solid var(--phosphor-dim,rgba(67,245,155,.45));
     border-radius:999px;padding:4px 11px;background:rgba(14,24,36,.6);white-space:nowrap;
@@ -1492,8 +1492,8 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       head.setAttribute('tabindex', '0');
       var caret = document.createElement('span');
       caret.className = 'sec-caret';
-      caret.innerHTML = '<span class="lbl"></span><span class="chev">&#9662;</span>';
-      head.appendChild(caret);
+      caret.innerHTML = '<span class="chev">&#9662;</span><span class="lbl"></span>';
+      head.insertBefore(caret, head.firstChild);   // lead with it on the LEFT so folded sections are obvious
       var id = sec.id, open = !!OPEN[id];
       try { var s = localStorage.getItem('sec:' + id); if (s !== null) open = (s === '1'); } catch (e) {}
       function forceReveal(){ [].forEach.call(body.querySelectorAll('.reveal'), function(el){ el.classList.add('in'); }); }
