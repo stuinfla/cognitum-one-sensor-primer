@@ -1444,5 +1444,90 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
   }
 })();
 </script>
+
+<!-- ============ COLLAPSIBLE SECTIONS (progressive enhancement) ============
+     Makes each section foldable so the page reads as a calm outline, not a wall.
+     If this JS ever fails, the page simply renders fully expanded (today's behavior). -->
+<style>
+  .sec-head.sec-toggle{cursor:pointer;}
+  .sec-head.sec-toggle .sec-caret{
+    float:right;margin-left:14px;display:inline-flex;align-items:center;gap:7px;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;
+    color:var(--phosphor);border:1px solid var(--phosphor-dim,rgba(67,245,155,.45));
+    border-radius:999px;padding:4px 11px;background:rgba(14,24,36,.6);white-space:nowrap;
+    text-transform:uppercase;transition:background .15s;
+  }
+  .sec-head.sec-toggle:hover .sec-caret{background:rgba(67,245,155,.12);}
+  .sec-caret .chev{display:inline-block;transition:transform .2s;}
+  section.collapsed .sec-caret .chev{transform:rotate(-90deg);}
+  .sec-collapse{overflow:hidden;}
+  section.collapsed .sec-collapse{display:none;}
+  #sec-allctl{
+    position:fixed;right:16px;bottom:16px;z-index:60;font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.03em;background:rgba(14,24,36,.94);
+    border:1px solid var(--phosphor-dim,rgba(67,245,155,.5));color:var(--phosphor);
+    border-radius:10px;padding:9px 13px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.45);
+  }
+  #sec-allctl:hover{background:#0e1824;}
+  @media(max-width:640px){.sec-head.sec-toggle .sec-caret{float:none;margin:9px 0 0;}}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    // Sections that start OPEN (the first-touch journey + the KB feature); the rest fold up,
+    // with their header + subtitle staying visible as a one-line teaser.
+    var OPEN = { start:1, connect:1, quickstart:1, dropin:1 };
+    var toggles = [];
+    [].forEach.call(document.querySelectorAll('section[id]'), function(sec){
+      var head = sec.querySelector('.sec-head');
+      if (!head) return;                 // skip non-standard sections (e.g. the KB banner)
+      var parent = head.parentNode;      // the .wrap that holds the header + body
+      var body = document.createElement('div');
+      body.className = 'sec-collapse';
+      var n = head.nextSibling;
+      while (n) { var nx = n.nextSibling; body.appendChild(n); n = nx; }
+      parent.appendChild(body);
+      head.classList.add('sec-toggle');
+      head.setAttribute('role', 'button');
+      head.setAttribute('tabindex', '0');
+      var caret = document.createElement('span');
+      caret.className = 'sec-caret';
+      caret.innerHTML = '<span class="lbl"></span><span class="chev">&#9662;</span>';
+      head.appendChild(caret);
+      var id = sec.id, open = !!OPEN[id];
+      try { var s = localStorage.getItem('sec:' + id); if (s !== null) open = (s === '1'); } catch (e) {}
+      function forceReveal(){ [].forEach.call(body.querySelectorAll('.reveal'), function(el){ el.classList.add('in'); }); }
+      function set(o, initial){
+        sec.classList.toggle('collapsed', !o);
+        head.setAttribute('aria-expanded', o ? 'true' : 'false');
+        caret.querySelector('.lbl').textContent = o ? 'Hide' : 'Show';
+        if (o && !initial) forceReveal();           // reveal content the IO never fired on
+        try { localStorage.setItem('sec:' + id, o ? '1' : '0'); } catch (e) {}
+      }
+      set(open, true);
+      toggles.push({ sec: sec, set: set });
+      function toggle(e){ if (e && e.target.closest('a')) return; set(sec.classList.contains('collapsed')); }
+      head.addEventListener('click', toggle);
+      head.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    });
+    function openFor(sec){ for (var i=0;i<toggles.length;i++){ if (toggles[i].sec === sec){ toggles[i].set(true); return; } } }
+    // clicking any in-page anchor opens its target section if folded, then scrolls to it
+    document.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!a) return;
+      var sec = document.getElementById(a.getAttribute('href').slice(1));
+      if (sec && sec.classList.contains('collapsed')) { openFor(sec); setTimeout(function(){ sec.scrollIntoView({behavior:'smooth', block:'start'}); }, 40); }
+    });
+    function openHash(){ var h = location.hash.slice(1); if (!h) return; var sec = document.getElementById(h); if (sec && sec.classList.contains('collapsed')) openFor(sec); }
+    window.addEventListener('hashchange', openHash); openHash();
+    // expand/collapse-all control
+    var ctl = document.createElement('button');
+    ctl.id = 'sec-allctl'; ctl.type = 'button'; ctl.textContent = '⊕ Expand all';
+    var allOpen = false;
+    ctl.addEventListener('click', function(){ allOpen = !allOpen; toggles.forEach(function(t){ t.set(allOpen); }); ctl.textContent = allOpen ? '⊖ Collapse all' : '⊕ Expand all'; });
+    document.body.appendChild(ctl);
+  });
+})();
+</script>
 </body>
 </html>
