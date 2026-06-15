@@ -1450,16 +1450,23 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
      If this JS ever fails, the page simply renders fully expanded (today's behavior). -->
 <style>
   .sec-head.sec-toggle{cursor:pointer;}
-  .sec-head.sec-toggle .sec-caret{
-    float:left;margin-right:14px;display:inline-flex;align-items:center;gap:7px;
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;
-    color:var(--phosphor);border:1px solid var(--phosphor-dim,rgba(67,245,155,.45));
-    border-radius:999px;padding:4px 11px;background:rgba(14,24,36,.6);white-space:nowrap;
-    text-transform:uppercase;transition:background .15s;
+  /* full-width toggle BAR placed BELOW each section header so a folded section is unmistakable */
+  .sec-toggle-bar{
+    display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;
+    margin:2px 0 20px;padding:12px 16px;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:.03em;
+    color:var(--phosphor);background:rgba(67,245,155,.08);
+    border:1px solid var(--phosphor-dim,rgba(67,245,155,.5));border-radius:10px;
+    transition:background .15s;
   }
-  .sec-head.sec-toggle:hover .sec-caret{background:rgba(67,245,155,.12);}
-  .sec-caret .chev{display:inline-block;transition:transform .2s;}
-  section.collapsed .sec-caret .chev{transform:rotate(-90deg);}
+  .sec-toggle-bar:hover{background:rgba(67,245,155,.15);}
+  .sec-toggle-bar .chev{display:inline-block;transition:transform .2s;font-size:15px;}
+  section.collapsed .sec-toggle-bar .chev{transform:rotate(-90deg);}
+  /* when expanded, the bar becomes a quiet 'hide' affordance, not a loud call-to-action */
+  section:not(.collapsed) .sec-toggle-bar{
+    background:transparent;color:var(--faint);border-color:var(--line);
+    font-size:12px;padding:8px 14px;margin-bottom:14px;
+  }
   .sec-collapse{overflow:hidden;}
   section.collapsed .sec-collapse{display:none;}
   #sec-allctl{
@@ -1469,7 +1476,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     border-radius:10px;padding:9px 13px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.45);
   }
   #sec-allctl:hover{background:#0e1824;}
-  @media(max-width:640px){.sec-head.sec-toggle .sec-caret{float:none;margin:9px 0 0;}}
+  /* (toggle bar is full-width; no mobile-specific rule needed) */
 </style>
 <script>
 (function(){
@@ -1490,17 +1497,18 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       head.classList.add('sec-toggle');
       head.setAttribute('role', 'button');
       head.setAttribute('tabindex', '0');
-      var caret = document.createElement('span');
-      caret.className = 'sec-caret';
-      caret.innerHTML = '<span class="chev">&#9662;</span><span class="lbl"></span>';
-      head.insertBefore(caret, head.firstChild);   // lead with it on the LEFT so folded sections are obvious
+      var bar = document.createElement('div');
+      bar.className = 'sec-toggle-bar';
+      bar.setAttribute('role', 'button'); bar.setAttribute('tabindex', '0');
+      bar.innerHTML = '<span class="chev">&#9662;</span><span class="lbl"></span>';
+      parent.insertBefore(bar, body);   // a clear labeled bar BELOW the header (sits above the folded body)
       var id = sec.id, open = !!OPEN[id];
       try { var s = localStorage.getItem('sec:' + id); if (s !== null) open = (s === '1'); } catch (e) {}
       function forceReveal(){ [].forEach.call(body.querySelectorAll('.reveal'), function(el){ el.classList.add('in'); }); }
       function set(o, initial){
         sec.classList.toggle('collapsed', !o);
         head.setAttribute('aria-expanded', o ? 'true' : 'false');
-        caret.querySelector('.lbl').textContent = o ? 'Hide' : 'Show';
+        bar.querySelector('.lbl').textContent = o ? 'Hide details' : 'Show details for this section';
         if (o && !initial) forceReveal();           // reveal content the IO never fired on
         try { localStorage.setItem('sec:' + id, o ? '1' : '0'); } catch (e) {}
       }
@@ -1508,7 +1516,10 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       toggles.push({ sec: sec, set: set });
       function toggle(e){ if (e && e.target.closest('a')) return; set(sec.classList.contains('collapsed')); }
       head.addEventListener('click', toggle);
-      head.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      bar.addEventListener('click', toggle);
+      function kd(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }
+      head.addEventListener('keydown', kd);
+      bar.addEventListener('keydown', kd);
     });
     function openFor(sec){ for (var i=0;i<toggles.length;i++){ if (toggles[i].sec === sec){ toggles[i].set(true); return; } } }
     // clicking any in-page anchor opens its target section if folded, then scrolls to it
