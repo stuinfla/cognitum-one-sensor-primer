@@ -71,7 +71,7 @@
   .update-wire:hover b { text-decoration:underline; }
   @media (max-width:720px){ .update-wire { font-size:11px; padding:8px 10px; } }
 </style>
-<a class="update-wire" href="/guide"><span class="uw-tag">ENHANCED · JUNE 13, 2026</span> New: the <b>Complete Walkthrough</b> — calibrate → train → heartbeats → pose → Seed memory · synced to Ruv's RuView v1701 →</a>
+<a class="update-wire" href="/guide"><span class="uw-tag">ENHANCED · JUNE 14, 2026</span> New: the <b>Complete Walkthrough</b> — calibrate → train → heartbeats → pose → Seed memory · synced to Ruv's RuView v1701 →</a>
 
 <nav>
   <div class="nav-inner">
@@ -215,14 +215,14 @@
 
   <div class="hv2-aur a" aria-hidden="true"></div>
   <div class="hv2-aur b" aria-hidden="true"></div>
-  <span class="hv2-ver" aria-hidden="true">v4 · June 13, 2026</span>
+  <span class="hv2-ver" aria-hidden="true">v4 · June 14, 2026</span>
 
   <div class="wrap hero-grid">
     <div>
-      <span class="fresh-badge"><span class="fd"></span> UPDATED JUNE 13, 2026 · KBs + PRIMERS REBUILT · SYNCED TO RUVIEW v1701</span>
+      <span class="fresh-badge"><span class="fd"></span> UPDATED JUNE 14, 2026 · KBs + PRIMERS REBUILT · SYNCED TO RUVIEW v1701</span>
       <br/>
       <span class="eyebrow">Field guide · passive contactless sensing</span>
-      <h1>You got a Seed.<br/>Now give it <span class="glow">senses.</span></h1>
+      <h1>You've got a Cognitum One Seed.<br/>Now give it <span class="glow">senses.</span></h1>
       <p class="lede">A plain-language primer for anyone who just received a <b>Cognitum One Seed</b> and has no idea what all these chips, radars and antennas actually <em>do</em>. We cover the sensors you can buy today — and a new <b>complete walkthrough</b> that takes you from the unopened box to live presence, breathing, heart-rate and pose on your own dashboard.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
         <a class="hero-cta" href="/guide">NEW · Full walkthrough →</a>
@@ -230,7 +230,7 @@
         <a class="hero-cta" style="--accent:var(--cyan);background:transparent;color:var(--cyan);border:1px solid var(--cyan);box-shadow:none;" href="/setup">Setup &amp; flashing →</a>
       </div>
       <div class="meta-row">
-        <span>UPDATED · <b>June 13, 2026</b></span>
+        <span>UPDATED · <b>June 14, 2026</b></span>
         <span>LEVEL · <b>Absolute beginner</b></span>
         <span>COVERS · <b>4 sensors · setup · full walkthrough</b></span>
       </div>
@@ -693,27 +693,10 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     <div class="cards">
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
-        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="LD2450 24 GHz mmWave radar USB kit — radar board with cable and USB adapter" loading="lazy" />
-        <span class="tag">24 GHz mmWave radar · position</span>
-        <h3>LD2450</h3>
-        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit · <span style="color:var(--faint)">legacy — superseded by the LD6004</span></div>
-        <p class="what">Tells you <strong>where a person is</strong> on a 2D floor plan — their X/Y position and how fast they're moving — by bouncing 24 GHz radio off them. No camera, works in total darkness, sees through clothing.</p>
-        <dl class="specs">
-          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 works · 2–3 for full room</dd>
-          <dt>SENSES</dt><dd>Position (X/Y), distance, speed</dd>
-          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
-          <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
-        </dl>
-        <div class="gotcha"><b>Gotcha →</b> Buy the <em>USB kit</em> version (radar + cable + USB adapter), not a bare module — otherwise you'll be soldering. It tracks one point per person, baud is the unusual <span class="mono">256000</span> — and know that for <em>3D movement</em> it's been <b>largely supplanted by the LD6004</b> (next card). The LD2450 keeps two wins: cheapest plug-and-play start, and it tracks <b>3 people at once</b> (the LD6004 tracks one).</div>
-        <a class="buybtn" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">Buy the USB kit on Amazon ↗</a>
-      </div>
-
-      <div class="scard reveal" style="--accent: var(--phosphor);">
-        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="HLK-LD6004 60 GHz mmWave radar module with true XYZ 3D position tracking" loading="lazy" />
-        <span class="tag">60 GHz mmWave · TRUE 3D position</span>
-        <h3>LD6004 <span style="font-size:12px;color:var(--phosphor);">— NEW, the movement pick</span></h3>
+        <span class="tag">60 GHz mmWave · TRUE 3D position · THE PICK</span>
+        <h3>LD6004 <span style="font-size:12px;color:var(--phosphor);">— the movement-tracking pick</span></h3>
         <div class="model-line">HLK-LD6004 · 60 GHz FMCW · X / Y / <b>Z</b> tracking</div>
-        <p class="what">The LD2450's successor for movement: it reports a person's position in <strong>true 3D — including the vertical Z axis</strong> the 2450 never had. Squat depth, sway, fall trajectories, micro-tremor — measured directly, no training, no camera. 60 GHz gives finer resolution than the 2450's 24 GHz. Field-proven here: <b>7+ weeks continuous uptime</b> wired to a Pi's GPIO.</p>
+        <p class="what">Reports a person's position in <strong>true 3D — including the vertical Z axis</strong>. Squat depth, sway, fall trajectories, micro-tremor — measured directly, no training, no camera, works in total darkness, sees through clothing. 60 GHz gives finer resolution than older 24 GHz radar. Field-proven here: <b>7+ weeks continuous uptime</b> wired to a Pi's GPIO.</p>
         <dl class="specs">
           <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">1 (tracks one primary target)</dd>
           <dt>SENSES</dt><dd>Position X/Y/Z (meters), presence heartbeat</dd>
@@ -722,6 +705,22 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         </dl>
         <div class="gotcha"><b>Gotcha →</b> It ships with bare 0.1" pins — you need 4 female-female Dupont jumpers (you probably have them). One target at a time, ~5 m range. Wire it to <b>GPIO, not a USB hub</b> — that's the brown-out story on the Setup page.</div>
         <a class="buybtn" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">Buy LD6004 on Amazon ↗</a>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--amber); opacity:0.92;">
+        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="LD2450 24 GHz mmWave radar USB kit — radar board with cable and USB adapter" loading="lazy" />
+        <span class="tag">24 GHz · 2D position · LEGACY</span>
+        <h3>LD2450 <span style="font-size:12px;color:var(--faint);">— legacy, only for two edge cases</span></h3>
+        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit · <span style="color:var(--amber)">superseded by the LD6004 above</span></div>
+        <p class="what"><b>Use the LD6004 above instead</b> — unless you specifically need one of the LD2450's two remaining niches: (1) you <b>can't touch the Seed's GPIO pins</b> and need a pure plug-in-over-USB radar, or (2) you must track <b>3 people at once in 2D</b> (the LD6004 tracks one). Otherwise it's older 2D-only 24 GHz radar with no Z axis.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd>1 (only if a niche above applies)</dd>
+          <dt>SENSES</dt><dd>Position (X/Y), distance, speed — <b>2D only</b></dd>
+          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
+          <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> If you do buy it, get the <em>USB kit</em> (radar + cable + USB adapter), not a bare module, or you'll be soldering — and note the unusual <span class="mono">256000</span> baud. But for almost everyone, the <b>LD6004 above is the right choice</b>.</div>
+        <a class="buybtn" style="opacity:0.85;" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">Buy the legacy USB kit ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--amber);">
@@ -1249,19 +1248,28 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     <div class="callout reveal" style="border-color:var(--phosphor-dim);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">📄 The RuVector Primer <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-primer.md</span></h3>
-      <p style="margin:0 0 10px;color:var(--muted);">The complete map of <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector ↗</a> — every crate (183 workspace members / 139 crate dirs), the capabilities and how to actually call them, every npm package, the RVF file format, ADRs, tutorials, integration commands, and an honest performance-claims table. Generated <b>June 13, 2026</b> by Claude (Fable 5) sweeping a same-day checkout (main @ <span class="mono">4dedde8</span>); the document explains exactly how it was made and how to regenerate it when it ages.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">The complete map of <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector ↗</a> — every crate (183 workspace members / 139 crate dirs), the capabilities and how to actually call them, every npm package, the RVF file format, ADRs, tutorials, integration commands, and an honest performance-claims table. Generated <b>June 14, 2026</b> by Claude (Fable 5) sweeping a same-day checkout (main @ <span class="mono">4dedde8</span>); the document explains exactly how it was made and how to regenerate it when it ages.</p>
       <p style="margin:0;"><a class="hero-cta" href="/ruvector-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruvector-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
     </div>
 
     <div class="callout reveal" style="border-color:rgba(92,214,255,0.45);margin-top:24px;">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">📄 The RuView / WiFi-DensePose Primer <span class="mono" style="font-size:12px;color:var(--faint);">ruview-primer.md</span></h3>
-      <p style="margin:0 0 10px;color:var(--muted);">The deep one — focused entirely on <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a> (the renamed wifi-densepose), the software your sensors actually feed. Every crate (~38), the complete REST/WebSocket API, all seven <span class="mono">0xC511</span> UDP packet formats with byte layouts, the full CLI including the calibrate→enroll→train-room pipeline, <b>all 163 ADRs</b>, the 90 scripts, the firmware tree, and every capability graded works-today / experimental / stub — with code paths, so your AI assistant knows exactly where to look instead of guessing. Generated <b>June 13, 2026</b> from the same-day build (v1701, <span class="mono">3d7530f0</span>); includes its own staleness check and regeneration prompt.</p>
+      <p style="margin:0 0 10px;color:var(--muted);">The deep one — focused entirely on <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a> (the renamed wifi-densepose), the software your sensors actually feed. Every crate (~38), the complete REST/WebSocket API, all seven <span class="mono">0xC511</span> UDP packet formats with byte layouts, the full CLI including the calibrate→enroll→train-room pipeline, <b>all 163 ADRs</b>, the 90 scripts, the firmware tree, and every capability graded works-today / experimental / stub — with code paths, so your AI assistant knows exactly where to look instead of guessing. Generated <b>June 14, 2026</b> from the same-day build (v1701, <span class="mono">3d7530f0</span>); includes its own staleness check and regeneration prompt.</p>
       <p style="margin:0;"><a class="hero-cta" style="--accent:var(--cyan);" href="/ruview-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruview-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
     </div>
 
     <div class="callout reveal" style="border-color:rgba(199,146,234,0.5);margin-top:24px;">
       <h3 style="margin:0 0 10px;font-size:19px;color:#c792ea;">🧠 The RuView &amp; ruvector Knowledge Bases — make your AI an instant expert</h3>
       <p style="margin:0 0 12px;color:var(--ink);font-size:16px;"><b>In one sentence:</b> a free, downloadable "brain" that already knows the <em>entire</em> RuView and ruvector codebases — so when you build with an AI assistant, it answers from the <b>real source code</b> instead of guessing.</p>
+
+      <div style="margin:0 0 14px;padding:14px 16px;background:rgba(14,24,36,0.5);border:1px solid var(--line);border-radius:10px;color:var(--muted);line-height:1.7;">
+        <div style="color:var(--phosphor);font-weight:600;margin-bottom:8px;">Wait — what even <em>is</em> this? (the plain version, assuming you've never heard of an "RVF")</div>
+        <p style="margin:0 0 10px;">Here's the honest situation. You bought a Seed — maybe after seeing a WiFi-DensePose video — expecting it to just <em>work</em>. It doesn't work by magic out of the box; you have to <b>build</b> a little, and to build you'll lean on an AI like Claude. The catch: the software that runs your Seed (<b>RuView</b>, built on <b>ruvector</b>) is an <b>enormous</b> open-source project — thousands of files across folders, sub-folders, and Rust "crates."</p>
+        <p style="margin:0 0 10px;">When you ask an AI about something that big, it tends to <b>skim and summarize</b> — and skimming means it <b>misses details and sometimes makes things up</b>. That's the #1 reason people get stuck: their AI confidently gives them a <em>wrong</em> answer about RuView and they don't know it's wrong.</p>
+        <p style="margin:0 0 10px;">So we did the patient work <em>for</em> the AI. A tool reads <b>every single file</b> in those projects — walking every folder, sub-folder and crate, going <em>deep</em> instead of skimming — and turns the whole thing into one searchable file. That file is the <b>"RVF" knowledge base</b> (RuVector's own format; think of it as a PDF that stores <em>meaning</em> instead of pages). You <b>download it, drag it into your project, point Claude at it, and ask your questions.</b> Now Claude looks up the <b>real answer in the complete project</b> instead of guessing — so it genuinely helps you get your Seed doing what you wanted, faster.</p>
+        <p style="margin:0;">And because Ruv improves RuView and ruvector almost every day, this rebuilds itself <b>every night</b> — so whatever you download is always the latest, never stale. (That's what <b>"evergreen"</b> means here: grab it once, and it keeps up with the project for you.)</p>
+      </div>
+
       <div style="margin:0 0 14px;padding:14px 16px;border:1px solid rgba(199,146,234,0.4);border-radius:10px;background:rgba(199,146,234,0.06);">
         <div style="margin-bottom:9px;"><b style="color:#c792ea;">Why would I want this?</b> <span style="color:var(--muted);">Ask Claude / Cursor / Copilot <em>"how does RuView tell an empty room from an occupied one?"</em> and it doesn't actually know Ruv's code — so it guesses, and often gets it wrong. Hand it this and it answers with the <b>real files and real APIs in seconds</b>. It turns a guessing assistant into a RuView expert.</span></div>
         <div style="margin-bottom:9px;"><b style="color:#c792ea;">Who's it for?</b> <span style="color:var(--muted);">Anyone who starts <b>building</b> on their Seed with AI help — even your first sensor dashboard. If you're only plugging in sensors right now, you don't need it yet; grab it when you start writing code. It's an optional accelerator, not a required step.</span></div>
@@ -1277,7 +1285,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <li>Unzip into your project as <span class="mono">kb/</span>, then <span class="mono">cd kb &amp;&amp; npm i</span> (installs <span class="mono">@ruvector/rvf</span> + <span class="mono">@xenova/transformers</span>).</li>
         <li>Create <span class="mono">.mcp.json</span> in your project root with exactly this — it runs the <b>bundled, working</b> <span class="mono">kb-mcp-server.mjs</span> (one server, both KBs):<br/><span class="mono" style="display:block;background:rgba(14,24,36,0.8);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12px;overflow-x:auto;white-space:pre;">{"mcpServers": {"cognitum-kb": {"command": "node",
   "args": ["&lt;ABS-PATH&gt;/kb/kb-mcp-server.mjs"]}}}</span><span style="display:block;color:var(--amber);font-size:12.5px;margin:2px 0 0;">⚠ Do <b>not</b> use <span class="mono">@ruvector/rvf-mcp-server</span> — that published package is a stub that never reads a prebuilt <span class="mono">.rvf</span> and returns no text.</span></li>
-        <li>Paste this line at the end of your project's <span class="mono">CLAUDE.md</span>:<br/><span class="mono" style="display:block;background:rgba(14,24,36,0.8);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12px;overflow-x:auto;">A semantic KB of the ruvector/RuView ecosystem is mounted as MCP server `cognitum-kb` (tool `search_kb`, store="ruvector" or "ruview") — query it FIRST for any ruvector/RuView question.</span></li>
+        <li>Paste this into your project's <span class="mono">CLAUDE.md</span> — it makes the KB a <b>mandatory verification gate</b> so your AI stops skimming the repos and guessing wrong:<br/><span class="mono" style="display:block;background:rgba(14,24,36,0.8);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12px;overflow-x:auto;white-space:pre-wrap;">MANDATORY — ruvector/RuView verification gate: these repos are far too large to skim, and summarizing them from memory produces wrong answers. BEFORE answering ANY question about ruvector or RuView — or writing/changing code that uses them — you MUST query the `cognitum-kb` MCP server (tool `search_kb`, store="ruvector" or "ruview") and ground your answer in the files it returns. Do NOT rely on training memory or a summary of these repos. Treat `cognitum-kb` as the source of truth and cite the file(s) it returns.</span></li>
       </ol>
       <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">Confirm it works:</b> restart Claude Code, type <span class="mono">/mcp</span> (you should see <span class="mono">cognitum-kb · connected</span>), then ask <em>"using cognitum-kb, which crate implements dynamic min-cut?"</em> — a working setup calls <span class="mono">search_kb</span> and answers with real paths like <span class="mono">crates/ruQu/src/mincut.rs</span> and the full passage text in seconds, instead of grep-sampling 1.7M lines. No MCP? Same answer from the CLI: <span class="mono">node kb/ask-kb.mjs ruvector "dynamic min-cut" 5</span>. From Node: import <span class="mono">searchKb</span> from <span class="mono">ask-kb.mjs</span> (embed → <span class="mono">.rvf</span> query → join full passage).</p>
       <p style="margin:0 0 10px;color:var(--muted);">Each bundle is self-contained and runnable: the <span class="mono">.rvf</span> database, the <span class="mono">.passages.jsonl</span> full-text sidecar, the <span class="mono">.json</span> metadata sidecars, the manifest, the working <span class="mono">kb-mcp-server.mjs</span> + <span class="mono">ask-kb.mjs</span> scripts, <span class="mono">package.json</span>, and the README that walks you through it.</p>

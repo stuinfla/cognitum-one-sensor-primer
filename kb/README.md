@@ -78,7 +78,7 @@ cd kb && npm i
 
 **Step 3.** Add this one line to the bottom of your project's `CLAUDE.md` (create the file if it doesn't exist) so the assistant knows the tool is there and uses it:
 ```
-A semantic knowledge base of the ruvector/RuView ecosystem is available as MCP server `cognitum-kb` (tool `search_kb`, with store="ruvector" or store="ruview"). Query it FIRST for any ruvector or RuView question before answering.
+MANDATORY — ruvector/RuView verification gate: these repos are far too large to skim, and summarizing them from memory produces wrong answers. BEFORE answering ANY question about ruvector or RuView — or writing/changing code that uses them — you MUST query the `cognitum-kb` MCP server (tool `search_kb`, store="ruvector" or "ruview") and ground your answer in the files it returns. Do NOT rely on training memory or a summary of these repos. Treat `cognitum-kb` as the source of truth and cite the file(s) it returns.
 ```
 
 **Step 4 — confirm it actually works (don't skip):**
