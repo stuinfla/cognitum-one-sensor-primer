@@ -186,7 +186,47 @@ The canonical source is this repo's `kb/` directory on GitHub (`SOURCE.json` car
 
 ---
 
-## 7. Honest limits (so you trust it)
+## 7. Putting it in your own project (without bloating your repo)
+
+**Don't commit the vector files into your project.** The `.rvf` databases (and the bundle zips) are big **build artifacts**, not source — they're rebuilt from the upstream repos and published on the [`kb-latest` release](https://github.com/stuinfla/cognitum-one-sensor-primer/releases/tag/kb-latest). Add them to your project's **`.gitignore`** and fetch them instead. Your teammates (and your CI) re-download in one step; your repo stays small.
+
+```gitignore
+# Cognitum KB — large artifacts, fetched from the release, never committed
+kb/**/*.rvf
+kb/**/*.rvf.idmap.json
+kb/**/*.passages.jsonl
+kb/*-kb-bundle.zip
+kb/models-cache/
+kb/node_modules/
+```
+
+Fetch / refresh the prebuilt KB any time (re-downloads the current release, verifies it, swaps it in):
+
+```bash
+cd kb && node kb-update.mjs --apply          # or just re-download the bundle from the release
+```
+
+**Want to rebuild the KB yourself from the very latest source?** Add the upstream repos as **git submodules**. A submodule stores only a tiny *pointer* in your repo — **not** RuView's/ruvector's million-plus lines — so it does **not** bloat your project; the actual code is fetched into a separate folder on demand.
+
+```bash
+# one-time: reference the upstream source (pointer only — your repo stays tiny)
+git submodule add https://github.com/ruvnet/RuView   vendor/RuView
+git submodule add https://github.com/ruvnet/ruvector vendor/ruvector
+
+# pull the latest upstream whenever you want it fresh (this is the "always updated" part)
+git submodule update --remote vendor/RuView vendor/ruvector
+
+# then rebuild + verify (writes into kb/stores/<repo>/, which your .gitignore above keeps out of git)
+cd kb && npm i
+KB_REPO_ROOT="$PWD/.." node .build-ruvector-kb/build.mjs   # or build-ruview-kb.mjs
+node guard-check.mjs                                        # must PASS before you trust a rebuild
+```
+
+> The submodule **working tree** (the checked-out RuView/ruvector files under `vendor/`) is what you don't want in *your* commits — but git already handles that: only the pointer is tracked, and the files live in `vendor/` which you can also add to `.gitignore` if you prefer to fetch them on demand rather than pin them. Most projects just **skip the submodule entirely and use the prebuilt release** — rebuilding is only for staying bleeding-edge.
+
+---
+
+## 8. Honest limits (so you trust it)
 
 - **It finds and quotes; it doesn't reason.** It excels at "where is X / how does Y work / which thing does Z." It returns the real source documents — it isn't a chatbot inventing prose. (Pair it with Claude via Way 1 to get reasoning *on top of* trustworthy sources.)
 - **ADRs are proposals, not always shipped reality.** ruvnet's "ADR" design docs are *initial thinking*; the code is what got built. When the KB returns an ADR that's still a proposal, it **labels it** (`ADR STATUS: PROPOSED — design intent, NOT confirmed shipped`) so you don't mistake a plan for a feature.
