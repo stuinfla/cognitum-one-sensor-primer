@@ -531,6 +531,29 @@ function implAdjust(path, crateTok, opNouns) {
   return adj;
 }
 
+// FIX D — NAMED-CRATE source boost (no rebuild). A query that explicitly names a real crate but
+// carries NO implementation verb ("HNSW index in ruvector-core", "ruvector-mmwave radar parser")
+// got no crate scoping before — so a sibling crate / example / bridge could outrank the named
+// crate's own source. When the query names crate(s) AND it is not an impl query (implAdjust already
+// covers those), GENTLY promote the named crate's own src/**/*.rs (a little extra when the filename
+// token-matches an operation noun). Gentle enough that a clearly-better vector match still wins.
+function namedCrateAdjust(path, crateToks, opNouns) {
+  if (!crateToks || !crateToks.length) return 0;
+  for (const c of crateToks) {
+    const inCrate = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${c}(?:-[a-z0-9-]+)?/`, 'i').test(path);
+    if (!inCrate) continue;
+    const isSrcRs = /(?:^|\/)src\/.+\.rs$/i.test(path) && !/(?:^|\/)main\.rs$/i.test(path);
+    if (isSrcRs) {
+      let adj = -0.28;                               // promote the named crate's own source
+      const slug = (path.split('/').pop() || '').toLowerCase();
+      if (opNouns && opNouns.some((t) => t.length >= 3 && slug.includes(t))) adj -= 0.22;
+      return adj;
+    }
+    return -0.10;                                    // mild lift for anything else in the named crate
+  }
+  return 0;
+}
+
 // Exact ADR-by-number, e.g. "ADR-027" / "adr 27" -> zero-padded "027". Returns [nums] or [].
 function adrNumbers(query) {
   return (query.match(/\badr[-\s_]?(\d{1,4})\b/gi) || [])
@@ -887,6 +910,9 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
   const implIntent = isImplIntent(query);
   const implCrateTok = (implIntent && entity.crates.length) ? entity.crates[0] : null;
   const implOpNouns = implIntent ? implOperationNouns(query, entity.crates) : [];
+  // FIX D — named crate(s) WITHOUT impl intent: gently scope to the named crate's own source.
+  const namedCrateToks = (!implIntent && entity.crates.length) ? entity.crates : [];
+  const namedOpNouns = namedCrateToks.length ? implOperationNouns(query, entity.crates) : [];
   // FIX C — crate-scoped maturity question: prefer the crate's OWN README/BENCHMARK over the
   // global capabilities primer / cross-crate benchmark doc.
   const crateMaturityTok = crateMaturityTarget(query, entity.crates);
@@ -960,6 +986,16 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
       if (srcRe.test(p)) { ensureDoc(p); if (++added >= 40) break; }
     }
   }
+  // FIX D — for a (non-impl) query naming crate(s), pull each named crate's own src/**/*.rs into the
+  // pool so the named crate's source can be promoted above a sibling crate / example / bridge.
+  for (const c of namedCrateToks) {
+    const srcRe = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${c}(?:-[a-z0-9-]+)?/src/.+\\.rs$`, 'i');
+    let added = 0;
+    for (const p of byPath.keys()) {
+      if (docs.has(p) || /(?:^|\/)main\.rs$/i.test(p)) continue;
+      if (srcRe.test(p)) { ensureDoc(p); if (++added >= 40) break; }
+    }
+  }
   // FIX C — for a crate-maturity query, ensure the crate's own README/BENCHMARK are in the pool.
   if (crateMaturityTok) {
     const cre = new RegExp(`(?:^|/)(?:v\\d+/)?crates/${crateMaturityTok}(?:-[a-z0-9-]+)?/(readme|benchmark)\\.md$`, 'i');
@@ -986,6 +1022,8 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
     // FIX A — implementation intent: demote vendored deps / entrypoints / manifest, promote the
     // named crate's own src/**/*.rs (extra for an operation-token-matching filename).
     const implAdj = implIntent ? implAdjust(d.path, implCrateTok, implOpNouns) : 0;
+    // FIX D — named crate (no impl verb): gently promote the named crate's own source.
+    const namedCrateAdj = namedCrateToks.length ? namedCrateAdjust(d.path, namedCrateToks, namedOpNouns) : 0;
     // FIX B — targeted off-topic-magnet down-weight (ADR-096 unless query is about rvCSI layout).
     const magnetPen = offtopicMagnetPenalty(query, d.path);
     // FIX C — crate-maturity: boost the named crate's OWN README/BENCHMARK.
@@ -1015,7 +1053,7 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
     // the per-variant rankScale (small=1.0 → unchanged; big<1 → gentler, trusts bge's raw order).
     const RANK_SCALE = conf.embedCfg.rankScale ?? 1;
     const offsets = pen - boost + seed - sub - orient - concept - intentAdj
-      + primerDemote + crateAdj + implAdj + magnetPen + matAdj;
+      + primerDemote + crateAdj + implAdj + namedCrateAdj + magnetPen + matAdj;
     const effDistance = d.bestDistance + RANK_SCALE * offsets;
     return { ...d, effDistance, kind: dkind };
   }).sort((a, b) => a.effDistance - b.effDistance);
