@@ -23,6 +23,8 @@ api-keys*.json
 .claude/
 .swarm/
 .claude-flow/
+# Local Claude Code / Ruflo project config — dev tooling, not part of the public primer product.
+CLAUDE.md
 ruvector.db
 agentdb.rvf
 agentdb.rvf.lock
