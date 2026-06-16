@@ -60,6 +60,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/css/styles.css?v=3" />
+
+<!-- Vercel Web Analytics — page views + custom "kb_download" events.
+     NOTE: requires Analytics to be ENABLED in the Vercel dashboard (Project → Analytics);
+     until then /_vercel/insights/script.js 404s and no counts accrue. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -1290,8 +1298,8 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">Confirm it works:</b> restart Claude Code, type <span class="mono">/mcp</span> (you should see <span class="mono">cognitum-kb · connected</span>), then ask <em>"using cognitum-kb, which crate implements dynamic min-cut?"</em> — a working setup calls <span class="mono">search_kb</span> and answers with real paths like <span class="mono">crates/ruQu/src/mincut.rs</span> and the full passage text in seconds, instead of grep-sampling 1.7M lines. No MCP? Same answer from the CLI: <span class="mono">node kb/ask-kb.mjs ruvector "dynamic min-cut" 5</span>. From Node: import <span class="mono">searchKb</span> from <span class="mono">ask-kb.mjs</span> (embed → <span class="mono">.rvf</span> query → join full passage).</p>
       <p style="margin:0 0 10px;color:var(--muted);">Each bundle is self-contained and runnable: the <span class="mono">.rvf</span> database, the <span class="mono">.passages.jsonl</span> full-text sidecar, the <span class="mono">.json</span> metadata sidecars, the manifest, the working <span class="mono">kb-mcp-server.mjs</span> + <span class="mono">ask-kb.mjs</span> scripts, <span class="mono">package.json</span>, and the README that walks you through it.</p>
       <p style="margin:0;">
-        <a class="hero-cta" style="--accent:#c792ea;" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruvector-kb-bundle.zip">ruvector KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 155 MB) ↓</a> &nbsp;
-        <a class="hero-cta" style="--accent:#c792ea;" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruview-kb-bundle.zip">ruview KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 38 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruvector'}})" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruvector-kb-bundle.zip">ruvector KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 155 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruview'}})" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruview-kb-bundle.zip">ruview KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 38 MB) ↓</a> &nbsp;
         <a href="https://github.com/stuinfla/cognitum-one-sensor-primer/blob/main/kb/README.md" style="font-family:'IBM Plex Mono';font-size:13px;"><b>START HERE: the KB README</b> (what it is · what's in it · 3 ways to use it) →</a>
       </p>
     </div>

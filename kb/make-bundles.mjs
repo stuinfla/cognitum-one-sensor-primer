@@ -4,7 +4,8 @@
 // Each bundle ships BOTH variants of that repo's KB (big 768-dim + small 384-dim) plus the
 // ONE shared passages/metadata sidecar (the big variant re-uses the small build's passages,
 // so we never double the ~92 MB text in the download), the runnable tools, the evergreen
-// self-updater, a full README, and a repo-specific START-HERE.md generated below.
+// self-updater, a full README, BOTH primers (ruvector + ruview — two halves of one Seed), and a
+// repo-specific START-HERE.md generated below.
 //
 // Usage: node kb/make-bundles.mjs           (both repos)
 //        node kb/make-bundles.mjs ruvector  (one)
@@ -28,6 +29,13 @@ const RELEASE_BASE = 'https://github.com/stuinfla/cognitum-one-sensor-primer/rel
 // files shared by every bundle (the runnable shim + setup + integrity check + evergreen + README)
 const SHARED = ['ask-kb.mjs', 'kb-mcp-server.mjs', 'resolve-deps.mjs', 'guard-check.mjs',
   'kb-update.mjs', 'SOURCE.json', 'package.json', 'README.md'];
+
+// BOTH primers ship in EVERY bundle (src-relative-to-KB_DIR, dest-inside-zip). The ruvector and
+// ruview stories are two halves of the same Seed, so a reader of either KB gets the full picture.
+const ALL_PRIMERS = [
+  ['stores/ruvector/ruvector-primer.md', 'ruvector-primer.md'],
+  ['stores/ruview/ruview-primer.md', 'ruview-primer.md'],
+];
 
 // Regenerate SOURCE.json from .last-built.json so embedded provenance never drifts from the manifest.
 function writeSourceJson() {
@@ -64,7 +72,7 @@ const BUNDLES = {
     blurb: 'ruvnet/ruvector — the ~1.7M-line Rust AI engine (vector search, learning, coherence, math) inside the Cognitum One Seed.',
     // per-repo DATA files (live in stores/ruvector/, staged FLAT into the zip)
     dataFiles: ['ruvector-kb.small.rvf', 'ruvector-kb.small.rvf.idmap.json', 'ruvector-kb.passages.jsonl',
-      'ruvector-kb.ids.json', 'ruvector-kb.MANIFEST.md', 'ruvector-primer.md'],
+      'ruvector-kb.ids.json', 'ruvector-kb.MANIFEST.md'],
     // big (optional — included only if built; also in stores/ruvector/)
     bigFiles: ['ruvector-kb.big.rvf', 'ruvector-kb.big.rvf.idmap.json', 'ruvector-kb.big.rvf.embed.json'],
     // build scripts (live in kb/, staged preserving their path)
@@ -83,7 +91,7 @@ const BUNDLES = {
     label: 'ruview',
     blurb: 'ruvnet/RuView — the WiFi-CSI / mmWave-radar contactless sensing platform the Seed runs (presence, occupancy, vitals, onboarding).',
     dataFiles: ['ruview-kb.small.rvf', 'ruview-kb.small.rvf.idmap.json', 'ruview-kb.passages.jsonl',
-      'ruview-kb.meta.json', 'ruview-kb.MANIFEST.md', 'ruview-primer.md'],
+      'ruview-kb.meta.json', 'ruview-kb.MANIFEST.md'],
     bigFiles: ['ruview-kb.big.rvf', 'ruview-kb.big.rvf.idmap.json', 'ruview-kb.big.rvf.embed.json'],
     scriptFiles: ['build-ruview-kb.mjs', 'build-big-variant.mjs', 'index-primer.mjs'],
     questions: [
@@ -125,6 +133,11 @@ Connect it to Claude Code / Cursor / VS Code so your assistant answers from the 
 ## Questions this KB answers well
 ${q}
 
+## Two primers are included (read both)
+The Seed is **ruvector** (the AI engine) running on **RuView** (the sensing platform) — two halves of one story. So every bundle ships **both** primers, whichever KB you downloaded:
+- 📘 **ruvector-primer.md** — the AI/vector/learning engine
+- 📗 **ruview-primer.md** — the WiFi-CSI / mmWave sensing platform
+
 ---
 **New to the whole thing?** Open **README.md** — it explains what an RVF knowledge base is from scratch, in plain English. New to the Seed device itself? See the primer at https://cognitum-sensor-primer.vercel.app and the first-run setup at https://cognitum.shaal.dev/.
 `;
@@ -142,6 +155,7 @@ function build(name) {
     ...dataNames.map((f) => [path.join(storeDir, f), f]),
     ...b.scriptFiles.map((f) => [path.join(KB_DIR, f), f]),
     ...SHARED.map((f) => [path.join(KB_DIR, f), f]),
+    ...ALL_PRIMERS.map(([src, dst]) => [path.join(KB_DIR, src), dst]),  // both primers in every bundle
   ];
   const missing = pairs.filter(([src]) => !fs.existsSync(src)).map(([src]) => src);
   if (missing.length) throw new Error(`${name}: missing files for bundle:\n  ${missing.join('\n  ')}`);
