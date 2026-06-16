@@ -206,6 +206,156 @@ Core: `ruvector`, `@ruvector/gnn`, `@ruvector/graph`, `@ruvector/attention`, `@r
 
 ---
 
+## Complete crate index (all 139 crates)
+
+Every entry in `ruvector/crates/` (139 directories as of commit `4dedde8`), one row per crate. Purpose text is taken verbatim from that crate's `Cargo.toml` `description` field; if the crate uses `description.workspace = true` or has no description, the first-line summary from its `README.md` or `src/lib.rs` `//!` doc is used instead. This table is keyword-dense by design — it is the retrieval surface for the KB.
+
+**Note on `emergent-time`:** this crate implements a calculus of relational/emergent time — time without an external coordinate, defined as ordered internal change. It contains four physics formalisms (Wheeler-DeWitt timeless constraint, Page-Wootters relational clocks, entropic time via Connes-Rovelli thermal time, and Structural Proper Time) plus an Agentic Time primitive that applies the same idea to AI agent traces. It has zero runtime dependencies and 72 tests. Previously absent from this primer and the KB — it is now indexed here.
+
+| crate | one-line purpose |
+|---|---|
+| `agentic-robotics-benchmarks` | Benchmark suite for agentic-robotics pub-sub latency, message serialization, and executor performance (ROS2-compatible robotics middleware) |
+| `agentic-robotics-core` | High-performance Rust robotics middleware: publish-subscribe messaging, service calls, and serialization — ROS2 compatible, 10× faster |
+| `agentic-robotics-embedded` | Embedded-systems support for agentic-robotics using Embassy and RTIC (no-std, bare-metal robotics) |
+| `agentic-robotics-mcp` | MCP 2025-11 compliant server exposing robot capabilities to AI assistants via stdio and SSE transports |
+| `agentic-robotics-node` | Node.js/TypeScript NAPI bindings for agentic-robotics-core pub-sub and service-call API |
+| `agentic-robotics-rt` | Dual Tokio + RTIC real-time executor with HDR-histogram latency tracking and priority-isolated thread pools |
+| `cognitum-gate-kernel` | No-std WASM kernel for 256-tile coherence gate fabric |
+| `cognitum-gate-tilezero` | Native arbiter for TileZero in the Anytime-Valid Coherence Gate |
+| `emergent-time` | Calculus of emergent / relational time: Wheeler-DeWitt timeless constraint, Page-Wootters relational clocks, entropic time, Connes-Rovelli thermal time, and Structural Proper Time for agentic and quantum systems |
+| `hailort-sys` | Raw FFI bindings for Hailo's HailoRT C library (ADR-167) |
+| `mcp-brain` | MCP server for RuVector Shared Brain — share, search, and transfer learning across Claude Code sessions |
+| `mcp-brain-server` | Cloud Run backend for RuVector Shared Brain — axum REST API with Firestore + GCS |
+| `mcp-gate` | MCP (Model Context Protocol) server for the Anytime-Valid Coherence Gate |
+| `micro-hnsw-wasm` | Neuromorphic HNSW vector search with spiking neural networks — 11.8 KB WASM for edge AI, ASIC, and embedded; LIF neurons, STDP learning, winner-take-all |
+| `neural-trader-coherence` | MinCut coherence gate, CUSUM drift detection, and proof-gated mutation for Neural Trader |
+| `neural-trader-core` | Canonical market event types, ingest pipeline, and graph schema for RuVector Neural Trader |
+| `neural-trader-replay` | Witnessable replay segments, RVF serialization, and audit receipt logging for Neural Trader |
+| `neural-trader-strategies` | Venue-agnostic strategy + risk-gate runtime for RuVector Neural Trader (ADR-153) |
+| `neural-trader-wasm` | WASM bindings for Neural Trader — market events, coherence gates, replay memory |
+| `prime-radiant` | Universal coherence engine: sheaf Laplacian mathematics, immutable Blake3 witness chains, 256-tile WASM gate fabric — AI safety, hallucination detection, structural consistency verification |
+| `profiling` | Profiling scripts, reports, and analysis directory for RuVector performance optimization (meta-directory, no top-level Cargo.toml) |
+| `ruQu` | Classical nervous system for quantum machines — real-time coherence assessment via dynamic min-cut |
+| `ruos-thermal` | Pi 5 thermal supervisor + over/underclock control (ADR-174) |
+| `ruqu-algorithms` | Production-ready quantum algorithms in Rust: VQE for chemistry, Grover's search, QAOA optimization, Surface Code error correction |
+| `ruqu-core` | High-performance quantum circuit simulator in pure Rust — state-vector simulation with SIMD acceleration, noise models, multi-threading |
+| `ruqu-exotic` | Experimental quantum-classical hybrid algorithms: quantum memory decay, interference search, reasoning error correction, swarm interference for AI systems |
+| `ruqu-wasm` | WebAssembly bindings for quantum simulations: 25-qubit support, VQE, Grover, QAOA in the browser |
+| `ruvector-acorn` | ACORN: Predicate-Agnostic Filtered HNSW — interleaved predicate evaluation inside the graph walk for 2–1000× QPS over post-filter patterns at low selectivity |
+| `ruvector-acorn-wasm` | WASM bindings for ruvector-acorn: predicate-agnostic filtered HNSW for browsers and edge runtimes |
+| `ruvector-attention` | Attention mechanisms for RuVector — geometric, graph, sparse attention; 46 mechanism types including Flash Attention, MLA, Mamba SSM, hyperbolic, optimal-transport |
+| `ruvector-attention-cli` | CLI for ruvector-attention: high-performance attention mechanisms |
+| `ruvector-attention-node` | Node.js NAPI bindings for ruvector-attention |
+| `ruvector-attention-unified-wasm` | Unified WASM bindings for 18+ attention mechanisms: Neural, DAG, Graph, and Mamba SSM |
+| `ruvector-attention-wasm` | High-performance WASM attention mechanisms: Multi-Head, Flash, Hyperbolic, MoE, CGT Sheaf Attention with GPU acceleration |
+| `ruvector-attn-mincut` | Min-cut gating attention operator: dynamic graph-based alternative to softmax attention; subpolynomial dynamic min-cut |
+| `ruvector-bench` | Comprehensive benchmarking suite for RuVector |
+| `ruvector-cli` | CLI and MCP server for RuVector |
+| `ruvector-cluster` | Distributed clustering and sharding for RuVector |
+| `ruvector-cnn` | CNN feature extraction for image embeddings with SIMD acceleration (MobileNet-V3 style, claimed <5 ms, INT8, zero deps) |
+| `ruvector-cnn-wasm` | WASM bindings for ruvector-cnn: CNN feature extraction for image embeddings |
+| `ruvector-cognitive-container` | Verifiable WASM cognitive container with canonical witness chains |
+| `ruvector-coherence` | Coherence measurement proxies for comparing attention mechanisms |
+| `ruvector-collections` | High-performance collection management for RuVector vector databases |
+| `ruvector-consciousness` | SOTA consciousness metrics: IIT Φ computation, causal emergence, effective information with SIMD acceleration and sublinear approximations |
+| `ruvector-consciousness-wasm` | WASM bindings for ruvector-consciousness: IIT Φ, causal emergence, quantum collapse |
+| `ruvector-core` | High-performance Rust vector database core with HNSW indexing, SIMD (AVX-512, NEON), REDB persistence; claimed 61 µs p50 search |
+| `ruvector-crv` | CRV (Coordinate Remote Viewing) protocol integration for RuVector — maps 6-stage signal-line methodology to vector database subsystems |
+| `ruvector-dag` | Directed Acyclic Graph (DAG) structures for query plan optimization with neural learning |
+| `ruvector-dag-wasm` | Minimal WASM DAG library for browser and embedded systems |
+| `ruvector-decompiler` | SOTA JavaScript bundle decompiler: MinCut graph partitioning, self-learning name inference, and RVF witness chains |
+| `ruvector-decompiler-wasm` | WASM bindings for the RuVector JavaScript bundle decompiler (Louvain pipeline) |
+| `ruvector-delta-consensus` | Distributed delta consensus using CRDTs and causal ordering |
+| `ruvector-delta-core` | Core delta types and traits for behavioral vector change tracking |
+| `ruvector-delta-graph` | Delta operations for graph structures: edge and node changes |
+| `ruvector-delta-index` | Delta-aware HNSW index with incremental updates and repair strategies |
+| `ruvector-delta-wasm` | WASM bindings for delta operations on vectors |
+| `ruvector-diskann` | DiskANN/Vamana — SSD-friendly approximate nearest neighbor search with product quantization; claimed <10 ms billion-scale |
+| `ruvector-diskann-node` | NAPI-RS Node.js bindings for ruvector-diskann |
+| `ruvector-dither` | Deterministic low-discrepancy dithering for low-bit quantization: golden-ratio and π-digit sequences for blue-noise error shaping |
+| `ruvector-domain-expansion` | Cross-domain transfer learning engine: Rust synthesis, structured planning, tool orchestration |
+| `ruvector-domain-expansion-wasm` | WASM bindings for the domain expansion cross-domain transfer learning engine |
+| `ruvector-economy-wasm` | CRDT-based autonomous credit economy for distributed compute networks — WASM optimized |
+| `ruvector-exotic-wasm` | Exotic AI mechanisms for emergent behavior: Neural Autonomous Orgs, Morphogenetic Networks, Time Crystals |
+| `ruvector-filter` | Advanced metadata filtering for RuVector vector search |
+| `ruvector-fpga-transformer` | FPGA Transformer backend with deterministic latency, quantization-first design, and coherence gating |
+| `ruvector-fpga-transformer-wasm` | WASM bindings for FPGA Transformer backend |
+| `ruvector-gnn` | Graph Neural Network layer for RuVector on HNSW topology; GCN/GAT/GraphSAGE; claimed +5–8% recall after 1K queries |
+| `ruvector-gnn-node` | Node.js NAPI-RS bindings for RuVector GNN |
+| `ruvector-gnn-wasm` | WASM bindings for RuVector GNN with tensor compression and differentiable search |
+| `ruvector-graph` | Distributed Neo4j-compatible hypergraph database with SIMD: Cypher, ACID, hyperedges, SPARQL 1.1, Leiden community detection |
+| `ruvector-graph-condense` | Structure-preserving graph condensation: collapse large feature graphs into small synthetic graphs using dynamic min-cut community boundaries |
+| `ruvector-graph-condense-wasm` | WASM bindings for ruvector-graph-condense: structure-preserving + differentiable-min-cut graph condensation |
+| `ruvector-graph-node` | Node.js NAPI-RS bindings for RuVector Graph Database |
+| `ruvector-graph-transformer` | Unified graph transformer with proof-gated mutation substrate — 8 verified modules: physics, biological, manifold, temporal, economic graph intelligence |
+| `ruvector-graph-transformer-node` | Node.js NAPI-RS bindings for RuVector Graph Transformer |
+| `ruvector-graph-transformer-wasm` | WASM bindings for ruvector-graph-transformer: proof-gated graph attention in the browser |
+| `ruvector-graph-wasm` | WASM bindings for RuVector graph database with Neo4j-inspired API and Cypher support |
+| `ruvector-hailo` | RuVector embedding backend for the Hailo-8 NPU (ADR-167); claimed 9.6× embedding speedup on Pi 5 |
+| `ruvector-hailo-cluster` | Multi-Pi cluster coordinator for RuVector Hailo embedding workers (ADR-167 §8) |
+| `ruvector-hyperbolic-hnsw` | Hyperbolic (Poincaré ball) embeddings with HNSW integration for hierarchy-aware vector search: taxonomies, ontologies, hierarchical data |
+| `ruvector-hyperbolic-hnsw-wasm` | WASM bindings for hyperbolic HNSW embeddings: hierarchy-aware vector search in the browser |
+| `ruvector-kalshi` | Kalshi exchange integration for RuVector Neural Trader (ADR-153) |
+| `ruvector-learning-wasm` | Ultra-fast MicroLoRA adaptation for WASM — rank-2 LoRA with <100 µs latency for per-operator learning |
+| `ruvector-math` | Advanced mathematics: Optimal Transport, Information Geometry, Product Manifolds for next-gen vector search |
+| `ruvector-math-wasm` | WASM bindings for ruvector-math: Optimal Transport, Information Geometry, Product Manifolds |
+| `ruvector-metrics` | Prometheus-compatible metrics collection for RuVector vector databases |
+| `ruvector-mincut` | World's first subpolynomial dynamic min-cut (n^0.12 claimed, arXiv:2512.13105): self-healing networks, AI optimization, real-time graph analysis |
+| `ruvector-mincut-brain-node` | Minimal WASM binary for pi.ruv.io brain node: canonical min-cut with V1 ABI stubs |
+| `ruvector-mincut-gated-transformer` | Ultra low latency transformer inference with mincut-gated coherence control |
+| `ruvector-mincut-gated-transformer-wasm` | WASM bindings for mincut-gated transformer inference |
+| `ruvector-mincut-node` | Node.js bindings for subpolynomial-time dynamic minimum cut |
+| `ruvector-mincut-wasm` | WASM bindings for subpolynomial-time dynamic minimum cut |
+| `ruvector-mmwave` | Shared parser for Seeed MR60BHA2 + HLK-LD2410 60/24 GHz mmWave radar UART streams (ADR-063) — directly relevant to Cognitum sensor array |
+| `ruvector-nervous-system` | Bio-inspired neural system with spiking networks, BTSP one-shot plasticity, and EWC forgetting protection |
+| `ruvector-nervous-system-wasm` | WASM bindings for ruvector-nervous-system bio-inspired AI components |
+| `ruvector-node` | Node.js NAPI-RS bindings for RuVector core |
+| `ruvector-perception` | Physical delta → boundary → coherence → proof → action substrate: trusted-physical-memory engine emitting structured delta witnesses, not class labels (ADR-198) |
+| `ruvector-postgres` | High-performance PostgreSQL vector database extension v2: pgvector drop-in replacement, 230+ SQL functions, SIMD, Flash Attention, GNN layers, hybrid search, multi-tenancy, self-learning |
+| `ruvector-profiler` | Memory, power, and latency profiling hooks with CSV emitters for benchmarking attention mechanisms |
+| `ruvector-rabitq` | RaBitQ: rotation-based 1-bit quantization for ultra-fast approximate nearest-neighbor search with theoretical error bounds |
+| `ruvector-rabitq-wasm` | WASM bindings for ruvector-rabitq: 1-bit quantized vector index for browsers and edge runtimes |
+| `ruvector-raft` | Raft consensus implementation for RuVector distributed metadata |
+| `ruvector-rairs` | RAIRS IVF: Redundant Assignment with Amplified Inverse Residual — RuVector's first IVF index family (ADR-193) |
+| `ruvector-replication` | Data replication and synchronization for RuVector |
+| `ruvector-robotics` | Cognitive robotics platform: bridge types, perception pipeline, cognitive architecture, and MCP tools |
+| `ruvector-router-cli` | CLI for testing and benchmarking ruvector-router-core |
+| `ruvector-router-core` | Core vector database and neural routing inference engine (FastGRNN) |
+| `ruvector-router-ffi` | NAPI-RS bindings for ruvector-router-core vector database |
+| `ruvector-router-wasm` | WASM bindings for ruvector-router-core |
+| `ruvector-rulake` | ruLake — vector-native federation intermediary over heterogeneous backends (ADR-155) |
+| `ruvector-server` | High-performance REST API server for RuVector vector databases |
+| `ruvector-snapshot` | Point-in-time snapshots and backup for RuVector vector databases |
+| `ruvector-solver` | Sublinear-time solver: O(log n) to O(√n) algorithms for sparse linear systems, PageRank, and spectral methods; 7 algorithms + auto-router; 177 tests |
+| `ruvector-solver-node` | Node.js NAPI bindings for RuVector sublinear-time solver |
+| `ruvector-solver-wasm` | WASM bindings for RuVector sublinear-time solver |
+| `ruvector-sparse-inference` | PowerInfer-style sparse inference engine for efficient neural network inference on edge devices |
+| `ruvector-sparse-inference-wasm` | WASM bindings for PowerInfer-style sparse inference |
+| `ruvector-sparsifier` | Dynamic spectral graph sparsification: always-on compressed world model for real-time graph analytics; 48 tests |
+| `ruvector-sparsifier-wasm` | WASM bindings for dynamic spectral graph sparsification |
+| `ruvector-temporal-tensor` | Temporal tensor compression with tiered quantization for RuVector; claimed 4–10× compression |
+| `ruvector-temporal-tensor-wasm` | WASM bindings for temporal tensor compression |
+| `ruvector-tiny-dancer-core` | Production-grade AI agent routing system with FastGRNN neural inference (ultra-low-latency) |
+| `ruvector-tiny-dancer-node` | Node.js NAPI-RS bindings for Tiny Dancer neural routing |
+| `ruvector-tiny-dancer-wasm` | WASM bindings for Tiny Dancer neural routing |
+| `ruvector-verified` | Formal verification layer for RuVector: proof-carrying vector operations with sub-microsecond overhead using lean-agentic dependent types |
+| `ruvector-verified-wasm` | WASM bindings for ruvector-verified: proof-carrying vector operations in the browser |
+| `ruvector-wasm` | WASM bindings for RuVector core including kernel pack system (ADR-005) |
+| `ruvix` | RuVix Cognition Kernel: purpose-built bare-metal AArch64 OS for AI agents; understands vectors, graphs, proofs, and coherence natively; seL4-inspired capabilities (22 sub-crates) |
+| `ruvllm` | LLM serving runtime with RuVector integration: paged attention, KV cache, SONA learning; GGUF models on Metal/CUDA/ANE/WebGPU/CPU |
+| `ruvllm-cli` | CLI for RuvLLM model management and inference on Apple Silicon |
+| `ruvllm-wasm` | WASM bindings for RuvLLM: browser-compatible LLM inference runtime with WebGPU acceleration |
+| `ruvllm_retrieval_diffusion` | Corpus-agnostic training-free retrieval LM and masked discrete diffusion on ruvllm_sparse_attention: game levels, drum patterns, configs, MIDI, visual tokens |
+| `ruvllm_sparse_attention` | Subquadratic O(N log N) sparse attention kernel for Rust LLM inference on edge devices; optional FastGRNN salience gating for near-linear O(N) scaling |
+| `rvAgent` | rvAgent framework root workspace: typed agent state, MCP integration, Agent2Agent protocol (A2A, ADR-159), terminal TUI agent (10 sub-crates) |
+| `rvf` | RVF (RuVector Format) sub-workspace: 18 top-level crates + 6 adapters for the cognitive container binary format — vectors, HNSW, LoRA, witness chains, post-quantum signatures, COW branching |
+| `rvlite` | Standalone vector database with SQL, SPARQL, and Cypher — powered by RuVector WASM (~2 MB edge runtime) |
+| `rvm` | RVM: coherence-native microhypervisor for edge computing and multi-agent systems |
+| `sona` | Self-Optimizing Neural Architecture: runtime-adaptive learning for LLM routers with two-tier LoRA (MicroLoRA + BaseLoRA), EWC++, and ReasoningBank trajectory learning |
+| `thermorust` | Thermodynamic neural motif engine: energy-driven state transitions with Landauer dissipation and Langevin noise |
+
+---
+
 ## 4. ADR index — the complete table (208 main-series files in `docs/adr/`, + 54 in 4 sub-series dirs)
 
 **Counts, verified June 13 against the submodule:** `docs/adr/` holds **208** loose `.md` files (the main numbered series tabled below) **plus 4 sub-series directories** totalling **54** files (coherence-engine 22, quantum-engine 15, delta-behavior 11, temporal-tensor-store 6) — so `find ruvector/docs/adr -name '*.md' | wc -l` = **262**. If instead you count *every* `adr`-pathed `.md` anywhere in the repo (`find ruvector -path '*adr*' -name '*.md'`), you get **340** — that adds ADRs that live next to specific components (ruvbot 15, the `dna` example 15, sublinear-time-solver 12, vibecast-7sense 9, ruvector-mincut 7, ruvocal UI 6, prime-radiant 6, delta-behavior example 4, and a handful of singletons). The table below is the canonical `docs/adr/` main series. Decision records live in `docs/adr/`. Every main-series record:

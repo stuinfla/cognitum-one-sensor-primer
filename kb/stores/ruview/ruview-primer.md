@@ -536,4 +536,88 @@ cd kb && npm i        # installs @ruvector/rvf + @xenova/transformers locally; M
 
 ---
 
+## provision.py — every flag, explained
+
+Two provisioning scripts exist in the repo. They differ in scope — the firmware-tree version is the current one:
+
+- **`firmware/esp32-csi-node/provision.py`** — the canonical, actively maintained script. Supports S3 and C6 (and any other chip esptool recognises). Implements additive-by-default NVS merging (issues #391, #574): it reads a per-port state JSON file from the OS user-config directory, overlays the new CLI flags on top, flashes the merged result, then writes the merged state back. Re-running with only `--ssid` does not wipe `--edge-tier` you set last time.
+- **`scripts/provision.py`** — an earlier, S3-only version. Narrower flag set; no TDM or swarm-bridge flags; no additive merge. Useful as a minimal reference but `firmware/esp32-csi-node/provision.py` is the one you should actually run.
+
+### Flag reference — `firmware/esp32-csi-node/provision.py`
+
+| Flag | Values / default | What it does |
+|---|---|---|
+| `--port` | required, e.g. `COM7` or `/dev/ttyUSB0` | Serial port for esptool |
+| `--chip` | `auto` (default), `esp32s3`, `esp32c6`, … | esptool target chip; `auto` works with esptool v5+; pass explicitly if auto-detect fails |
+| `--baud` | integer, default `460800` | Flash baud rate |
+| `--ssid` | string | WiFi SSID to provision |
+| `--password` | string | WiFi password |
+| `--target-ip` | IP string, e.g. `192.168.1.20` | Aggregator (sensing-server) host IP — baked into flash; moving the server requires re-provisioning every node |
+| `--target-port` | integer, default `5005` | Aggregator UDP port |
+| `--node-id` | integer `0–255`, default `1` | Node identity — the only way nodes are told apart by the server; must be unique per node |
+| `--tdm-slot` | integer (0-based) | This node's TDM transmit slot; must be `< --tdm-total`; must be passed together with `--tdm-total` |
+| `--tdm-total` | integer | Total TDM nodes in mesh; must be passed together with `--tdm-slot` |
+| `--edge-tier` | `0`, `1`, or `2` | Edge processing tier: `0`=off (raw CSI stream), `1`=stats (~30 KB RAM), `2`=on-chip presence/vitals/fall (~33 KB RAM) |
+| `--pres-thresh` | integer, default `50` | Presence detection threshold (NVS stores as raw integer; `0` means auto-calibrate in the scripts/provision.py variant) |
+| `--fall-thresh` | integer milli-units, default `15000` (= 15.0 rad/s²) | Fall detection threshold; walking ≈ 2 000–5 000; confirmed falls ≈ 20 000+; raise in high-traffic areas to reduce false positives |
+| `--vital-win` | integer frames, default `300` | Phase history window for BPM estimation (32–256 in scripts/provision.py variant) |
+| `--vital-int` | integer ms, default `1000` | Vitals packet send interval (100–10 000 ms in scripts/provision.py variant) |
+| `--subk-count` | integer, default `32` | Top-K subcarrier count to track (1–32) |
+| `--channel` | `1–14` (2.4 GHz) or `36–177` (5 GHz) | Override CSI channel; bypasses auto-detection from the connected AP (ADR-060) |
+| `--filter-mac` | `AA:BB:CC:DD:EE:FF` | Filter CSI frames to frames from this MAC address (ADR-060) |
+| `--hop-channels` | comma-separated list, e.g. `1,6,11` | Multi-frequency channel-hopping list (ADR-073) |
+| `--hop-dwell` | integer ms, default `200` | Dwell time per channel when hopping (ADR-073) |
+| `--seed-url` | URL string, e.g. `http://10.1.10.236` | Cognitum Seed base URL, baked into node NVS for swarm bridge (ADR-066) |
+| `--seed-token` | string | Seed Bearer token (obtained from the pairing step; stored in NVS so the node can authenticate to the Seed directly) |
+| `--zone` | string, e.g. `lobby` | Zone name for this node — stored as `zone_name` in NVS |
+| `--swarm-hb` | integer seconds, default `30` | Swarm heartbeat interval |
+| `--swarm-ingest` | integer seconds, default `5` | Swarm vector ingest interval |
+| `--dry-run` | boolean flag | Generate NVS binary but do not flash; saves to `nvs_provision.bin`; also persists merged state |
+| `--reset` | boolean flag | Wipe this machine's per-port state file before merging; use when re-provisioning a recycled board where previously-staged keys must not carry over |
+| `--state-dir` | path string | Override the per-user state directory (default: OS user-config dir under `wifi-densepose/esp32-provision-state/`) |
+| `--state` | boolean flag | Print the merged state that WOULD be flashed for this port and exit — useful for debugging which keys are about to land on the device |
+| `--force-partial` | boolean flag | Deprecated since #391/#574. Suppresses the missing-WiFi-trio error when no prior state file exists; the additive-merge default makes this rarely needed |
+
+### Flag reference — `scripts/provision.py` (S3-only, older)
+
+This script has a narrower set: `--port` (required) · `--baud 460800` · `--ssid` · `--password` · `--target-ip` · `--target-port` · `--node-id` · `--edge-tier 0|1|2` · `--pres-thresh` (float, `0`=auto-calibrate) · `--fall-thresh` (float rad/s², default `2.0`) · `--vital-window` · `--vital-interval` · `--subk-count ≤32` · `--wasm-verify` / `--no-wasm-verify` · `--wasm-pubkey` (64 hex chars, Ed25519 public key for WASM signature verification per ADR-040) · `--dry-run`. No TDM, channel, seed, or swarm flags.
+
+**Key operational facts:** runs are additive by default in the firmware-tree version — re-runs merge, they do not wipe. `--ssid`, `--password`, and `--target-ip` must be present on the first run for a port (or use `--force-partial`). `--tdm-slot` and `--tdm-total` must always be supplied together. The server identifies nodes solely by `--node-id`; it must be unique across the array.
+
+---
+
+## WiFi-DensePose — dense body-surface pose from WiFi CSI
+
+WiFi-DensePose is the dense human pose estimation capability in RuView. Unlike the 17-keypoint skeleton tracker (which produces sparse joint locations), WiFi-DensePose maps every visible body-surface point to a continuous UV coordinate on a canonical body model — the same IUV (body part index, U coordinate, V coordinate) representation used by Facebook's DensePose camera system, applied here entirely from WiFi Channel State Information with no cameras.
+
+**What "dense pose" means versus 17-keypoint pose:** the 17-keypoint skeleton gives you a discrete joint graph (wrist, elbow, shoulder, …). Dense pose gives you a per-pixel body-part label plus a (U, V) coordinate that locates that pixel on the surface of the 3-D body model — enabling downstream analysis of body surface deformation, contact, and posture that keypoints cannot capture.
+
+**The NN architecture (as implemented in the Rust crates):**
+
+The pipeline has three stages wired together in `v2/crates/wifi-densepose-nn/`:
+
+1. **RF encoder** (`v2/crates/wifi-densepose-nn/src/rf_encoder.rs`): a shared 256-dimensional embedding (`EMBEDDING_DIM = 256`) produced by a multi-task encoder (ADR-146). Seven task-specific linear heads branch off this shared embedding: `Pose` (17 keypoints → 51-dim), `Presence`, `Count`, `Activity`, `Vitals` (HR/BR), `Gait`, and `IdentityEmbedding`. Each head outputs task values plus a per-head scalar predictive uncertainty (softplus of a learned log-variance). The encoder is trained with a triplet contrastive loss (ADR-024 AETHER) that pulls same-physical-state embeddings together across different rooms, and a calibration-robustness loss (ADR-146 §2.3) that penalises embedding shift between two ADR-135 baselines. A `ContrastiveBatcher` samples cross-environment positives (same state, different room) to enforce cross-room generalisation (ADR-027 MERIDIAN).
+
+2. **Modality translator** (`v2/crates/wifi-densepose-nn/src/translator.rs`): an encoder-decoder network (`ModalityTranslator`) that converts the CSI-domain RF embedding into a 256-channel visual-feature-space representation compatible with the DensePose head. The encoder path applies strided convolutions (configurable hidden channels `[256, 512, 256]` by default) with optional scaled-dot-product multi-head attention; the decoder path upsamples 2× per block via transposed convolution and applies tanh normalisation on the output. Supports ReLU, LeakyReLU, GELU, Sigmoid, and Tanh activations, and BatchNorm / InstanceNorm / LayerNorm / None normalisation.
+
+3. **DensePose head** (`v2/crates/wifi-densepose-nn/src/densepose.rs`): takes the translated 256-channel feature maps and produces (a) **body-part segmentation logits** — `(batch, num_parts+1, H, W)` with softmax over 24 DensePose body-part classes plus background — and (b) **UV coordinates** — `(batch, 2, H, W)` in `[0, 1]` after sigmoid, representing the (U, V) surface position within each predicted body part. The architecture is a shared-conv trunk branching into a segmentation head and a UV regression head, with optional Feature Pyramid Network (FPN) multi-scale fusion. Body part labels follow the DensePose specification: Background (0), Torso (1), Right/Left Hand (2/3), Left/Right Foot (4/5), Upper/Lower Leg Right/Left (6–9), Upper/Lower Arm Left/Right (10–13), Head (14). Post-processing applies argmax over the segmentation channels and returns per-pixel body-part labels plus UV coordinates and confidence scores. The native Rust convolution applies batch-norm in-place (gamma/beta/running-mean/var parameters per layer).
+
+**WiFlow-STD** (`v2/crates/wifi-densepose-train/src/wiflow_std/`): the training backbone — a Rust port of the WiFlow-STD WiFi pose model. Provides `WiflowStdConfig`, `WiflowStdModel`, and the layer primitives in `wiflow_std/layers.rs`, `config.rs`, `model.rs`, and `mod.rs`. Used for MAE pretraining (ADR-152) and supervised fine-tuning on MM-Fi; per-room LoRA adapters (~11 KB) recover cross-room accuracy.
+
+**Heuristic skeleton vs trained dense pose:** out of the box, pose output is labelled "Signal-Derived" in the UI — it comes from `v2/crates/wifi-densepose-signal/src/ruvsense/pose_tracker.rs`, a motion-driven 17-keypoint Kalman tracker with AETHER re-ID embeddings. This is distinct from the WiFi-DensePose NN pipeline above. The trained dense-surface pipeline requires a fine-tuned checkpoint; the HF model `ruvnet/wifi-densepose-mmfi-pose` gives 82.69% torso-PCK@20 on MM-Fi. Live-server wiring of the DensePose keypoint head is experimental (not wired by default).
+
+**Key terms for retrieval:** WiFi-DensePose, dense pose estimation, IUV correspondence, UV body-surface regression, dense surface, body part segmentation, DensePose head, UV coordinates, ModalityTranslator, RfEmbedding, MultiTaskHeads, WiFlow-STD, AETHER embedding, cross-room generalisation, MERIDIAN, triplet contrastive loss, calibration robustness loss.
+
+---
+
+## What is RuView? What is WiFi-DensePose? (plain answers)
+
+**What is RuView?**
+RuView is a contactless human-sensing platform that uses cheap ESP32 boards ($5–9) to capture WiFi Channel State Information (CSI) — the fine-grained per-subcarrier signal that bodies disturb as they move through a room — and streams it to a Rust server that infers presence, occupancy count, breathing rate, heart rate, motion, falls, and (with training) body pose, all without cameras or wearables. It integrates with Apple Home, Home Assistant via MQTT, and the Cognitum Seed (a Pi Zero 2 W appliance) for permanent, witness-chained, AI-queryable history. The project started as `wifi-densepose` and was later renamed RuView; both names refer to the same repository (`github.com/ruvnet/RuView`).
+
+**What is WiFi-DensePose?**
+WiFi-DensePose is RuView's dense human pose capability: instead of outputting only 17 skeleton joints, it maps each body-surface point to a continuous (U, V) coordinate on a canonical 3-D body model — the IUV representation — using only WiFi CSI, no cameras. The pipeline runs a shared RF encoder to a 256-dimensional embedding, a modality translator that converts RF features to visual-domain feature maps, and a DensePose head that predicts per-pixel body-part labels and UV coordinates. Out of the box you get a heuristic 17-keypoint skeleton; the full dense-surface output requires a fine-tuned checkpoint (HuggingFace `ruvnet/wifi-densepose-mmfi-pose`). The relevant Rust crates are `wifi-densepose-nn` (inference), `wifi-densepose-train` (training, including `wiflow_std/`), and `wifi-densepose-signal` (the live-server heuristic skeleton in `ruvsense/pose_tracker.rs`).
+
+---
+
 *Generated 2026-06-12, last verified 2026-06-13 by Claude (Opus 4.8) for the [Cognitum One Sensor Primer](https://cognitum-sensor-primer.vercel.app). Source: RuView main @ `3d7530f0` (`git describe` = v1701) — the commit the working submodule and the shipped `ruview-kb.rvf` are both built from. Companion: `ruvector-primer.md`. Regeneration instructions at the top of this file.*
