@@ -911,7 +911,11 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
   const implCrateTok = (implIntent && entity.crates.length) ? entity.crates[0] : null;
   const implOpNouns = implIntent ? implOperationNouns(query, entity.crates) : [];
   // FIX D — named crate(s) WITHOUT impl intent: gently scope to the named crate's own source.
-  const namedCrateToks = (!implIntent && entity.crates.length) ? entity.crates : [];
+  // BUT NOT for a definitional "what is X" / overview query: there the user wants the concept doc,
+  // and a crate-family token in the name (e.g. "wifi-densepose") must NOT boost crate src over the
+  // plain-answer PRIMER. So suppress on the whatis-concept archetype + product-overview queries.
+  const definitionalQ = archetype === 'whatis-concept' || isProductOverviewQuery(query, store);
+  const namedCrateToks = (!implIntent && !definitionalQ && entity.crates.length) ? entity.crates : [];
   const namedOpNouns = namedCrateToks.length ? implOperationNouns(query, entity.crates) : [];
   // FIX C — crate-scoped maturity question: prefer the crate's OWN README/BENCHMARK over the
   // global capabilities primer / cross-crate benchmark doc.
