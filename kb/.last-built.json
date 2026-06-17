@@ -1,25 +1,34 @@
 {
-  "generated": "2026-06-14T18:00:00.000Z",
+  "generated": "2026-06-17T01:54:46.720Z",
   "metric": "cosine",
   "variants": {
-    "big": { "model": "Xenova/bge-base-en-v1.5", "dimensions": 768, "for": "Mac/PC — sharper", "rankScale": 0.45 },
-    "small": { "model": "Xenova/all-MiniLM-L6-v2", "dimensions": 384, "for": "Cognitum One Seed — lighter" }
+    "big": {
+      "model": "Xenova/bge-base-en-v1.5",
+      "dimensions": 768,
+      "for": "Mac/PC — sharper",
+      "rankScale": 0.45
+    },
+    "small": {
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "for": "Cognitum One Seed — lighter"
+    }
   },
   "stores": {
     "ruvector": {
       "rvfBig": "ruvector-kb.big.rvf",
       "rvfSmall": "ruvector-kb.small.rvf",
-      "vectors": 29439,
+      "vectors": 29589,
       "sourceRepo": "github.com/ruvnet/ruvector",
-      "sha": "4dedde800ccab7117b21213f0b472a252c9142d2"
+      "sha": "85e475a45335242dc9535d7efc75dd1bc5f6ec7d"
     },
     "ruview": {
       "rvfBig": "ruview-kb.big.rvf",
       "rvfSmall": "ruview-kb.small.rvf",
-      "vectors": 7174,
+      "vectors": 7547,
       "sourceRepo": "github.com/ruvnet/RuView",
-      "sha": "3d7530f08dbf5043d2aebc716f029fc4794caa97",
-      "describe": "v1701"
+      "sha": "90a88ada9a9ce7e7efaf6874b4f64d389c8e4271",
+      "describe": "v1770-17-g90a88ada"
     }
   }
 }

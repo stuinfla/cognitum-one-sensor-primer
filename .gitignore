@@ -46,8 +46,11 @@ kb/*.tmp
 # scratch helper scripts (prefixed with _)
 kb/_*.sh
 kb/_*.mjs
-# archived v1 backups (history lives in git)
+# archived v1 backups (history lives in git) — anywhere under kb/, incl. kb/stores/<repo>/
 kb/_archive/
+kb/**/*.v1.rvf
+kb/**/*.v1.json
+kb/**/*.v1.rvf.idmap.json
 kb/*.v1.rvf
 kb/*.v1.json
 kb/*.v1.rvf.idmap.json

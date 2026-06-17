@@ -35,15 +35,29 @@ const ruvectorSha = gitSha('ruvector');
 const ruviewSha = gitSha('RuView');
 const ruviewDesc = gitDescribe('RuView');
 
-// --- 1. write the build marker ---
+// Count embedded vectors == passages (reconcile-verified) from each store's passages sidecar, so
+// the marker reports the real, current size after a rebuild instead of a stale hard-coded number.
+function vectorCount(store) {
+  const p = path.join(KB_DIR, 'stores', store, `${store}-kb.passages.jsonl`);
+  try {
+    const txt = fs.readFileSync(p, 'utf8');
+    return txt.length ? txt.split('\n').filter((l) => l.trim()).length : 0;
+  } catch { return null; }
+}
+
+// --- 1. write the build marker (TWO-VARIANT: big 768-dim bge + small 384-dim MiniLM) ---
+// Both variants ship in every bundle. `variants` documents the model/dims/rankScale of each; the
+// small build is the source of truth for passages (big re-embeds them), so `vectors` is shared.
 const marker = {
   generated: iso,
-  embeddingModel: 'Xenova/all-MiniLM-L6-v2',
-  dimensions: 384,
   metric: 'cosine',
+  variants: {
+    big:   { model: 'Xenova/bge-base-en-v1.5',     dimensions: 768, for: 'Mac/PC — sharper',            rankScale: 0.45 },
+    small: { model: 'Xenova/all-MiniLM-L6-v2',     dimensions: 384, for: 'Cognitum One Seed — lighter' },
+  },
   stores: {
-    ruvector: { rvf: 'ruvector-kb.rvf', sourceRepo: 'github.com/ruvnet/ruvector', sha: ruvectorSha },
-    ruview: { rvf: 'ruview-kb.rvf', sourceRepo: 'github.com/ruvnet/RuView', sha: ruviewSha, describe: ruviewDesc },
+    ruvector: { rvfBig: 'ruvector-kb.big.rvf', rvfSmall: 'ruvector-kb.small.rvf', vectors: vectorCount('ruvector'), sourceRepo: 'github.com/ruvnet/ruvector', sha: ruvectorSha },
+    ruview: { rvfBig: 'ruview-kb.big.rvf', rvfSmall: 'ruview-kb.small.rvf', vectors: vectorCount('ruview'), sourceRepo: 'github.com/ruvnet/RuView', sha: ruviewSha, describe: ruviewDesc },
   },
 };
 fs.writeFileSync(path.join(KB_DIR, '.last-built.json'), JSON.stringify(marker, null, 2) + '\n');
