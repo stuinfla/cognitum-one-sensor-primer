@@ -19,10 +19,12 @@ jobs:
       - name: Update RuView and ruvector to latest upstream main
         run: git submodule update --remote RuView ruvector
 
-      - name: Commit and push if either submodule moved
+      - name: Commit, push, and trigger a rebuild if either submodule moved
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git diff --quiet RuView ruvector; then
-            echo "Submodules already up to date."
+            echo "Submodules already up to date — nothing to rebuild."
             exit 0
           fi
           RV_DESC=$(git -C RuView describe --tags --always)
@@ -32,3 +34,10 @@ jobs:
           git add RuView ruvector
           git commit -m "Bump submodules: RuView ${RV_DESC}, ruvector ${RVEC_SHA}"
           git push
+          # CRITICAL: the push above is authenticated with GITHUB_TOKEN, and GitHub deliberately
+          # does NOT start `push`-triggered workflows from a GITHUB_TOKEN push (anti-recursion).
+          # So the rebuild would never fire on its own. workflow_dispatch IS exempt from that rule,
+          # so explicitly dispatch rebuild-kb here — this is what makes the KBs actually rebuild
+          # and republish on every real submodule bump.
+          echo "Submodules moved — dispatching rebuild-kb.yml…"
+          gh workflow run rebuild-kb.yml --ref main
