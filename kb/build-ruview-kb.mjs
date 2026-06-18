@@ -45,6 +45,26 @@ const OVERLAP_CHARS = 400;
 // RuView KB indexes RuView's OWN code only. '.claude' is agent config, never knowledge.
 const SKIP_DIRS = new Set(['target', 'node_modules', '.git', 'dist', 'build', 'vendor', '.claude']);
 
+// Nested git submodules under RuView are SEPARATE upstream repos vendored in — NOT RuView's own
+// code: vendor/ruvector (the full 1.7M-line engine, has its own KB), midstream, sublinear-time-solver,
+// rvcsi, rufield, and v2/crates/ruv-neural. CI checks out submodules recursively, so indexing them
+// drags ruvector/upstream into the RuView KB (44k chunks — overwhelms the small .rvf's close()/persist
+// on the CI runner). Read .gitmodules so EVERY submodule (now AND any future one RuView adds) is
+// excluded by path — while keeping RuView's OWN authored crates (e.g. wifi-densepose-ruvector, which
+// is not a submodule). The RuView KB indexes RuView's own tree only.
+const SUBMODULE_DIRS = (() => {
+  const set = new Set();
+  try {
+    const gm = fs.readFileSync(path.join(RUVIEW, '.gitmodules'), 'utf8');
+    for (const m of gm.matchAll(/^\s*path\s*=\s*(.+?)\s*$/gm)) set.add(path.resolve(RUVIEW, m[1].trim()));
+  } catch { /* no .gitmodules — nothing to exclude */ }
+  return set;
+})();
+const inSubmodule = (p) => {
+  for (const d of SUBMODULE_DIRS) { if (p === d || p.startsWith(d + path.sep)) return true; }
+  return false;
+};
+
 // ---------- helpers ----------
 const read = (p) => fs.readFileSync(p, 'utf8');
 const tryRead = (p) => { try { return read(p); } catch { return null; } };
@@ -56,6 +76,7 @@ function* walk(dir, skip = false) {
   for (const e of dirents) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) {
+      if (inSubmodule(p)) continue;   // never index nested submodules (external upstream repos)
       if (skip && SKIP_DIRS.has(e.name)) continue;
       yield* walk(p, skip);
     } else if (e.isFile()) yield p;
@@ -128,6 +149,7 @@ for (const p of walk(path.join(RUVIEW, 'docs'))) {
 for (const dirent of fs.readdirSync(path.join(RUVIEW, 'v2/crates'), { withFileTypes: true })) {
   if (!dirent.isDirectory()) continue;
   const cdir = path.join(RUVIEW, 'v2/crates', dirent.name);
+  if (inSubmodule(cdir)) continue;   // skip vendored submodule crates (e.g. ruv-neural) — not RuView's own
   const parts = [];
   const toml = tryRead(path.join(cdir, 'Cargo.toml'));
   if (toml) {
