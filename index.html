@@ -1247,7 +1247,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <div style="flex:1 1 320px;min-width:260px;">
           <div style="font-family:'Chakra Petch';font-size:17px;color:var(--phosphor);"><b>Knowledge bases &amp; primers — last rebuilt <span id="kb-fresh-date">June 14, 2026</span></b></div>
           <div style="font-family:'IBM Plex Mono';font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.6;">
-            ruvector KB → <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector</a> @ <span class="mono" style="color:var(--ink);">4dedde8</span> &nbsp;·&nbsp; RuView KB → <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">ruvnet/RuView</a> @ <span class="mono" style="color:var(--ink);">3d7530f0</span> (<span class="mono" style="color:var(--ink);">v1701</span>)<br/>
+            ruvector KB → <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector</a> @ <span class="mono" id="kb-rvec-sha" style="color:var(--ink);">4dedde8</span> &nbsp;·&nbsp; RuView KB → <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">ruvnet/RuView</a> @ <span class="mono" id="kb-rv-sha" style="color:var(--ink);">3d7530f0</span> (<span class="mono" id="kb-rv-desc" style="color:var(--ink);">v1701</span>)<br/>
             29,439 + 7,174 full-text chunks · now in <b style="color:var(--ink);">two versions each</b> — a sharper <b style="color:var(--ink);">768-dim</b> build for your Mac/PC and a lighter <b style="color:var(--ink);">384-dim</b> build for the Seed · <b style="color:var(--phosphor);">auto-rebuilds whenever ruvector or RuView publish</b> — so a download today and a download in six months both carry the latest source.
           </div>
         </div>
@@ -1257,13 +1257,13 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     <div class="callout reveal" style="border-color:var(--phosphor-dim);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--phosphor);">📄 The RuVector Primer <span class="mono" style="font-size:12px;color:var(--faint);">ruvector-primer.md</span></h3>
       <p style="margin:0 0 10px;color:var(--muted);">The complete map of <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvnet/ruvector ↗</a> — every crate (183 workspace members / 139 crate dirs), the capabilities and how to actually call them, every npm package, the RVF file format, ADRs, tutorials, integration commands, and an honest performance-claims table. Generated <b>June 14, 2026</b> by Claude (Fable 5) sweeping a same-day checkout (main @ <span class="mono">4dedde8</span>); the document explains exactly how it was made and how to regenerate it when it ages.</p>
-      <p style="margin:0;"><a class="hero-cta" href="/ruvector-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruvector-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
+      <p style="margin:0;"><a class="hero-cta" href="/ruvector-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruvector-primer.md" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
     </div>
 
     <div class="callout reveal" style="border-color:rgba(92,214,255,0.45);margin-top:24px;">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">📄 The RuView / WiFi-DensePose Primer <span class="mono" style="font-size:12px;color:var(--faint);">ruview-primer.md</span></h3>
       <p style="margin:0 0 10px;color:var(--muted);">The deep one — focused entirely on <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a> (the renamed wifi-densepose), the software your sensors actually feed. Every crate (~38), the complete REST/WebSocket API, all seven <span class="mono">0xC511</span> UDP packet formats with byte layouts, the full CLI including the calibrate→enroll→train-room pipeline, <b>all 163 ADRs</b>, the 90 scripts, the firmware tree, and every capability graded works-today / experimental / stub — with code paths, so your AI assistant knows exactly where to look instead of guessing. Generated <b>June 14, 2026</b> from the same-day build (v1701, <span class="mono">3d7530f0</span>); includes its own staleness check and regeneration prompt.</p>
-      <p style="margin:0;"><a class="hero-cta" style="--accent:var(--cyan);" href="/ruview-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruview-primer.md" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
+      <p style="margin:0;"><a class="hero-cta" style="--accent:var(--cyan);" href="/ruview-primer.md" download>Download the primer ↓</a> &nbsp; <a href="/ruview-primer.md" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono';font-size:13px;">view raw →</a></p>
     </div>
 
     <div class="callout reveal" style="border-color:rgba(199,146,234,0.5);margin-top:24px;">
@@ -1297,10 +1297,61 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       </ol>
       <p style="margin:0 0 10px;color:var(--muted);"><b style="color:var(--ink)">Confirm it works:</b> restart Claude Code, type <span class="mono">/mcp</span> (you should see <span class="mono">cognitum-kb · connected</span>), then ask <em>"using cognitum-kb, which crate implements dynamic min-cut?"</em> — a working setup calls <span class="mono">search_kb</span> and answers with real paths like <span class="mono">crates/ruQu/src/mincut.rs</span> and the full passage text in seconds, instead of grep-sampling 1.7M lines. No MCP? Same answer from the CLI: <span class="mono">node kb/ask-kb.mjs ruvector "dynamic min-cut" 5</span>. From Node: import <span class="mono">searchKb</span> from <span class="mono">ask-kb.mjs</span> (embed → <span class="mono">.rvf</span> query → join full passage).</p>
       <p style="margin:0 0 10px;color:var(--muted);">Each bundle is self-contained and runnable: the <span class="mono">.rvf</span> database, the <span class="mono">.passages.jsonl</span> full-text sidecar, the <span class="mono">.json</span> metadata sidecars, the manifest, the working <span class="mono">kb-mcp-server.mjs</span> + <span class="mono">ask-kb.mjs</span> scripts, <span class="mono">package.json</span>, and the README that walks you through it.</p>
+
+      <!-- WHAT'S IN THE BOX — friendly two-halves showcase (human + AI) with file directories -->
+      <div style="margin:10px 0 16px;">
+        <div style="text-align:center;margin-bottom:4px;font-family:'Chakra Petch';font-size:21px;color:var(--ink);font-weight:700;">📦 One download — two halves, a little something for everyone</div>
+        <div style="text-align:center;color:var(--muted);font-size:13.5px;margin-bottom:16px;max-width:720px;margin-left:auto;margin-right:auto;">It unzips into a single <span class="mono">kb/</span> folder with <b style="color:var(--ink)">two halves</b>: one for <b style="color:var(--cyan)">you to read &amp; watch</b>, one for <b style="color:var(--phosphor)">your AI to search</b>. Both ship together, both stay current.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;">
+
+          <!-- HUMAN half -->
+          <div style="flex:1 1 300px;border:1px solid rgba(92,214,255,0.42);border-radius:14px;background:linear-gradient(180deg,rgba(92,214,255,0.09),rgba(92,214,255,0.03));overflow:hidden;">
+            <img src="/assets/img/kb-human.png" alt="For humans — a person watching the video explainer, audio overview, slides and infographics" loading="lazy" style="width:100%;height:188px;object-fit:contain;display:block;background:#070b10;border-bottom:1px solid rgba(92,214,255,0.22);"/>
+            <div style="padding:13px 16px 16px;">
+              <div style="font-weight:700;color:var(--cyan);font-size:16px;">👤 For you — the human</div>
+              <div style="color:var(--muted);font-size:12.5px;margin:3px 0 10px;">Understand RuView &amp; ruvector in a few minutes — no code required.</div>
+              <pre style="margin:0;background:rgba(8,16,24,0.78);border:1px solid rgba(92,214,255,0.22);border-radius:9px;padding:11px 12px;font-family:'IBM Plex Mono';font-size:11.5px;line-height:1.7;color:var(--muted);overflow-x:auto;white-space:pre;">kb/
+├ <span style="color:var(--cyan)">ruvector-primer.md</span>  — the AI engine, plain English
+├ <span style="color:var(--cyan)">ruview-primer.md</span>    — the WiFi sensing, plain English
+└ studio/for-humans/
+  ├ <span style="color:var(--cyan)">video-explainer.mp4</span> — ▶ 3-min watch
+  ├ <span style="color:var(--cyan)">audio-overview.mp3</span>  — 🎧 podcast-style listen
+  ├ <span style="color:var(--cyan)">slides-….pdf</span>        — 🖼 15-slide deck
+  └ <span style="color:var(--cyan)">infographic-*.png</span>  — 📊 2 posters</pre>
+            </div>
+          </div>
+
+          <!-- AI half -->
+          <div style="flex:1 1 300px;border:1px solid var(--phosphor-dim);border-radius:14px;background:linear-gradient(180deg,rgba(67,245,155,0.08),rgba(67,245,155,0.025));overflow:hidden;">
+            <img src="/assets/img/kb-ai.png" alt="For AI — an assistant wired into the searchable knowledge base and command-line tools" loading="lazy" style="width:100%;height:188px;object-fit:contain;display:block;background:#070b10;border-bottom:1px solid rgba(67,245,155,0.22);"/>
+            <div style="padding:13px 16px 16px;">
+              <div style="font-weight:700;color:var(--phosphor);font-size:16px;">🤖 For your AI</div>
+              <div style="color:var(--muted);font-size:12.5px;margin:3px 0 10px;">Point Claude / Cursor at it — it answers from the <b>real code</b>, not guesses.</div>
+              <pre style="margin:0;background:rgba(8,16,24,0.78);border:1px solid rgba(67,245,155,0.22);border-radius:9px;padding:11px 12px;font-family:'IBM Plex Mono';font-size:11.5px;line-height:1.7;color:var(--muted);overflow-x:auto;white-space:pre;">kb/
+├ <span style="color:var(--phosphor)">*-kb.big.rvf</span>       — 768-dim brain (Mac/PC)
+├ <span style="color:var(--phosphor)">*-kb.small.rvf</span>     — 384-dim brain (the Seed)
+├ <span style="color:var(--phosphor)">*.passages.jsonl</span>   — every doc + all source
+├ <span style="color:var(--phosphor)">ask-kb.mjs</span>         — query it from the CLI
+├ <span style="color:var(--phosphor)">kb-mcp-server.mjs</span>  — wire into Claude/Cursor
+└ studio/for-ai/
+  ├ <span style="color:var(--phosphor)">*.transcript.txt</span>  — video + audio as text
+  └ <span style="color:var(--phosphor)">notebook-summary.md</span> — machine-readable recap</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- friendly 3-step install strip -->
+        <div style="margin-top:13px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;">
+          <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">1 · Drop it in</span><br/><span style="color:var(--muted);font-size:12.5px;">Unzip into your project as <span class="mono">kb/</span>.</span></div>
+          <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">2 · Keep your repo clean</span><br/><span style="color:var(--muted);font-size:12.5px;">Add <span class="mono">kb/</span> to your <span class="mono">.gitignore</span> so it doesn't clog your project.</span></div>
+          <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">3 · You're all set</span><br/><span style="color:var(--muted);font-size:12.5px;">Point your AI at it (2-line <span class="mono">.mcp.json</span>, steps above) — done.</span></div>
+        </div>
+      </div>
+
       <p style="margin:0;">
-        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruvector'}})" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruvector-kb-bundle.zip">ruvector KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 155 MB) ↓</a> &nbsp;
-        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruview'}})" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruview-kb-bundle.zip">ruview KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · + NotebookLM studio media: video/audio/slides/infographics, split for-humans &amp; for-AI · 138 MB) ↓</a> &nbsp;
-        <a href="https://github.com/stuinfla/cognitum-one-sensor-primer/blob/main/kb/README.md" style="font-family:'IBM Plex Mono';font-size:13px;"><b>START HERE: the KB README</b> (what it is · what's in it · 3 ways to use it) →</a>
+        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruvector'}})" target="_blank" rel="noopener" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruvector-kb-bundle.zip">ruvector KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · 155 MB) ↓</a> &nbsp;
+        <a class="hero-cta" style="--accent:#c792ea;" onclick="window.va&&va('event',{name:'kb_download',data:{bundle:'ruview'}})" target="_blank" rel="noopener" href="https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruview-kb-bundle.zip">ruview KB bundle (both versions: big 768-dim + small 384-dim · full-text + tools + README · + studio media pack · 138 MB) ↓</a> &nbsp;
+        <a href="https://github.com/stuinfla/cognitum-one-sensor-primer/blob/main/kb/README.md" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono';font-size:13px;"><b>START HERE: the KB README</b> (what it is · what's in it · 3 ways to use it) →</a>
       </p>
     </div>
 
@@ -1548,6 +1599,30 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     document.body.appendChild(ctl);
   });
 })();
+</script>
+<script>
+  /* Live KB provenance — read the real build marker so the "last rebuilt" date + source SHAs
+     reflect what CI actually published, instead of a hardcoded date that silently goes stale.
+     kb/.last-built.json is committed and served same-origin by Vercel. */
+  (function(){
+    fetch('/kb/.last-built.json', { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(m){
+        if (!m) return;
+        var set = function(id, v){ var el = document.getElementById(id); if (el && v) el.textContent = v; };
+        if (m.generated) {
+          try {
+            set('kb-fresh-date', new Date(m.generated).toLocaleDateString('en-US',
+              { year:'numeric', month:'long', day:'numeric', timeZone:'UTC' }));
+          } catch (e) {}
+        }
+        var rvec = (m.stores && m.stores.ruvector) || {}, rv = (m.stores && m.stores.ruview) || {};
+        if (rvec.sha) set('kb-rvec-sha', String(rvec.sha).slice(0,7));
+        if (rv.sha)   set('kb-rv-sha',   String(rv.sha).slice(0,7));
+        if (rv.describe) set('kb-rv-desc', rv.describe);
+      })
+      .catch(function(){ /* leave the static fallback text in place */ });
+  })();
 </script>
 </body>
 </html>
