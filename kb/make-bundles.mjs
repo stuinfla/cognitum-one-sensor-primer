@@ -176,6 +176,14 @@ function build(name) {
 
   // (src absolute path, dest path-inside-zip) pairs. Data + shared go FLAT; scripts keep their path.
   const studioPairs = b.studioDir ? walkDir(path.join(storeDir, b.studioDir), b.studioDir) : [];
+  // Guard: a bundle that DECLARES studio media must not ship without it. Catches an accidental
+  // gitignore / missing checkout in CI BEFORE make-bundles produces a studio-less zip that would
+  // clobber the good Release. Fail RED instead of silently shipping an incomplete download.
+  if (b.studioDir && studioPairs.filter(([, rel]) => rel.includes('for-humans/')).length === 0) {
+    throw new Error(`${name}: studioDir '${b.studioDir}' is set but no for-humans/ media was found under ` +
+      `${path.join(storeDir, b.studioDir)}. Refusing to build a studio-less bundle — are the studio ` +
+      `files committed and checked out? (If you truly want to drop studio, remove studioDir from BUNDLES.)`);
+  }
   const pairs = [
     ...dataNames.map((f) => [path.join(storeDir, f), f]),
     ...b.scriptFiles.map((f) => [path.join(KB_DIR, f), f]),
