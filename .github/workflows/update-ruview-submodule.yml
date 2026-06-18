@@ -6,7 +6,8 @@ on:
   workflow_dispatch:        # allow manual runs from the Actions tab
 
 permissions:
-  contents: write
+  contents: write   # commit + push the submodule bump
+  actions: write    # required for `gh workflow run rebuild-kb.yml` (create a workflow_dispatch event)
 
 jobs:
   update:
