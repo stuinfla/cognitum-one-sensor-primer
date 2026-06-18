@@ -37,7 +37,13 @@ const OUT_PASSAGES = path.join(STORE_DIR, 'ruview-kb.passages.jsonl');
 
 const CHUNK_CHARS = 4000;   // ~1000 tokens
 const OVERLAP_CHARS = 400;
-const SKIP_DIRS = new Set(['target', 'node_modules', '.git', 'dist', 'build']);
+// 'vendor' holds RuView's NESTED git submodules — third-party repos it pulls in, INCLUDING a full
+// copy of ruvnet/ruvector (the 1.7M-line engine, which has its OWN KB). CI checks out submodules
+// recursively, so without this exclusion the RuView build full-body-indexes all of vendor/** —
+// ~36k extra chunks / 4k+ segments that (a) pollute the RuView KB with ruvector's code and
+// (b) overwhelm the small .rvf's close()/persist on the free CI runner (ManifestNotFound). The
+// RuView KB indexes RuView's OWN code only. '.claude' is agent config, never knowledge.
+const SKIP_DIRS = new Set(['target', 'node_modules', '.git', 'dist', 'build', 'vendor', '.claude']);
 
 // ---------- helpers ----------
 const read = (p) => fs.readFileSync(p, 'utf8');
@@ -340,7 +346,7 @@ for (const p of walk(RUVIEW, true)) {
 //     tests/ benches/ __tests__/, minified/bundled output, non-src example fixtures.
 const CODE_EXT = new Set(['.rs', '.py', '.ts', '.tsx', '.js', '.mjs', '.go', '.c', '.h', '.cpp', '.hpp']);
 const CRATE_ROOTS = new Set(['lib.rs', 'main.rs', 'mod.rs']);
-const NOISE_DIR_RE = /(^|\/)(target|node_modules|\.git|dist|build|pkg|\.vite|stub)(\/|$)/;
+const NOISE_DIR_RE = /(^|\/)(target|node_modules|\.git|dist|build|pkg|\.vite|stub|vendor|\.claude)(\/|$)/;
 const MINIFIED_RE = /\.(min|bundle)\.(js|css|mjs)$/;
 function sourceInScope(rel) {
   if (NOISE_DIR_RE.test(rel)) return false;
