@@ -94,6 +94,9 @@ const BUNDLES = {
       'ruview-kb.meta.json', 'ruview-kb.MANIFEST.md'],
     bigFiles: ['ruview-kb.big.rvf', 'ruview-kb.big.rvf.idmap.json', 'ruview-kb.big.rvf.embed.json'],
     scriptFiles: ['build-ruview-kb.mjs', 'build-big-variant.mjs', 'index-primer.mjs'],
+    // NotebookLM Studio extras (audio/video/slides/infographics + AI-readable text), staged
+    // recursively from stores/ruview/studio/ into the zip under studio/for-humans|for-ai/.
+    studioDir: 'studio',
     questions: [
       'What is RuView and what can it sense?',
       'How does it tell an empty room from an occupied one?',
@@ -105,9 +108,30 @@ const BUNDLES = {
   },
 };
 
+// Recursively collect [absPath, relPath] for every file under absDir (relPath rooted at relBase).
+// Used to sweep a bundle's studio/ tree so new Studio outputs are picked up without editing lists.
+function walkDir(absDir, relBase) {
+  const out = [];
+  if (!fs.existsSync(absDir)) return out;
+  for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
+    const abs = path.join(absDir, entry.name);
+    const rel = path.posix.join(relBase, entry.name);
+    if (entry.isDirectory()) out.push(...walkDir(abs, rel));
+    else if (entry.isFile() && !entry.name.startsWith('.')) out.push([abs, rel]);
+  }
+  return out;
+}
+
 // A tailored one-page intro generated INTO each zip so a first-timer knows exactly what they have.
 function startHere(b, hasBig) {
   const q = b.questions.map((x) => `- "${x}"`).join('\n');
+  const studio = b.studioDir ? `
+
+## Bonus: NotebookLM Studio media (in \`studio/\`)
+This bundle also ships an AI-generated media pack about RuView, split by audience:
+- 👤 **\`studio/for-humans/\`** — watch/listen/read: a **video explainer** (.mp4), an **audio overview** (.mp3), a **slide deck** (.pdf), and two **infographics** (.png).
+- 🤖 **\`studio/for-ai/\`** — plain text for assistants to ingest: **transcripts** of the audio + video, a machine-readable **notebook-summary.md**, and a README index.
+` : '';
   return `# START HERE — the ${b.label} knowledge base
 
 **What you just unzipped:** a searchable "brain" for **${b.blurb}**
@@ -137,7 +161,7 @@ ${q}
 The Seed is **ruvector** (the AI engine) running on **RuView** (the sensing platform) — two halves of one story. So every bundle ships **both** primers, whichever KB you downloaded:
 - 📘 **ruvector-primer.md** — the AI/vector/learning engine
 - 📗 **ruview-primer.md** — the WiFi-CSI / mmWave sensing platform
-
+${studio}
 ---
 **New to the whole thing?** Open **README.md** — it explains what an RVF knowledge base is from scratch, in plain English. New to the Seed device itself? See the primer at https://cognitum-sensor-primer.vercel.app and the first-run setup at https://cognitum.shaal.dev/.
 `;
@@ -151,11 +175,13 @@ function build(name) {
   const dataNames = bigPresent ? [...b.dataFiles, ...b.bigFiles] : b.dataFiles;
 
   // (src absolute path, dest path-inside-zip) pairs. Data + shared go FLAT; scripts keep their path.
+  const studioPairs = b.studioDir ? walkDir(path.join(storeDir, b.studioDir), b.studioDir) : [];
   const pairs = [
     ...dataNames.map((f) => [path.join(storeDir, f), f]),
     ...b.scriptFiles.map((f) => [path.join(KB_DIR, f), f]),
     ...SHARED.map((f) => [path.join(KB_DIR, f), f]),
     ...ALL_PRIMERS.map(([src, dst]) => [path.join(KB_DIR, src), dst]),  // both primers in every bundle
+    ...studioPairs,  // NotebookLM Studio extras (ruview only): studio/for-humans|for-ai/**
   ];
   const missing = pairs.filter(([src]) => !fs.existsSync(src)).map(([src]) => src);
   if (missing.length) throw new Error(`${name}: missing files for bundle:\n  ${missing.join('\n  ')}`);
