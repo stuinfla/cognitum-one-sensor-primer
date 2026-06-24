@@ -335,6 +335,7 @@
       <p style="margin:0 0 14px; font-size:18px; color:var(--ink);">The <b>Cognitum One Seed</b> is a tiny, self-contained AI computer — it runs on-device intelligence with <em>no cloud required</em>. It senses the space around it, remembers what it learns as mathematical "fingerprints," and can recognise patterns <strong>passively</strong> — just by watching, never by asking you to scan or wear anything.</p>
       <p style="margin:0; color:var(--muted);">Out of the box it has a few simple built-in senses. But the moment you want to sense <em>finer</em> things — exactly where a body is, a heartbeat through the air, the shape of a person with no camera — you connect the sensors in this guide. Some wire straight into the Seed's pins; the richer ones connect to the same Seed over USB or WiFi (that's the next section).</p>
       <p style="margin:18px 0 0;"><a href="https://cognitum.one" target="_blank" rel="noopener" class="mono" style="font-size:13.5px; letter-spacing:0.04em;">▸ Learn more about the Cognitum One Seed at cognitum.one</a></p>
+      <p style="margin:14px 0 0;color:var(--muted);">🎬 <b style="color:var(--ink)">Prefer to watch or listen?</b> There's an ~8-minute explainer video, a podcast-style audio overview and two infographics that show how this passive WiFi sensing actually works — <a href="#watch-listen" style="color:var(--cyan);font-weight:600;">play them right here, no download ↓</a></p>
     </div>
 
     <div class="callout reveal" id="first-run" style="margin-bottom:34px;border:1px solid var(--phosphor);background:linear-gradient(135deg,rgba(67,245,155,0.10),rgba(67,245,155,0.02));">
@@ -563,8 +564,17 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <p>The short version of your first win. The full, careful walkthrough — cables, flashing on your Mac/PC, WiFi, talking to the Seed — lives on the <a href="/setup">Setup &amp; flashing page</a>.</p>
     </div>
     <div class="when" style="grid-template-columns:1fr 1fr;">
+      <div class="block cyan reveal">
+        <h4>Start here · the ESP32-S3 / C6 WiFi sensors</h4>
+        <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
+          <li>ESP32 CSI nodes must be <b>flashed</b> on a Mac/PC first (see Setup page).</li>
+          <li>Give them your WiFi (the 2.4 GHz network — S3 and C6 are 2.4-only) + the Seed's address.</li>
+          <li>Power them near the Seed; they stream over WiFi (UDP :5005).</li>
+          <li><b style="color:var(--cyan)">Win:</b> the host shows packets arriving ~10×/sec; or an MR60 shows heart &amp; breathing after a ~60 s warm-up.</li>
+        </ol>
+      </div>
       <div class="block reveal">
-        <h4>Easiest first win · the LD6004 radar</h4>
+        <h4>Fastest no-flash win · the LD6004 radar</h4>
         <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
           <li>Buy the <b>LD6004</b> (60 GHz, true 3D — <a href="/setup#wiring-radar">exact pinout on the Setup page</a>).</li>
           <li>Push four jumper wires onto the host's GPIO header. No flashing, no soldering.</li>
@@ -572,15 +582,6 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
           <li><b style="color:var(--phosphor)">Win:</b> walk around — the radar reports your position moving <em>in 3D</em>.</li>
         </ol>
         <p style="margin:10px 0 0;color:var(--faint);font-size:13px;">(Can't touch GPIO pins at all? The legacy LD2450 USB kit plugs in over USB — but it's 2D and superseded. Buy it only for that constraint or for 3-person tracking.)</p>
-      </div>
-      <div class="block cyan reveal">
-        <h4>The WiFi sensors · a bit more setup</h4>
-        <ol style="margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.85;">
-          <li>ESP32 CSI nodes must be <b>flashed</b> on a Mac/PC first (see Setup page).</li>
-          <li>Give them your WiFi (the 2.4 GHz network — S3 and C6 are 2.4-only) + the Seed's address.</li>
-          <li>Power them near the Seed; they stream over WiFi (UDP :5005).</li>
-          <li><b style="color:var(--cyan)">Win:</b> the host shows packets arriving ~10×/sec; or an MR60 shows heart &amp; breathing after a ~60 s warm-up.</li>
-        </ol>
       </div>
     </div>
 
@@ -616,9 +617,9 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <table>
         <thead><tr><th>If it looks like…</th><th>It's…</th><th>It does…</th></tr></thead>
         <tbody>
+          <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C6 / S3 CSI node</td><td>WiFi sensing</td></tr>
           <tr><td>A small radar board with a 4-pin cable (jumper wires)</td><td>LD6004</td><td>3D position &amp; movement tracking</td></tr>
           <tr><td>A small black module behind a textured cover, USB-C</td><td>MR60BHA2 (Seeed XIAO)</td><td>Heart &amp; breathing</td></tr>
-          <tr><td>A stamp-sized board with a metal shield + pin headers + USB-C</td><td>ESP32-C6 / S3 CSI node</td><td>WiFi sensing</td></tr>
           <tr><td>A small grey stick with a screen, a button &amp; USB-C</td><td>M5StickS3</td><td>Motion / vibration</td></tr>
         </tbody>
       </table>
@@ -673,7 +674,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     <div class="sec-head reveal">
       <span class="num">05 — THE SENSES</span>
       <h2>The sensors — and what each one gives you</h2>
-      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here are the sensors you can buy and use today — three that sense a room contactlessly, plus the M5StickS3 you attach to an object for motion. Each has the real product photo and a direct buy link.</p>
+      <p>An ESP32 is just the brainstem of a sensor. What matters is the <em>physics module</em> bolted to it. Here are the sensors you can buy and use today — start with the ESP32-S3 / C6 WiFi-CSI nodes (the core of the system), then the radar, vital-signs and legacy options. Each has the real product photo and a direct buy link.</p>
     </div>
 
     <figure class="figure reveal" style="margin-bottom:34px; padding:0; border:none; background:none;">
@@ -701,6 +702,39 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
     <div class="cards">
 
       <div class="scard reveal" style="--accent: var(--phosphor);">
+        <img class="shot" src="/assets/img/amz-c5.jpg" alt="ESP32 WiFi 6 dev board for CSI sensing" loading="lazy" />
+        <span class="tag">WiFi CSI · presence &amp; shape</span>
+        <h3>ESP32 CSI nodes</h3>
+        <div class="model-line">ESP32-C6 (WiFi 6, 242-tone — <b>the pick</b>) &amp; ESP32-S3 (workhorse)</div>
+        <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 7 ideal</dd>
+          <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
+          <dt>SETUP</dt><dd>Flash on a Mac/PC, then WiFi (see Setup)</dd>
+          <dt>CONNECTS</dt><dd>WiFi → Seed over UDP <span class="mono">5005</span></dd>
+        </dl>
+        <div class="gotcha"><b>Gotcha →</b> Use a <em>mesh</em> of nodes; one node alone can't tell left from right. These must be flashed first — see the <a href="/setup">Setup &amp; flashing page</a>.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">Buy XIAO ESP32-C6 3-pack (buy 7 nodes total) ↗</a>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">Buy ESP32-S3 3-pack (workhorse nodes) ↗</a>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--amber);">
+        <img class="shot" src="/assets/img/amz-c5.jpg" alt="Seeed XIAO ESP32S3 Sense with detachable OV2640 camera module" loading="lazy" />
+        <span class="tag">CSI node + camera · the pose teacher</span>
+        <h3>XIAO ESP32S3 Sense</h3>
+        <div class="model-line">ESP32-S3 + detachable OV2640 camera + mic</div>
+        <p class="what">The intriguing one: a thumb-sized S3 CSI node <strong>with a camera on board</strong>. Why that matters: RuView's highest-accuracy pose comes from <em>camera-supervised training</em> — a camera acts as a temporary teacher for ~40 minutes, then goes away forever and the model runs on WiFi alone. This board is both halves of that story in one $27 part: teacher during training, ordinary S3 CSI node after.</p>
+        <dl class="specs">
+          <dt>NEED</dt><dd>1 (only during pose training)</dd>
+          <dt>SENSES</dt><dd>WiFi CSI (as S3 node) + 1600×1200 camera + PDM mic</dd>
+          <dt>SETUP</dt><dd>Flash as a normal S3 node; camera workflow on the <a href="/guide#pose">pose ladder</a></dd>
+          <dt>CONNECTS</dt><dd>WiFi → UDP <span class="mono">5005</span>; camera frames to your training host</dd>
+        </dl>
+        <div class="gotcha"><b>Honest note →</b> RuView's documented teacher workflow uses a <em>host webcam</em> (MediaPipe). Using the Sense's own camera as the teacher means streaming its video to the host first — a fun experiment, not a documented path. Worst case: it's still a perfectly good S3 array node.</div>
+        <a class="buybtn" href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">Buy XIAO ESP32S3 Sense ↗</a>
+      </div>
+
+      <div class="scard reveal" style="--accent: var(--phosphor);">
         <span class="tag">60 GHz mmWave · TRUE 3D position · THE PICK</span>
         <h3>LD6004 <span style="font-size:12px;color:var(--phosphor);">— the movement-tracking pick</span></h3>
         <div class="model-line">HLK-LD6004 · 60 GHz FMCW · X / Y / <b>Z</b> tracking</div>
@@ -713,22 +747,6 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         </dl>
         <div class="gotcha"><b>Gotcha →</b> It ships with bare 0.1" pins — you need 4 female-female Dupont jumpers (you probably have them). One target at a time, ~5 m range. Wire it to <b>GPIO, not a USB hub</b> — that's the brown-out story on the Setup page.</div>
         <a class="buybtn" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">Buy LD6004 on Amazon ↗</a>
-      </div>
-
-      <div class="scard reveal" style="--accent: var(--amber); opacity:0.92;">
-        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="LD2450 24 GHz mmWave radar USB kit — radar board with cable and USB adapter" loading="lazy" />
-        <span class="tag">24 GHz · 2D position · LEGACY</span>
-        <h3>LD2450 <span style="font-size:12px;color:var(--faint);">— legacy, only for two edge cases</span></h3>
-        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit · <span style="color:var(--amber)">superseded by the LD6004 above</span></div>
-        <p class="what"><b>Use the LD6004 above instead</b> — unless you specifically need one of the LD2450's two remaining niches: (1) you <b>can't touch the Seed's GPIO pins</b> and need a pure plug-in-over-USB radar, or (2) you must track <b>3 people at once in 2D</b> (the LD6004 tracks one). Otherwise it's older 2D-only 24 GHz radar with no Z axis.</p>
-        <dl class="specs">
-          <dt>NEED</dt><dd>1 (only if a niche above applies)</dd>
-          <dt>SENSES</dt><dd>Position (X/Y), distance, speed — <b>2D only</b></dd>
-          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
-          <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
-        </dl>
-        <div class="gotcha"><b>Gotcha →</b> If you do buy it, get the <em>USB kit</em> (radar + cable + USB adapter), not a bare module, or you'll be soldering — and note the unusual <span class="mono">256000</span> baud. But for almost everyone, the <b>LD6004 above is the right choice</b>.</div>
-        <a class="buybtn" style="opacity:0.85;" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">Buy the legacy USB kit ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--amber);">
@@ -747,36 +765,20 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <a class="buybtn" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">Buy on Amazon ↗</a>
       </div>
 
-      <div class="scard reveal" style="--accent: var(--phosphor);">
-        <img class="shot" src="/assets/img/amz-c5.jpg" alt="ESP32 WiFi 6 dev board for CSI sensing" loading="lazy" />
-        <span class="tag">WiFi CSI · presence &amp; shape</span>
-        <h3>ESP32 CSI nodes</h3>
-        <div class="model-line">ESP32-C6 (WiFi 6, 242-tone — <b>the pick</b>) &amp; ESP32-S3 (workhorse)</div>
-        <p class="what">The cleverest trick here: an ordinary WiFi chip reads how radio waves <strong>scatter off your body</strong> (Channel State Information). With several nodes you get rough body shape, presence, and breathing — <em>through walls</em>, with no dedicated radar at all.</p>
+      <div class="scard reveal" style="--accent: var(--amber); opacity:0.92;">
+        <img class="shot" src="/assets/img/amz-ld2450.jpg" alt="LD2450 24 GHz mmWave radar USB kit — radar board with cable and USB adapter" loading="lazy" />
+        <span class="tag">24 GHz · 2D position · LEGACY</span>
+        <h3>LD2450 <span style="font-size:12px;color:var(--faint);">— legacy, only for two edge cases</span></h3>
+        <div class="model-line">HLK-LD2450 · 24 GHz FMCW radar · USB kit · <span style="color:var(--amber)">superseded by the LD6004 above</span></div>
+        <p class="what"><b>Use the LD6004 above instead</b> — unless you specifically need one of the LD2450's two remaining niches: (1) you <b>can't touch the Seed's GPIO pins</b> and need a pure plug-in-over-USB radar, or (2) you must track <b>3 people at once in 2D</b> (the LD6004 tracks one). Otherwise it's older 2D-only 24 GHz radar with no Z axis.</p>
         <dl class="specs">
-          <dt>NEED</dt><dd style="color:var(--amber);font-weight:600;">3 minimum · 7 ideal</dd>
-          <dt>SENSES</dt><dd>Presence, coarse pose, breathing, identity hints</dd>
-          <dt>SETUP</dt><dd>Flash on a Mac/PC, then WiFi (see Setup)</dd>
-          <dt>CONNECTS</dt><dd>WiFi → Seed over UDP <span class="mono">5005</span></dd>
+          <dt>NEED</dt><dd>1 (only if a niche above applies)</dd>
+          <dt>SENSES</dt><dd>Position (X/Y), distance, speed — <b>2D only</b></dd>
+          <dt>SETUP</dt><dd><span class="mono">No flashing</span> — plug the USB kit into the Seed</dd>
+          <dt>CONNECTS</dt><dd>USB-serial @ <span class="mono">256000</span> baud</dd>
         </dl>
-        <div class="gotcha"><b>Gotcha →</b> Use a <em>mesh</em> of nodes; one node alone can't tell left from right. These must be flashed first — see the <a href="/setup">Setup &amp; flashing page</a>.</div>
-        <a class="buybtn" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">Buy XIAO ESP32-C6 3-pack (buy 7 nodes total) ↗</a>
-      </div>
-
-      <div class="scard reveal" style="--accent: var(--amber);">
-        <img class="shot" src="/assets/img/amz-c5.jpg" alt="Seeed XIAO ESP32S3 Sense with detachable OV2640 camera module" loading="lazy" />
-        <span class="tag">CSI node + camera · the pose teacher</span>
-        <h3>XIAO ESP32S3 Sense</h3>
-        <div class="model-line">ESP32-S3 + detachable OV2640 camera + mic</div>
-        <p class="what">The intriguing one: a thumb-sized S3 CSI node <strong>with a camera on board</strong>. Why that matters: RuView's highest-accuracy pose comes from <em>camera-supervised training</em> — a camera acts as a temporary teacher for ~40 minutes, then goes away forever and the model runs on WiFi alone. This board is both halves of that story in one $27 part: teacher during training, ordinary S3 CSI node after.</p>
-        <dl class="specs">
-          <dt>NEED</dt><dd>1 (only during pose training)</dd>
-          <dt>SENSES</dt><dd>WiFi CSI (as S3 node) + 1600×1200 camera + PDM mic</dd>
-          <dt>SETUP</dt><dd>Flash as a normal S3 node; camera workflow on the <a href="/guide#pose">pose ladder</a></dd>
-          <dt>CONNECTS</dt><dd>WiFi → UDP <span class="mono">5005</span>; camera frames to your training host</dd>
-        </dl>
-        <div class="gotcha"><b>Honest note →</b> RuView's documented teacher workflow uses a <em>host webcam</em> (MediaPipe). Using the Sense's own camera as the teacher means streaming its video to the host first — a fun experiment, not a documented path. Worst case: it's still a perfectly good S3 array node.</div>
-        <a class="buybtn" href="https://www.amazon.com/dp/B0DRNW6KMG" target="_blank" rel="noopener">Buy XIAO ESP32S3 Sense ↗</a>
+        <div class="gotcha"><b>Gotcha →</b> If you do buy it, get the <em>USB kit</em> (radar + cable + USB adapter), not a bare module, or you'll be soldering — and note the unusual <span class="mono">256000</span> baud. But for almost everyone, the <b>LD6004 above is the right choice</b>.</div>
+        <a class="buybtn" style="opacity:0.85;" href="https://www.amazon.com/dp/B0CQ2P4RVP" target="_blank" rel="noopener">Buy the legacy USB kit ↗</a>
       </div>
 
       <div class="scard reveal" style="--accent: var(--cyan);">
@@ -1205,7 +1207,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">The three sensors</h3>
     <div class="buy-grid" style="margin-bottom:34px;">
-      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit <span style="color:var(--faint);font-weight:400;">(legacy)</span></h4><span class="price">~$16</span></div><span class="sub">Only if you need 3-person 2D tracking or can't touch GPIO — otherwise buy the LD6004 above</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GSVBWNCQ" target="_blank" rel="noopener">B0GSVBWNCQ</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit <span style="color:var(--faint);font-weight:400;">(legacy)</span></h4><span class="price">~$16</span></div><span class="sub">Only if you need 3-person 2D tracking or can't touch GPIO — otherwise buy the LD6004 above</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CQ2P4RVP" target="_blank" rel="noopener">B0CQ2P4RVP</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>LD6004 radar — true 3D movement</h4><span class="price">~$19–38</span></div><span class="sub">60 GHz · X/Y/Z position · wires to Pi GPIO (4 Dupont jumpers) · the movement-tracking pick</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">B0GKNCY7G7</a><a class="verified" href="https://www.amazon.com/dp/B0GKNYXWCK" target="_blank" rel="noopener">alt: B0GKNYXWCK</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO MR60BHA2</h4><span class="price">~$25</span></div><span class="sub">60 GHz heart/breath kit · ESP32-C6 · USB-C</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0F3CCM5P6" target="_blank" rel="noopener">B0F3CCM5P6</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Seeed XIAO ESP32-C6 3-pack (CSI node — the pick)</h4><span class="price">~$24 / 3</span></div><span class="sub">WiFi 6 · 242-tone HE-LTF CSI · <b>buy 7 nodes for a full array</b> (mix with S3s)</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX</a><a class="verified" href="https://www.amazon.com/dp/B0G4PW2518" target="_blank" rel="noopener">or LONELY BINARY S3 3-pack</a></div></div>
@@ -1314,7 +1316,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 ├ <span style="color:var(--cyan)">ruvector-primer.md</span>  — the AI engine, plain English
 ├ <span style="color:var(--cyan)">ruview-primer.md</span>    — the WiFi sensing, plain English
 └ studio/for-humans/
-  ├ <span style="color:var(--cyan)">video-explainer.mp4</span> — ▶ 3-min watch
+  ├ <span style="color:var(--cyan)">video-explainer.mp4</span> — ▶ ~8-min watch
   ├ <span style="color:var(--cyan)">audio-overview.mp3</span>  — 🎧 podcast-style listen
   ├ <span style="color:var(--cyan)">slides-….pdf</span>        — 🖼 15-slide deck
   └ <span style="color:var(--cyan)">infographic-*.png</span>  — 📊 2 posters</pre>
@@ -1345,6 +1347,51 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
           <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">1 · Drop it in</span><br/><span style="color:var(--muted);font-size:12.5px;">Unzip into your project as <span class="mono">kb/</span>.</span></div>
           <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">2 · Keep your repo clean</span><br/><span style="color:var(--muted);font-size:12.5px;">Add <span class="mono">kb/</span> to your <span class="mono">.gitignore</span> so it doesn't clog your project.</span></div>
           <div style="flex:1 1 200px;border:1px dashed var(--line);border-radius:10px;padding:11px 13px;background:rgba(255,255,255,0.015);"><span style="color:var(--phosphor);font-weight:700;">3 · You're all set</span><br/><span style="color:var(--muted);font-size:12.5px;">Point your AI at it (2-line <span class="mono">.mcp.json</span>, steps above) — done.</span></div>
+        </div>
+      </div>
+
+      <!-- ============ WATCH & LISTEN — real, playable studio media (no download needed) ============ -->
+      <div id="watch-listen" style="margin:8px 0 18px;border:1px solid rgba(92,214,255,0.45);border-radius:14px;background:linear-gradient(180deg,rgba(92,214,255,0.08),rgba(92,214,255,0.02));padding:18px 18px 20px;scroll-margin-top:80px;">
+        <div style="font-family:'Chakra Petch';font-size:21px;color:var(--cyan);font-weight:700;margin-bottom:3px;">▶ See it and hear it — right here, no download</div>
+        <div style="color:var(--muted);font-size:13.5px;margin-bottom:16px;max-width:780px;line-height:1.65;">The same human-facing media that ships inside the <span class="mono">ruview</span> bundle, playable right on this page — an explainer video, a podcast-style audio overview, two infographics, and the slide deck. Grok how seeing-through-walls actually works without reading a line of code.</div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:18px;">
+          <!-- VIDEO -->
+          <div style="flex:2 1 380px;min-width:300px;">
+            <div style="font-weight:700;color:var(--ink);font-size:14.5px;margin-bottom:7px;">🎬 The explainer <span style="color:var(--faint);font-weight:500;font-size:12px;">— ~8&nbsp;min</span></div>
+            <video controls preload="none" playsinline poster="/assets/media/infographic-1-process.png" style="width:100%;border-radius:10px;border:1px solid rgba(92,214,255,0.3);background:#070b10;display:block;">
+              <source src="/assets/media/video-explainer.mp4" type="video/mp4"/>
+              Your browser can't play this video — <a href="/assets/media/video-explainer.mp4" style="color:var(--cyan);">download it instead ↓</a>.
+            </video>
+          </div>
+          <!-- AUDIO + SLIDES -->
+          <div style="flex:1 1 260px;min-width:240px;display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <div style="font-weight:700;color:var(--ink);font-size:14.5px;margin-bottom:7px;">🎧 Audio overview <span style="color:var(--faint);font-weight:500;font-size:12px;">— podcast-style</span></div>
+              <audio controls preload="none" style="width:100%;">
+                <source src="/assets/media/audio-overview.mp3" type="audio/mpeg"/>
+                Your browser can't play this — <a href="/assets/media/audio-overview.mp3" style="color:var(--cyan);">download the MP3 ↓</a>.
+              </audio>
+              <div style="color:var(--faint);font-size:11.5px;margin-top:6px;">Tip: hit play and keep scrolling — it streams as you read.</div>
+            </div>
+            <div>
+              <div style="font-weight:700;color:var(--ink);font-size:14.5px;margin-bottom:7px;">🖼 Slide deck</div>
+              <a class="hero-cta" style="--accent:var(--cyan);font-size:13px;padding:9px 14px;" href="/assets/media/slides-spatial-intelligence.pdf" target="_blank" rel="noopener">Open the slide deck (PDF) ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFOGRAPHICS -->
+        <div style="margin-top:18px;">
+          <div style="font-weight:700;color:var(--ink);font-size:14.5px;margin-bottom:8px;">📊 The two infographics <span style="color:var(--faint);font-weight:500;font-size:12px;">— click either to open full size</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;">
+            <a href="/assets/media/infographic-1-process.png" target="_blank" rel="noopener" style="flex:1 1 300px;min-width:240px;display:block;">
+              <img src="/assets/media/infographic-1-process.png" alt="Infographic: how passive WiFi sensing turns radio reflections into a sense of the room" loading="lazy" style="width:100%;border-radius:10px;border:1px solid var(--line);display:block;"/>
+            </a>
+            <a href="/assets/media/infographic-2-seethrough.png" target="_blank" rel="noopener" style="flex:1 1 300px;min-width:240px;display:block;">
+              <img src="/assets/media/infographic-2-seethrough.png" alt="Infographic: seeing through walls with WiFi — what spatial intelligence can and can't do" loading="lazy" style="width:100%;border-radius:10px;border:1px solid var(--line);display:block;"/>
+            </a>
+          </div>
         </div>
       </div>
 

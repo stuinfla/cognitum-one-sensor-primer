@@ -2,3 +2,9 @@
 # (docs/amazon-* exports are gitignored, so they never reach Vercel anyway)
 RuView
 ruvector
+
+# kb/ is the ~500MB SOURCE that CI zips into the GitHub Release bundles
+# (releases/download/kb-latest/*.zip) — it is NOT meant to be served live and
+# already 404s on Vercel. Excluding it keeps deploys small and well under
+# Vercel's size limits. Human-facing studio media is served from assets/media/.
+kb
