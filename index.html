@@ -325,6 +325,31 @@
 <!-- ============ START ============ -->
 <section id="start">
   <div class="wrap">
+
+    <!-- ============ START HERE — the one guided path (first 3 steps) ============ -->
+    <div class="reveal" style="margin-bottom:40px;">
+      <div style="font-family:'Chakra Petch';font-size:13px;letter-spacing:0.08em;color:var(--phosphor);margin-bottom:5px;">▶ START HERE</div>
+      <h2 style="margin:0 0 7px;font-size:26px;">New to all this? Your first 3 steps.</h2>
+      <p style="margin:0 0 18px;color:var(--muted);max-width:780px;">There's a lot on this page, but the actual path is short. Do these three in order — everything below is reference you can dip into whenever you need it. Prefer it all walked end-to-end? Take the <a href="/guide" style="color:var(--cyan);font-weight:600;">full guided walkthrough →</a></p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;">
+        <a href="#first-run" style="flex:1 1 240px;min-width:220px;text-decoration:none;border:1px solid var(--phosphor-dim);border-radius:12px;background:rgba(67,245,155,0.05);padding:16px 18px;display:block;transition:border-color .15s;">
+          <div style="font-family:'Chakra Petch';font-size:30px;color:var(--phosphor);line-height:1;">1</div>
+          <div style="color:var(--ink);font-weight:700;font-size:16px;margin:7px 0 4px;">Set up your Seed</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.55;">~3 minutes in your browser — no app. Get the brain online before any sensors. <span style="color:var(--phosphor);font-weight:600;">↓ jump to it</span></div>
+        </a>
+        <a href="#starter-kit" style="flex:1 1 240px;min-width:220px;text-decoration:none;border:1px solid rgba(92,214,255,0.4);border-radius:12px;background:rgba(92,214,255,0.05);padding:16px 18px;display:block;transition:border-color .15s;">
+          <div style="font-family:'Chakra Petch';font-size:30px;color:var(--cyan);line-height:1;">2</div>
+          <div style="color:var(--ink);font-weight:700;font-size:16px;margin:7px 0 4px;">Get the Starter Kit</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.55;">~$60 buys the exact sensors + cables for your first signal. <span style="color:var(--cyan);font-weight:600;">↓ see the kit</span></div>
+        </a>
+        <a href="/setup" style="flex:1 1 240px;min-width:220px;text-decoration:none;border:1px solid rgba(255,180,84,0.4);border-radius:12px;background:rgba(255,180,84,0.05);padding:16px 18px;display:block;transition:border-color .15s;">
+          <div style="font-family:'Chakra Petch';font-size:30px;color:var(--amber);line-height:1;">3</div>
+          <div style="color:var(--ink);font-weight:700;font-size:16px;margin:7px 0 4px;">Flash &amp; connect</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.55;">Point your first sensor at the Seed and watch it light up. <span style="color:var(--amber);font-weight:600;">setup &amp; flashing →</span></div>
+        </a>
+      </div>
+    </div>
+
     <div class="sec-head reveal">
       <span class="num">01 — ORIENTATION</span>
       <h2>What is a Cognitum One Seed?</h2>
@@ -483,7 +508,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       </div>
       <div class="block cyan reveal">
         <h4>Path B — connect it to the Seed over USB / WiFi</h4>
-        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The three sensors in this guide — radar, vital-signs radar, WiFi CSI — produce far more data than the Seed's GPIO pins can take. Instead they connect to your <b>Cognitum One Seed</b> over USB or WiFi, and it does the heavier sensing.</p>
+        <p style="color:var(--muted); font-size:14.5px; margin:0 0 10px;">The richer sensing — WiFi-CSI and the 60&nbsp;GHz vitals — needs more bandwidth (and WiFi itself) than the Seed's GPIO pins can carry, so it connects to your <b>Cognitum One Seed</b> over USB or WiFi and the Seed does the heavier work. The <b>LD6004 radar</b> is the low-rate exception — it's plain serial, so it wires straight to the GPIO header (below).</p>
         <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:14px;">
           <li>The LD6004 radar wires to the host's <b>GPIO header</b> (four jumper wires, plain serial)</li>
           <li>The MR60 &amp; ESP32 CSI nodes stream to the Seed over <b>WiFi</b></li>
@@ -644,7 +669,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
         <tbody>
           <tr><td>ESP32 <span class="pill cyan">original</span></td><td>Xtensa LX6</td><td>2 · 240&nbsp;MHz</td><td>520&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>Classic + BLE 4.2</td><td>The mature, do-everything default</td><td class="mono">$3–10</td></tr>
           <tr><td>ESP32-S2</td><td>Xtensa LX7</td><td>1 · 240&nbsp;MHz</td><td>320&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>none</td><td>USB-OTG; far better deep-sleep</td><td class="mono">~$6</td></tr>
-          <tr><td>ESP32-S3 <span class="pill green">used here</span></td><td>Xtensa LX7</td><td>2 · 240&nbsp;MHz</td><td>512&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>AI/vector instructions; 192-subcarrier CSI</td><td class="mono">~$4</td></tr>
+          <tr><td>ESP32-S3 <span class="pill green">used here</span></td><td>Xtensa LX7</td><td>2 · 240&nbsp;MHz</td><td>512&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>AI/vector instructions; 64-subcarrier 802.11n CSI</td><td class="mono">~$4</td></tr>
           <tr><td>ESP32-C2</td><td>RISC-V</td><td>1 · 120&nbsp;MHz</td><td>272&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>Smallest &amp; cheapest, 4×4&nbsp;mm</td><td class="mono">~$4</td></tr>
           <tr><td>ESP32-C3</td><td>RISC-V</td><td>1 · 160&nbsp;MHz</td><td>400&nbsp;KB</td><td>802.11n · 2.4&nbsp;GHz</td><td>BLE 5.0</td><td>Best-in-class low power (~5&nbsp;µA sleep)</td><td class="mono">~$4</td></tr>
           <tr><td>ESP32-C5</td><td>RISC-V</td><td>1 · 240&nbsp;MHz</td><td>400&nbsp;KB</td><td>Dual-band WiFi 6 · 2.4 + 5&nbsp;GHz</td><td>BLE 5.2</td><td>First ESP32 with 5&nbsp;GHz — but <b style="color:var(--amber)">no RuView firmware support</b></td><td class="mono">~$18</td></tr>
@@ -1044,10 +1069,10 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
           <!-- row 1: the different sensor TYPES -->
           <g><rect x="20" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="64" r="7" fill="#43f59b"/><text x="40" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">LD6004 · radar</text><text x="40" y="94" fill="#8293a6">3D position · LIVE</text><text x="40" y="116" fill="#43f59b">x 0.32 · y 1.10 · z 1.42 m</text><text x="40" y="136" fill="#8293a6">1 target · age 30 ms</text></g>
           <g><rect x="350" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="630" cy="64" r="7" fill="#43f59b"/><text x="370" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">MR60BHA2 · vitals</text><text x="370" y="94" fill="#8293a6">LIVE</text><text x="370" y="116" fill="#43f59b">72 bpm · 16 rpm</text><text x="370" y="136" fill="#8293a6">present: yes</text></g>
-          <g><rect x="680" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="960" cy="64" r="7" fill="#43f59b"/><text x="700" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #1 · CSI</text><text x="700" y="94" fill="#8293a6">2.4 GHz · LIVE</text><text x="700" y="116" fill="#43f59b">subcarriers 192</text><text x="700" y="136" fill="#8293a6">rssi −44 dBm · age 18 ms</text></g>
+          <g><rect x="680" y="44" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="960" cy="64" r="7" fill="#43f59b"/><text x="700" y="72" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #1 · CSI</text><text x="700" y="94" fill="#8293a6">2.4 GHz · LIVE</text><text x="700" y="116" fill="#43f59b">subcarriers 64</text><text x="700" y="136" fill="#8293a6">rssi −44 dBm · age 18 ms</text></g>
           <!-- row 2 -->
-          <g><rect x="20" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="196" r="7" fill="#43f59b"/><text x="40" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #2 · CSI</text><text x="40" y="226" fill="#8293a6">2.4 GHz · LIVE</text><text x="40" y="248" fill="#43f59b">subcarriers 192</text><text x="40" y="268" fill="#8293a6">rssi −51 dBm · age 22 ms</text></g>
-          <g><rect x="350" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="rgba(255,180,84,0.5)"/><circle cx="630" cy="196" r="7" fill="#ffb454"/><text x="370" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-C5 #5 · CSI</text><text x="370" y="226" fill="#ffb454">5 GHz · WARMING…</text><text x="370" y="248" fill="#8293a6">no frames yet — go check #5</text></g>
+          <g><rect x="20" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="#2a9d68"/><circle cx="300" cy="196" r="7" fill="#43f59b"/><text x="40" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-S3 #2 · CSI</text><text x="40" y="226" fill="#8293a6">2.4 GHz · LIVE</text><text x="40" y="248" fill="#43f59b">subcarriers 64</text><text x="40" y="268" fill="#8293a6">rssi −51 dBm · age 22 ms</text></g>
+          <g><rect x="350" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="rgba(255,180,84,0.5)"/><circle cx="630" cy="196" r="7" fill="#ffb454"/><text x="370" y="204" font-family="Chakra Petch" font-size="14" fill="#dbe6f0">ESP32-C6 #5 · CSI</text><text x="370" y="226" fill="#ffb454">2.4 GHz · WARMING…</text><text x="370" y="248" fill="#8293a6">no frames yet — go check #5</text></g>
           <g><rect x="680" y="176" width="300" height="116" rx="10" fill="#0e1824" stroke="#43f59b"/><circle cx="960" cy="196" r="7" fill="#43f59b"/><text x="700" y="204" font-family="Chakra Petch" font-size="14" fill="#43f59b">Fusion → RuVector</text><text x="700" y="226" fill="#8293a6">consolidating 5 feeds</text><text x="700" y="248" fill="#43f59b">one picture · LIVE</text></g>
         </g>
         <text x="20" y="312" font-family="IBM Plex Mono" font-size="10" fill="#4a5a6c">reading the Seed's live stream (e.g. a WebSocket) · updates ~10×/sec</text>
@@ -1205,7 +1230,27 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <p>Beginner-friendly, plug-and-play versions only. <span style="color:var(--phosphor)">▸ direct links</span> were correct when last checked; <span style="color:var(--amber)">⌕ search links</span> point at a product category. Always open the page and confirm before buying.</p>
     </div>
 
-    <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">The three sensors</h3>
+    <!-- ============ THE STARTER KIT — one canonical, minimal, opinionated bundle with a total ============ -->
+    <div class="callout reveal" id="starter-kit" style="border:1px solid var(--phosphor);background:linear-gradient(135deg,rgba(67,245,155,0.11),rgba(67,245,155,0.02));margin-bottom:32px;scroll-margin-top:80px;">
+      <div style="font-family:'Chakra Petch';font-size:13px;letter-spacing:0.08em;color:var(--phosphor);margin-bottom:5px;">⭐ JUST WANT TO START? — THE STARTER KIT</div>
+      <h3 style="margin:0 0 7px;font-size:22px;color:var(--ink);">Buy exactly this — about <span style="color:var(--phosphor)">$60</span> and you're sensing</h3>
+      <p style="margin:0 0 16px;color:var(--muted);">You already have the Seed (the brain). This is the smallest set of sensors + cables that gets you a <b style="color:var(--ink)">first real signal</b>: one WiFi-CSI 3-pack for whole-room presence &amp; motion, one radar for instant no-flash movement tracking, and the cables to connect them. Add more CSI nodes later for a full 7-node array.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Part</th><th>What it gives you</th><th>Price</th><th>Buy</th></tr></thead>
+          <tbody>
+            <tr><td><b>1× Seeed XIAO ESP32-C6 3-pack</b></td><td>Your first 3 WiFi-CSI nodes — presence &amp; motion across a room</td><td>~$24</td><td><a class="verified" href="https://www.amazon.com/dp/B0DJ6N55FX" target="_blank" rel="noopener">B0DJ6N55FX ↗</a></td></tr>
+            <tr><td><b>1× LD6004 radar</b></td><td>Fastest no-flash win — true 3D movement, plugs in over USB-UART</td><td>~$19</td><td><a class="verified" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">B0GKNCY7G7 ↗</a></td></tr>
+            <tr><td><b>USB-C data cables</b></td><td>Data-capable (not power-only) — needed to flash the ESP32s</td><td>~$10</td><td><a class="search" href="https://www.amazon.com/s?k=USB-C+data+cable+short" target="_blank" rel="noopener">search ↗</a></td></tr>
+            <tr><td><b>Dupont jumper wires</b></td><td>4 jumpers to wire the radar to your host's GPIO</td><td>~$7</td><td><a class="search" href="https://www.amazon.com/s?k=Dupont+jumper+wires+assortment" target="_blank" rel="noopener">search ↗</a></td></tr>
+            <tr><td colspan="2" style="text-align:right;color:var(--ink);"><b>Total to start sensing</b> <span style="color:var(--faint);font-weight:400;">· Seed not included — you have it</span></td><td colspan="2"><b style="color:var(--phosphor);font-size:17px;">~$60</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:14px 0 0;color:var(--faint);font-size:13px;">Want vital signs (heart/breath) or camera-supervised pose training too? Add the <b style="color:var(--muted)">MR60BHA2</b> (~$25) or the <b style="color:var(--muted)">XIAO ESP32S3 Sense</b> (~$27) from the full list below. Not sure what you want to sense? See <a href="#choose" style="color:var(--cyan);">“which sensor do I use?”</a></p>
+    </div>
+
+    <h3 class="reveal" style="color:var(--phosphor); font-size:18px; margin:0 0 16px;">The full menu · pick by what you want to sense</h3>
     <div class="buy-grid" style="margin-bottom:34px;">
       <div class="buy reveal"><div class="bt"><h4>LD2450 radar — USB kit <span style="color:var(--faint);font-weight:400;">(legacy)</span></h4><span class="price">~$16</span></div><span class="sub">Only if you need 3-person 2D tracking or can't touch GPIO — otherwise buy the LD6004 above</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0CQ2P4RVP" target="_blank" rel="noopener">B0CQ2P4RVP</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>LD6004 radar — true 3D movement</h4><span class="price">~$19–38</span></div><span class="sub">60 GHz · X/Y/Z position · wires to Pi GPIO (4 Dupont jumpers) · the movement-tracking pick</span><div class="links"><a class="verified" href="https://www.amazon.com/dp/B0GKNCY7G7" target="_blank" rel="noopener">B0GKNCY7G7</a><a class="verified" href="https://www.amazon.com/dp/B0GKNYXWCK" target="_blank" rel="noopener">alt: B0GKNYXWCK</a></div></div>
