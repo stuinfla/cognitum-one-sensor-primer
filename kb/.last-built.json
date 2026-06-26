@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-23T08:29:22.607Z",
+  "generated": "2026-06-26T08:34:40.060Z",
   "metric": "cosine",
   "variants": {
     "big": {
@@ -18,9 +18,9 @@
     "ruvector": {
       "rvfBig": "ruvector-kb.big.rvf",
       "rvfSmall": "ruvector-kb.small.rvf",
-      "vectors": 30870,
+      "vectors": 30977,
       "sourceRepo": "github.com/ruvnet/ruvector",
-      "sha": "85d231478041ae72d048fa59dac58db224798500"
+      "sha": "3971093d46e66157ab56f7168ba4711c7ffeb380"
     },
     "ruview": {
       "rvfBig": "ruview-kb.big.rvf",
