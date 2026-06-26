@@ -7,7 +7,7 @@
 <!-- ===================== SEO ===================== -->
 <title>Cognitum One Sensor Primer — ESP32, mmWave Radar &amp; WiFi CSI Sensing Explained</title>
 <meta name="description" content="A beginner's field guide to passive, contactless sensing for the Cognitum One Seed. Learn what ESP32 chips, the LD6004 mmWave radar, the MR60BHA2 vital-signs radar, and WiFi CSI sensors actually do — how to power, wire, flash and battery them, where to buy the plug-and-play kits, and how to set it all up." />
-<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD6004, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Cognitum One appliance" />
+<meta name="keywords" content="Cognitum One Seed, ESP32 sensors, ESP32-S3, ESP32-C5, ESP32-C6, mmWave radar, LD6004, LD2450, MR60BHA2, WiFi CSI, WiFi sensing, contactless sensing, passive sensing, presence detection, heart rate radar, sensor primer, ESP32 battery, sensor wiring, flashing ESP32, RuView, soul signature, AETHER, Cognitum One appliance, Reuven Cohen, rUv, ruvnet, ruvector, RuView, wifi-densepose, WiFi DensePose, DensePose WiFi, CSI pose estimation, MM-Fi pose, see through walls WiFi, through-wall sensing, ambient intelligence, agentic engineering, claude-flow, RVF, HNSW, SONA, ESP32 pose estimation" />
 <meta name="author" content="Cognitum One" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://cognitum-sensor-primer.vercel.app/" />
@@ -33,14 +33,88 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Cognitum One Sensor Primer — ESP32, mmWave Radar & WiFi CSI Sensing Explained",
-  "description": "A beginner's field guide to passive contactless sensing for the Cognitum One Seed: ESP32 chips, mmWave radar and WiFi CSI — what they do, how to power, flash, wire and battery them, and where to buy.",
-  "image": "https://cognitum-sensor-primer.vercel.app/assets/img/og-cover-v4.jpg",
-  "author": { "@type": "Organization", "name": "Cognitum One", "url": "https://cognitum.one" },
-  "publisher": { "@type": "Organization", "name": "Cognitum One", "url": "https://cognitum.one" },
-  "about": ["ESP32", "mmWave radar", "WiFi CSI sensing", "passive contactless sensing", "Cognitum One Seed"],
-  "inLanguage": "en"
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen",
+      "name": "Reuven Cohen",
+      "alternateName": ["rUv", "ruvnet"],
+      "description": "Creator of the ruvnet open-source ecosystem — RuView (WiFi DensePose), ruvector and claude-flow — the agentic-engineering and WiFi-sensing tooling the Cognitum One Seed is built on.",
+      "url": "https://github.com/ruvnet",
+      "sameAs": [
+        "https://github.com/ruvnet",
+        "https://x.com/ruvnet",
+        "https://www.linkedin.com/in/reuvencohen"
+      ]
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://cognitum.one/#org",
+      "name": "Cognitum One",
+      "url": "https://cognitum.one"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/ruvnet/RuView#repo",
+      "name": "RuView",
+      "alternateName": "wifi-densepose",
+      "description": "Real-time WiFi CSI sensing platform (formerly wifi-densepose) — presence, pose and vital-signs from ESP32 nodes. The software the Cognitum One sensors feed.",
+      "codeRepository": "https://github.com/ruvnet/RuView",
+      "programmingLanguage": "Rust",
+      "author": { "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen" }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/ruvnet/ruvector#repo",
+      "name": "ruvector",
+      "description": "Vector + graph intelligence stack (RVF binary format, HNSW search, SONA self-learning) powering the Cognitum One Seed.",
+      "codeRepository": "https://github.com/ruvnet/ruvector",
+      "programmingLanguage": "Rust",
+      "author": { "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://cognitum-sensor-primer.vercel.app/#website",
+      "name": "Cognitum One Sensor Primer",
+      "url": "https://cognitum-sensor-primer.vercel.app/",
+      "publisher": { "@id": "https://cognitum.one/#org" },
+      "about": { "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen" }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://cognitum-sensor-primer.vercel.app/#article",
+      "headline": "Cognitum One Sensor Primer — ESP32, mmWave Radar & WiFi CSI Sensing Explained",
+      "description": "A beginner's field guide to passive contactless sensing for the Cognitum One Seed: ESP32 chips, mmWave radar and WiFi CSI — what they do, how to power, flash, wire and battery them, and where to buy.",
+      "image": "https://cognitum-sensor-primer.vercel.app/assets/img/og-cover-v4.jpg",
+      "inLanguage": "en",
+      "author": { "@id": "https://cognitum.one/#org" },
+      "publisher": { "@id": "https://cognitum.one/#org" },
+      "creator": { "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen" },
+      "about": ["ESP32", "mmWave radar", "WiFi CSI sensing", "passive contactless sensing", "WiFi DensePose", "Cognitum One Seed"],
+      "keywords": "Reuven Cohen, rUv, ruvnet, ruvector, RuView, wifi-densepose, WiFi DensePose, ESP32 CSI, mmWave radar, passive contactless sensing",
+      "isBasedOn": [
+        { "@id": "https://github.com/ruvnet/RuView#repo" },
+        { "@id": "https://github.com/ruvnet/ruvector#repo" }
+      ],
+      "mentions": [
+        { "@id": "https://cognitum-sensor-primer.vercel.app/#reuven-cohen" },
+        { "@id": "https://github.com/ruvnet/RuView#repo" },
+        { "@id": "https://github.com/ruvnet/ruvector#repo" }
+      ],
+      "citation": [
+        "https://github.com/ruvnet/RuView",
+        "https://github.com/ruvnet/ruvector"
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Sensor Primer", "item": "https://cognitum-sensor-primer.vercel.app/" },
+        { "@type": "ListItem", "position": 2, "name": "Setup & Flashing", "item": "https://cognitum-sensor-primer.vercel.app/setup" },
+        { "@type": "ListItem", "position": 3, "name": "Complete Walkthrough", "item": "https://cognitum-sensor-primer.vercel.app/guide" }
+      ]
+    }
+  ]
 }
 </script>
 <script type="application/ld+json">
@@ -1167,7 +1241,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <div class="buy reveal"><div class="bt"><h4>ESP32 18650 dev board</h4><span class="price">~$9</span></div><span class="sub">ESP32 with onboard 18650 holder + charging</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=ESP32+18650+development+board" target="_blank" rel="noopener">search: ESP32 18650 board</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>TP4056 charging module (protected)</h4><span class="price">~$1</span></div><span class="sub">DIY LiPo charging + protection</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=TP4056+charging+module+protection" target="_blank" rel="noopener">search: TP4056 protected</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Voltaic V50 "Always On" bank</h4><span class="price">~$74</span></div><span class="sub">The only battery here verified to never sleep · <b>use its USB-A port</b> (the USB-C PD port still sleeps!) · pass-through charging = mini-UPS</span><div class="links"><a class="verified" href="https://voltaicsystems.com/V50/" target="_blank" rel="noopener">voltaicsystems.com/V50</a><a class="search" href="https://www.amazon.com/s?k=Voltaic+V50+always+on" target="_blank" rel="noopener">on Amazon</a></div></div>
-      <div class="buy reveal"><div class="bt"><h4>USB keep-alive dongle</h4><span class="price">~$8–15</span></div><span class="sub">Budget fix: pulses ~100 mA load to keep ANY bank awake (costs ~10 mA average) · inline on the cable · adjustable version if your bank is stubborn</span><div class="links"><a class="verified" href="https://thepihut.com/products/power-bank-keepalive-usb-c" target="_blank" rel="noopener">Pi Hut KeepAlive USB-C</a><a class="verified" href="https://www.amazon.com/dp/B0G2XMW8DQ" target="_blank" rel="noopener">USB current maintainer</a></div></div>
+      <div class="buy reveal"><div class="bt"><h4>USB keep-alive dongle</h4><span class="price">~$8–15</span></div><span class="sub">Budget fix: pulses ~100 mA load to keep ANY bank awake (costs ~10 mA average) · inline on the cable · adjustable version if your bank is stubborn</span><div class="links"><a class="verified" href="https://thepihut.com/products/power-bank-keepalive-usb-c" target="_blank" rel="noopener">Pi Hut KeepAlive USB-C</a><a class="search" href="https://www.amazon.com/s?k=USB+power+bank+keep+alive+dongle" target="_blank" rel="noopener">search: USB keep-alive dongles</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>Plain USB wall adapter</h4><span class="price">~$5</span></div><span class="sub"><b>The real answer for any node near an outlet</b>: wall adapters have no load detection — they never sleep, ever. Batteries are for placement freedom only</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=5v+usb+c+wall+adapter" target="_blank" rel="noopener">search: 5V USB-C adapter</a></div></div>
       <div class="buy reveal"><div class="bt"><h4>18650 Li-ion cells (quality)</h4><span class="price">~$10</span></div><span class="sub">Reputable brand, true capacity</span><div class="links"><a class="search" href="https://www.amazon.com/s?k=18650+rechargeable+battery+button+top" target="_blank" rel="noopener">search: 18650 cells</a></div></div>
     </div>
@@ -1527,6 +1601,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
       <div style="color:var(--phosphor); font-weight:600; margin-bottom:6px;">COGNITUM ONE · SENSOR PRIMER</div>
       <div>A beginner's field guide to passive contactless sensing.</div>
       <div style="margin-top:10px;"><a href="/setup">Setup &amp; flashing →</a> · <a href="https://cognitum.one" target="_blank" rel="noopener">cognitum.one ↗</a> · <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView ↗</a></div>
+      <div style="margin-top:10px; color:var(--faint); font-size:13px; line-height:1.65;">Built on the open-source work of <a href="https://github.com/ruvnet" target="_blank" rel="noopener"><b>Reuven Cohen (rUv)</b></a> — creator of <a href="https://github.com/ruvnet/RuView" target="_blank" rel="noopener">RuView</a> (WiFi DensePose), <a href="https://github.com/ruvnet/ruvector" target="_blank" rel="noopener">ruvector</a> and the <a href="https://github.com/ruvnet" target="_blank" rel="noopener">ruvnet</a> agentic-engineering ecosystem.</div>
       <div id="counter-strip" style="display:none; margin-top:14px; font-family:'IBM Plex Mono'; font-size:12px; letter-spacing:0.04em; color:var(--faint);">
         <span style="color:var(--phosphor);">◉</span> <span id="cnt-visits">–</span> visitors &nbsp;·&nbsp; <span style="color:var(--amber);">❤</span> <span id="cnt-helped">–</span> found this helpful &nbsp;—&nbsp;
         <button id="helped-btn" type="button" style="font-family:'IBM Plex Mono'; font-size:11.5px; letter-spacing:0.04em; background:transparent; border:1px solid var(--phosphor); border-radius:6px; color:var(--phosphor); padding:3px 10px; cursor:pointer;">This helped me</button>
