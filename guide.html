@@ -193,7 +193,7 @@ cargo test --workspace --no-default-features       <span class="c"># optional: r
     <div class="sec-head reveal">
       <span class="num">04 — FLASH THE NODES</span>
       <h2>Firmware onto every ESP32 — exact commands</h2>
-      <p>Download the prebuilt binaries from <a href="https://github.com/ruvnet/RuView/releases" target="_blank" rel="noopener">RuView Releases ↗</a>. As of today, use <b>v0.7.1-esp32 or newer</b> (fixes a CSI-starvation bug and a heart-rate bug stuck near 45 BPM); <b>v0.8.0-esp32</b> adds the C6's 242-tone WiFi-6 CSI. The easiest path is still <b>asking Claude Code with the RuView plugin</b> to do this — below is what happens under the hood.</p>
+      <p>Download the prebuilt binaries from <a href="https://github.com/ruvnet/RuView/releases" target="_blank" rel="noopener">RuView Releases ↗</a>. Use <b>v0.7.1-esp32 or newer</b> (fixes a CSI-starvation bug and a heart-rate bug stuck near 45 BPM); the <b>v0.8.x-esp32</b> line adds the C6's 242-tone WiFi-6 CSI — always grab the latest tag. The easiest path is still <b>asking Claude Code with the RuView plugin</b> to do this — below is what happens under the hood.</p>
     </div>
 
     <div class="callout reveal" style="margin-bottom:24px;border-color:var(--phosphor-dim);">
@@ -208,7 +208,7 @@ python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
 
     <div class="callout reveal" style="margin-bottom:24px;border-color:rgba(92,214,255,0.4);">
       <h3 style="margin:0 0 10px;font-size:19px;color:var(--cyan);">ESP32-C6 — the high-fidelity node (incl. the chip in your MR60 XIAO)</h3>
-      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Build with current <b>ESP-IDF</b> (the v0.8.0-esp32 release notes say v5.5.2 for full HE-LTF; the in-repo README still documents v5.4 — check the release notes), or grab the C6 binaries from v0.8.0-esp32:</p>
+      <p style="margin:0 0 10px;color:var(--muted);font-size:14.5px;">Build with current <b>ESP-IDF</b> (the v0.8.x-esp32 release notes say v5.5.2 for full HE-LTF; the in-repo README still documents v5.4 — check the release notes), or grab the C6 binaries from the latest v0.8.x-esp32 release:</p>
       <pre class="code">cd firmware/esp32-csi-node
 idf.py set-target esp32c6
 idf.py build                    <span class="c"># ~1.0 MB binary</span>

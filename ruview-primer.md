@@ -86,7 +86,7 @@ RuView turns **Channel State Information** — the fine-grained way bodies distu
 
 **Naming:** the project began as `wifi-densepose`; "RuView" is the post-rename umbrella. The Docker image (`ruvnet/wifi-densepose`), PyPI packages, and most crate names still carry the old name. One repo, two names.
 
-**Versioning, two parallel schemes:** `v0.x.y-esp32` tags are **firmware releases** (manual, hardware-verified — latest v0.8.0-esp32); `v1xxx` tags are **automated rolling server releases** (latest v1701, several per day).
+**Versioning, two parallel schemes:** `v0.x.y-esp32` tags are **firmware releases** (manual, hardware-verified — latest in the v0.8.x-esp32 line, v0.8.3-esp32 in this checkout); `v1xxx` tags are **automated rolling server releases** (latest v1701, several per day).
 
 ---
 
@@ -479,7 +479,7 @@ wifi-densepose calibrate-serve --http-port 8090        # HTTP calibration API fo
 | HLK-LD2410 (24 GHz) | radar accessory | ✅ | |
 | Intel 5300 / Atheros AR9580 | full CSI 3×3 | ✅ research (Linux) | |
 | Pi 5/4/3B+ via Nexmon (rvcsi) | CIR/CSI | ⚠️ research bridge | BCM43455c0 |
-| **ESP32-C5** | — | ❌ **no firmware target** | despite dual-band silicon |
+| **ESP32-C5** | — | ❌ **no firmware target** | Espressif's *newest* chip (mass-production 2025, **after** the C6) and the only dual-band 2.4/5 GHz one — but no RuView firmware yet |
 | ESP32 original / C3 / C2 | — | ❌ | single-core, can't run the DSP |
 | Laptop/phone WiFi | RSSI only | ✅ coarse fallback | presence/motion, no vitals |
 
