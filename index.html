@@ -1650,6 +1650,8 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 <script src="/assets/js/main.js?v=3" defer></script>
 <script>
 /* Visitor + "this helped" counters — counterapi.dev v1 (verified 2026-06-12).
+   Visits are counted UNIQUE PER BROWSER (localStorage guard) so the total only
+   climbs by one per new unique person, never on reloads or return visits.
    Graceful degradation: the strip stays display:none unless the API answers. */
 (function(){
   var API = 'https://api.counterapi.dev/v1/cognitum-sensor-primer/';
@@ -1667,7 +1669,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
   try {
     var seen = false, helped = false;
-    try { seen = sessionStorage.getItem('cgp_visited') === '1'; } catch(e){}
+    try { seen = localStorage.getItem('cgp_visited') === '1'; } catch(e){}
     try { helped = localStorage.getItem('cgp_helped') === '1'; } catch(e){}
 
     function thanks(){
@@ -1689,7 +1691,7 @@ YOUR MAC / PC — powerful, but sealed       COGNITUM SEED / V0 — humble, but 
 
     counter('visits', !seen)
       .then(function(n){
-        try { sessionStorage.setItem('cgp_visited', '1'); } catch(e){}
+        try { localStorage.setItem('cgp_visited', '1'); } catch(e){}
         vEl.textContent = n.toLocaleString();
         return counter('helped', false).catch(function(){ return 0; });
       })
