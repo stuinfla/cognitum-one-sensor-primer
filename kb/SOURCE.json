@@ -1,15 +1,15 @@
 {
   "builder": "rvf-kb-forge",
-  "builtUtc": "2026-07-27T08:26:49.604Z",
+  "builtUtc": "2026-07-28T08:13:13.680Z",
   "canonicalManifestUrl": "https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/.last-built.json",
   "selfUpdate": "node kb-update.mjs",
   "stores": {
     "ruvector": {
       "kbName": "ruvector",
       "sourceRepo": "github.com/ruvnet/ruvector",
-      "sourceCommit": "6a6c39e662a4c3184dcb913db91a09401c84b2ae",
+      "sourceCommit": "597be6a753472f0521fe2def097116e717ed4332",
       "sourceDescribe": null,
-      "builtUtc": "2026-07-27T08:26:49.604Z",
+      "builtUtc": "2026-07-28T08:13:13.680Z",
       "builder": "rvf-kb-forge",
       "canonicalManifestUrl": "https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/.last-built.json",
       "canonicalBundleUrl": "https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruvector-kb-bundle.zip",
@@ -18,9 +18,9 @@
     "ruview": {
       "kbName": "ruview",
       "sourceRepo": "github.com/ruvnet/RuView",
-      "sourceCommit": "2cc378c12f56bbe462f237496188f44a57de45eb",
-      "sourceDescribe": "v2038",
-      "builtUtc": "2026-07-27T08:26:49.604Z",
+      "sourceCommit": "e6062977c965e9dd5603a3b1587a9da49caf9b17",
+      "sourceDescribe": "v2063",
+      "builtUtc": "2026-07-28T08:13:13.680Z",
       "builder": "rvf-kb-forge",
       "canonicalManifestUrl": "https://raw.githubusercontent.com/stuinfla/cognitum-one-sensor-primer/main/kb/.last-built.json",
       "canonicalBundleUrl": "https://github.com/stuinfla/cognitum-one-sensor-primer/releases/download/kb-latest/ruview-kb-bundle.zip",
