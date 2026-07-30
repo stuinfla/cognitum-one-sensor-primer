@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-29T08:13:10.941Z",
+  "generated": "2026-07-30T08:10:23.154Z",
   "metric": "cosine",
   "variants": {
     "big": {
@@ -25,10 +25,10 @@
     "ruview": {
       "rvfBig": "ruview-kb.big.rvf",
       "rvfSmall": "ruview-kb.small.rvf",
-      "vectors": 7429,
+      "vectors": 7470,
       "sourceRepo": "github.com/ruvnet/RuView",
-      "sha": "a34bfc246e0642745c7142efd8655a84836c7e72",
-      "describe": "ruview-harness-v0.3.1"
+      "sha": "90b29595fbebf5c7b0356fa260332fcc674760ef",
+      "describe": "v2096"
     }
   }
 }
