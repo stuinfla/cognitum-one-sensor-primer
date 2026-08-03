@@ -18166,35 +18166,35 @@
    "kind": "doc",
    "title": "π RuView",
    "chunk": "1/22",
-   "preview": "# π RuView <p align=\"center\"> <a href=\"https://cognitum.one/seed\"> <img src=\"assets/ruview-seed.png\" alt=\"RuView - WiFi DensePose\" width=\"100%\"> </a> </p> <p align=\"center\"> <a href=\"https://cognitum.one/marketplace/musica\"> "
+   "preview": "# π RuView <p align=\"center\"> <a href=\"https://cognitum.one/seed\"> <img src=\"assets/ruview-seed.png\" alt=\"RuView - WiFi DensePose\" width=\"100%\"> </a> </p> <p align=\"center\"> <a href=\"https://cognitum.one/marketplace\"> <img sr"
   },
   "2596": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "2/22",
-   "preview": "ty** — overnight monitoring with sleep stage classification and apnea screening Built on [RuVector](https://github.com/ruvnet/ruvector/) and [Cognitum Seed](https://cognitum.one), RuView runs entirely on edge hardware — an ESP32 mesh (as l"
+   "preview": "*Vital signs** — breathing rate and heart rate, contactless, while sleeping or sitting - **Activity recognition** — walking, sitting, gestures, falls — from temporal CSI patterns - **Environment mapping** — RF fingerprinting identifies room"
   },
   "2597": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "3/22",
-   "preview": "breathing%20%2B%20heartbeat-red.svg)](#vital-sign-detection) [![ESP32 Ready](https://img.shields.io/badge/ESP32--S3-CSI%20streaming-purple.svg)](#esp32-s3-hardware-pipeline) [![crates.io](https://img.shields.io/crates/v/wifi-densepose-ruvec"
+   "preview": "of 82.3%** — up from 66.4% raw; the older \"100% presence\" figure was measured on a single-class recording and has been retracted in favor of this.) No cameras, no wearables, no app on the user's phone. ### Built for low-power edge applicat"
   },
   "2598": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "4/22",
-   "preview": " | > | 🎯 **Camera-free pre-training** | Self-supervised contrastive encoder, 12.2M training steps on 60K frames, shipped on Hugging Face | 84 s/epoch retrain on M4 Pro | > | 📷 **Camera-supervised fine-tune** | MediaPipe + ESP32 CSI paired"
+   "preview": " learned counters available as Cogs: `occupancy-zones`, `elevator-count`, `queue-length`, `customer-flow`, `clean-room`, `person-matching` | Real-time, self-calibrating | > | 🌍 **World model prediction** | OccWorld TransVQVAE — 15-frame fu"
   },
   "2599": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "5/22",
-   "preview": "ateExtractor # equivalent to: # from wifi_densepose import BreathingExtractor, HeartRateExtractor # from ruview.client import SensingClient, RuViewMqttClient ``` [![PyPI ruview](https://img.shields.io/pypi/v/ruview?label=ruview)](https:/"
+   "preview": "{LP_CORE,SOFTAP_HE}_ENABLE to turn them on. # Option 3: Full system with Cognitum Seed ($140) # ESP32 streams CSI → bridge forwards to Seed for persistent storage + kNN + witness chain node scripts/rf-scan.js --port 5006 # Live R"
   },
   "2600": {
    "path": "README.md",
@@ -18208,21 +18208,21 @@
    "kind": "doc",
    "title": "π RuView",
    "chunk": "7/22",
-   "preview": "sed | Status | |----------|-------------|--------| | Python training / evaluation / embedding extraction | `model.safetensors` | ✅ Works — load with `safetensors.torch.load_file` | | Inspect / re-export the bundle | `model.rvf.jsonl` (line-"
+   "preview": "ensors`, or `model.rvf.jsonl` | ✅ Native RVF loads directly; safetensors and JSONL auto-convert in memory | **Loader scope:** `--model` now accepts native RVF and auto-converts the published safetensors or JSONL files. The quantized `model"
   },
   "2602": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "8/22",
-   "preview": "github.com/ruvnet/RuView/issues/509); see [ADR-079](docs/adr/ADR-079-camera-ground-truth-training.md) phases P7–P9 for the camera-supervised fine-tune path. ### Model weights: what's real, what's not \"WiFi → pose\" means three different th"
+   "preview": "etails> ### Model weights: what's real, what's not See which checkpoints are validated, experimental, or architecture-only. <details> <summary><strong>View model maturity details</strong></summary> \"WiFi → pose\" means three different th"
   },
   "2603": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "9/22",
-   "preview": "the WiFi-DensePose sensing stack on a Cognitum-V0 appliance. The catalog updates over the air &mdash; your appliance fetches it via <code>GET /api/v1/edge/registry</code> ([ADR-102](docs/adr/ADR-102-edge-module-registry.md)) and verifies ea"
+   "preview": "ognitum.one/store) or on your appliance at `http://<appliance>:9000/cogs`. Each module is a small signed binary that runs beside the sensing stack. The appliance updates the catalog over the air and verifies every module before installation"
   },
   "2604": {
    "path": "README.md",
@@ -18299,21 +18299,21 @@
    "kind": "doc",
    "title": "π RuView",
    "chunk": "20/22",
-   "preview": "rompts/*.md ~/.codex/prompts/` — the seven `/ruview-*` commands are mirrored as Codex prompts; [`plugins/ruview/codex/AGENTS.md`](plugins/ruview/codex/AGENTS.md) carries the project rules. See [`plugins/ruview/codex/README.md`](plugins/ruvi"
+   "preview": "ness, use `npx @ruvnet/ruview@0.3.1`; the quick commands and fuller explanation are in the collapsed MetaHarness section near the top of this README and in [`harness/ruview/`](harness/ruview/README.md). </details> --- ## 📖 Documentation"
   },
   "2615": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "21/22",
-   "preview": "](docs/adr/ADR-120-bfld-privacy-class-and-hash-rotation.md)/[121](docs/adr/ADR-121-bfld-identity-risk-scoring.md)/[122](docs/adr/ADR-122-bfld-ruview-ha-matter-exposure.md)/[123](docs/adr/ADR-123-bfld-capture-path-nexmon-and-esp32.md). Resea"
+   "preview": "nt stdio`. | | [Semantic Primitives — Precision/Recall](docs/integrations/semantic-primitives-metrics.md) | Per-primitive F1 on the held-out paired-capture set: someone-sleeping, possible-distress, room-active, elderly-inactivity-anomaly, m"
   },
   "2616": {
    "path": "README.md",
    "kind": "doc",
    "title": "π RuView",
    "chunk": "22/22",
-   "preview": " worlds, and an 802.11bf/ETSI-ISAC-aligned sensing policy plane (raw RF structurally unexportable). All accuracy numbers SYNTHETIC until real-data validation. | | [Medical Examples](examples/medical/README.md) | Contactless blood pressure, "
+   "preview": "% with proxy labels) — [camera ground-truth training](docs/adr/ADR-079-camera-ground-truth-training.md) targets **35%+ PCK@20**; the pipeline is implemented, but the data-collection and evaluation phases (ADR-079 P7–P9) are still pending. >"
   },
   "2617": {
    "path": "CHANGELOG.md",
@@ -44080,7 +44080,7 @@
    "kind": "source",
    "title": "main.rs",
    "chunk": "122/131",
-   "preview": "ad magic\"); assert!(msg.contains(\"quantized weight blob\"), \"{msg}\"); assert!(msg.contains(\"RVFS\") || msg.contains(\"0x52564653\"), \"{msg}\"); } #[test] fn jsonl_manifest_is_identified() { let data = *b\"{\\\"s"
+   "preview": "10, 0, 0, 0, 0, 0, 0, 0, b'{', b'\"']; let msg = diagnose_model_load_error( Path::new(\"models/wifi-densepose-pretrained/model.safetensors\"), &data, \"invalid magic at offset 0\", ); a"
   },
   "6298": {
    "path": "v2/crates/wifi-densepose-sensing-server/src/main.rs",
