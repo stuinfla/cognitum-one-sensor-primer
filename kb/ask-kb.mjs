@@ -927,7 +927,19 @@ export async function searchKb({ query, k = 6, store, n, variant }) {
     // Fetch plenty of raw chunk hits so we have material to group into documents and rerank.
     hits = await db.query(qv, Math.max(RAW_HITS, k * 4));
   } finally {
-    await db.close();
+    // Best-effort close. The store is opened READONLY, so there is nothing of ours to flush —
+    // but the native backend still issues a durable flush on close, and on Windows that flush
+    // is rejected on a handle opened without write access:
+    //   RvfError: Durable write (fsync) failed: RVF error 0x0303: FsyncFailed
+    // (@ruvector/rvf 0.3.4, rvf-node-win32-x64-msvc; reproducible with a bare
+    // openReadonly + close and no query at all). Letting that propagate out of a `finally`
+    // discards the hits we already have and makes EVERY query fail on Windows. A failed
+    // flush on a readonly handle has nothing to corrupt, so swallow it.
+    try {
+      await db.close();
+    } catch (e) {
+      if (process.env.KB_DEBUG) console.error(`[ask-kb] db.close() failed (ignored, readonly store): ${e.message}`);
+    }
   }
 
   // FIX 1 — collapse chunk hits into documents keyed by path; doc score = best (min) distance.
