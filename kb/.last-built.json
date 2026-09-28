@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T07:45:53.534Z",
+  "generated": "2026-09-28T08:06:04.482Z",
   "metric": "cosine",
   "variants": {
     "big": {
@@ -18,17 +18,17 @@
     "ruvector": {
       "rvfBig": "ruvector-kb.big.rvf",
       "rvfSmall": "ruvector-kb.small.rvf",
-      "vectors": 33717,
+      "vectors": 33721,
       "sourceRepo": "github.com/ruvnet/ruvector",
-      "sha": "8307c1d4c02c9597dd771ef18414b11ff3e8cfc0"
+      "sha": "4b59352aabc8cc7c2efb04721e9edd1bd244be31"
     },
     "ruview": {
       "rvfBig": "ruview-kb.big.rvf",
       "rvfSmall": "ruview-kb.small.rvf",
       "vectors": 8820,
       "sourceRepo": "github.com/ruvnet/RuView",
-      "sha": "65247129004ac48d3572ff606aa723ce09714713",
-      "describe": "v2828"
+      "sha": "5ef001b4fef3e08433043ebd248e6121f1221528",
+      "describe": "v2872"
     }
   }
 }

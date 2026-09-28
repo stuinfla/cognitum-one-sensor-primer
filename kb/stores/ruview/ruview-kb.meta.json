@@ -29996,7 +29996,7 @@
    "kind": "doc-deep",
    "title": "ESP32 CSI Node Firmware",
    "chunk": "7/13",
-   "preview": ") All settings can be changed at runtime via Non-Volatile Storage (NVS) without reflashing the firmware. NVS values override Kconfig defaults. ### Provisioning Script The easiest way to write NVS settings: ```bash python firmware/esp32-"
+   "preview": ") main: WiFi STA initialized, connecting to SSID: wifi-densepose I (1023) main: Connected to WiFi I (1025) main: CSI streaming active -> 192.168.1.100:5005 (edge_tier=2, OTA=ready, WASM=ready) ``` --- ## Runtime Configuration (NVS) All s"
   },
   "4286": {
    "path": "firmware/esp32-csi-node/README.md",
