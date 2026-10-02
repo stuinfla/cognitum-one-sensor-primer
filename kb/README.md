@@ -75,6 +75,15 @@ cd kb && npm i
 }
 ```
 > Tip: run `pwd` inside the `kb/` folder to get the absolute path, then append `/kb-mcp-server.mjs`.
+>
+> **On Windows, do not paste the `pwd` output from Git Bash.** It prints a POSIX-style path
+> (`/d/Code/your-project/kb`), but the editor launches `node` directly rather than through
+> bash, so Node resolves `/d/...` against the current drive root and dies with
+> `Error: Cannot find module 'D:\d\Code\...'`. The server then never completes the MCP
+> handshake and the editor reports a connection failure (in Claude Code: `-32000`).
+> Use a real Windows absolute path with the drive letter instead — forward slashes are fine
+> and avoid having to escape backslashes in JSON:
+> `"args": ["D:/Code/your-project/kb/kb-mcp-server.mjs"]`
 
 **Step 3.** Add this one line to the bottom of your project's `CLAUDE.md` (create the file if it doesn't exist) so the assistant knows the tool is there and uses it:
 ```
